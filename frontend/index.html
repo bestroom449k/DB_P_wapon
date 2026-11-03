@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko" data-grade="1">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>다섯 빛 공방</title>
+  <meta name="description" content="뽑고, 벼리고, 모으는 수집형 힐링 게임">
+  <meta name="theme-color" content="#0b0e26">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Ccircle r='48' fill='%230b0e26'/%3E%3Cpath d='M0 -40L23.51 32.36L-38.04 -12.36L38.04 -12.36L-23.51 32.36Z' fill='none' stroke='%23ffcf8a' stroke-width='4' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Diphylleia&family=Gowun+Dodum&display=swap">
+  <link rel="stylesheet" href="css/title.css">
+
+  <!-- JS는 3D 장면(Three.js, GSAP)만 맡는다 -->
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <p class="loader" role="status">공방에 불을 지피는 중</p>
+
+  <input class="gate" type="radio" id="gate" autofocus aria-label="공방 문 열기">
+
+  <main class="hud">
+    <h1 class="logo">다섯 빛 공방</h1>
+    <p class="tagline">뽑고, 벼리고, 모으는 작은 공방</p>
+
+    <label class="press" for="gate">클릭하거나 Space를 눌러 공방 문을 여세요</label>
+    <nav class="menu" aria-label="메인 메뉴">
+      <a class="menu__item" href="#start">게임 시작</a>
+      <a class="menu__item" href="#signup">회원가입</a>
+      <a class="menu__item" href="#bye">게임 종료</a>
+    </nav>
+
+    <div class="forge" aria-hidden="true"><span class="pips"><i></i><i></i><i></i><i></i><i></i></span></div>
+
+    <p class="keys"><kbd>Tab</kbd> 이동 <kbd>Enter</kbd> 확인</p>
+    <p class="build">v0.1.0 테스트 빌드</p>
+  </main>
+
+  <p class="toast" id="start" role="status">로그인 화면은 아직 준비 중이에요</p>
+  <p class="toast" id="signup" role="status">회원가입 화면은 아직 준비 중이에요</p>
+
+  <section class="farewell" id="bye">
+    <p>공방의 불을 껐어요. 다음에 또 만나요.</p>
+    <a class="btn btn--ghost" href="#">다시 열기</a>
+  </section>
+</body>
+</html>

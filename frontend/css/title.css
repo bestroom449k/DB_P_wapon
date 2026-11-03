@@ -1,0 +1,694 @@
+/* =========================================================
+   다섯 빛 공방 - 타이틀 화면
+   3D 장면만 JS가 맡고 나머지 화면 동작은 모두 이 파일이 맡는다.
+   - 로딩 → 제목 등장 → "공방 문 열기" → 메뉴: 시간차 애니메이션
+   - 공방 문 열기: 숨은 라디오 버튼(#gate)의 :checked
+   - 준비 중 알림, 작별 화면: 주소의 #해시를 쓰는 :target
+   - 강화 등급 표시: JS가 <html data-grade="n">만 바꾸면 이름, 색, 표시가 따라 바뀐다
+   ========================================================= */
+
+:root {
+  --night-0: #0b0e26;
+  --night-1: #161a44;
+  --night-2: #20255a;
+  --moon: #eef0ff;
+  --mist: #a9afdb;
+  --lamp: #ffcf8a;
+  --lamp-ink: #24180f;
+  --font-display: 'Diphylleia', 'Noto Serif KR', serif;
+  --font-ui: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --gutter: clamp(16px, 4vw, 64px);
+  --intro: 2.4s; /* 로딩 화면이 걷히는 시점. 등장 연출은 모두 이 뒤에 이어진다 */
+
+  /* 무기 등급 5단계의 색. 3D 장면(js/grades.js)도 이 값을 읽어 간다 */
+  --g1: #8d93a6;
+  --g2: #d08c4a;
+  --g3: #46d9a0;
+  --g4: #a477ff;
+  --g5: #fff1cf;
+
+  --grade: var(--g1);
+  --grade-num: '1등급';
+  --grade-name: '무쇠';
+
+  /* 그림: 이미지 파일 없이 SVG를 CSS 안에 직접 넣는다 */
+  --i-sword: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 12'><path d='M12 4.6H33L38.5 6 33 7.4H12Z'/><rect x='9.4' y='.8' width='2.2' height='10.4' rx='1.1'/><rect x='3.6' y='5' width='6' height='2' rx='1' opacity='.7'/><circle cx='2.4' cy='6' r='1.9'/></svg>");
+  /* 로딩 표시: 다섯 등급을 뜻하는 별이 그려졌다 지워진다 (SVG 안의 애니메이션) */
+  --i-star: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'><style>path,circle{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1}path{stroke:%23ffcf8a;stroke-width:1.8;animation:d 2.4s ease-in-out infinite}circle{stroke:%23a9afdb;stroke-opacity:.3;animation:d 3.2s ease-in-out infinite reverse}@keyframes d{from{stroke-dashoffset:1}55%25{stroke-dashoffset:0}to{stroke-dashoffset:-1}}</style><circle r='46' pathLength='1'/><path pathLength='1' d='M0 -40L23.51 32.36L-38.04 -12.36L38.04 -12.36L-23.51 32.36Z'/></svg>");
+
+  color-scheme: dark;
+}
+
+:root[data-grade='2'] {
+  --grade: var(--g2);
+  --grade-num: '2등급';
+  --grade-name: '청동';
+}
+
+:root[data-grade='3'] {
+  --grade: var(--g3);
+  --grade-num: '3등급';
+  --grade-name: '비취';
+}
+
+:root[data-grade='4'] {
+  --grade: var(--g4);
+  --grade-num: '4등급';
+  --grade-name: '자수정';
+}
+
+:root[data-grade='5'] {
+  --grade: var(--g5);
+  --grade-num: '5등급';
+  --grade-name: '성광';
+}
+
+/* ---------- 기본 ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 70% 30%, #1d1d52 0%, var(--night-0) 70%);
+  color: var(--moon);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--lamp);
+  color: var(--lamp-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--lamp);
+  outline-offset: 3px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+@keyframes appear {
+  from { opacity: 0; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+}
+
+@keyframes vanish {
+  to { opacity: 0; visibility: hidden; }
+}
+
+/* ---------- 로딩 ---------- */
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  margin: 0;
+  background: radial-gradient(circle at 50% 45%, #171c4a 0%, #080a1c 70%);
+  font: 400 1.3rem/1.4 var(--font-display);
+  animation: vanish 0.8s ease-in-out var(--intro) forwards;
+}
+
+.loader::before {
+  content: '';
+  width: 92px;
+  height: 92px;
+  margin-bottom: 8px;
+  background: var(--i-star) center / contain no-repeat;
+}
+
+.loader::after {
+  content: '';
+  width: 220px;
+  height: 2px;
+  border-radius: 2px;
+  background:
+    linear-gradient(var(--lamp), var(--lamp)) left / 0% 100% no-repeat,
+    rgba(169, 175, 219, 0.18);
+  box-shadow: 0 0 10px rgba(255, 207, 138, 0.35);
+  animation: load-bar 2.2s cubic-bezier(0.3, 0.1, 0.2, 1) forwards;
+}
+
+@keyframes load-bar {
+  to { background-size: 100% 100%, auto; }
+}
+
+/* ---------- 타이틀 화면 배치 ---------- */
+
+.hud {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  grid-template-rows: auto 1fr auto auto auto 1.3fr auto;
+  grid-template-areas:
+    'top top'
+    '. .'
+    'logo .'
+    'tag .'
+    'action .'
+    '. .'
+    'foot foot';
+  padding: var(--gutter);
+  pointer-events: none;
+}
+
+.hud :is(a, button, label) {
+  pointer-events: auto;
+}
+
+/* ---------- 제목 ---------- */
+
+.logo {
+  grid-area: logo;
+  margin: 0;
+  font: 400 clamp(3.2rem, min(7.6vw, 12.5vh), 6rem) / 1.05 var(--font-display);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  color: var(--moon);
+  text-shadow:
+    0 0 1px rgba(255, 255, 255, 0.6),
+    0 0 28px color-mix(in srgb, var(--grade) 55%, transparent),
+    0 2px 24px rgba(5, 6, 20, 0.6);
+  transition: text-shadow 0.8s var(--ease-out);
+  animation: ink 2s var(--ease-out) calc(var(--intro) + 0.5s) backwards;
+}
+
+/* 제목이 흐릿한 빛에서 왼쪽부터 먹이 번지듯 드러난다 */
+@keyframes ink {
+  from {
+    opacity: 0;
+    filter: blur(16px);
+    letter-spacing: 0.12em;
+    -webkit-mask: linear-gradient(90deg, #000 40%, transparent 60%) 100% 0 / 260% 100% no-repeat;
+    mask: linear-gradient(90deg, #000 40%, transparent 60%) 100% 0 / 260% 100% no-repeat;
+  }
+  to {
+    -webkit-mask: linear-gradient(90deg, #000 40%, transparent 60%) 0 0 / 260% 100% no-repeat;
+    mask: linear-gradient(90deg, #000 40%, transparent 60%) 0 0 / 260% 100% no-repeat;
+  }
+}
+
+.logo::after {
+  content: 'Fivefold Atelier';
+  display: block;
+  margin: 0.7rem 0 0 0.2rem;
+  font-size: clamp(0.95rem, 1.35vw, 1.15rem);
+  line-height: 1;
+  letter-spacing: 0.42em;
+  color: var(--lamp);
+  text-shadow: none;
+  animation: spread 1.8s var(--ease-out) calc(var(--intro) + 1s) backwards;
+}
+
+@keyframes spread {
+  from { opacity: 0; letter-spacing: 0.9em; }
+}
+
+.tagline {
+  grid-area: tag;
+  margin: 1.5rem 0 0 0.2rem;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--mist);
+  animation: rise 1s var(--ease-out) calc(var(--intro) + 1.4s) backwards;
+}
+
+/* ---------- 공방 문 열기 (아무 곳이나 클릭하거나 Space) ---------- */
+
+.gate {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.press {
+  grid-area: action;
+  align-self: start;
+  margin: 3.2rem 0 0 0.2rem;
+  font: 400 1.25rem/1.4 var(--font-display);
+  color: var(--moon);
+  cursor: pointer;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--grade) 60%, transparent);
+  animation:
+    rise 0.9s var(--ease-out) calc(var(--intro) + 2s) backwards,
+    breathe 3.2s ease-in-out calc(var(--intro) + 2.9s) infinite;
+}
+
+/* 화면 전체가 이 라벨이 되어, 어디를 눌러도 문이 열린다 */
+.press::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+@keyframes breathe {
+  50% { opacity: 0.4; }
+}
+
+.gate:focus-visible ~ .hud .press {
+  text-decoration: underline 1px;
+  text-underline-offset: 8px;
+}
+
+.gate:checked ~ .hud .press {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-8px);
+  animation: none;
+  transition: opacity 0.3s ease-in, transform 0.3s ease-in, visibility 0s 0.3s;
+}
+
+/* ---------- 메인 메뉴 ---------- */
+
+.menu {
+  grid-area: action;
+  align-self: start;
+  display: grid;
+  justify-items: start;
+  margin-top: 2.4rem;
+  padding-left: 56px;
+  visibility: hidden; /* 열리기 전에도 자리를 차지해 제목이 움직이지 않는다 */
+}
+
+.gate:checked ~ .hud .menu {
+  visibility: visible;
+}
+
+.menu__item {
+  position: relative;
+  display: block;
+  padding: 0.5rem 0.25rem;
+  font: 400 clamp(1.3rem, min(2vw, 3.2vh), 1.7rem) / 1.25 var(--font-display);
+  color: var(--moon);
+  opacity: 0.55;
+  transition: opacity 0.25s, transform 0.45s var(--ease-out), text-shadow 0.35s;
+}
+
+.menu__item:last-child {
+  margin-top: 0.6rem;
+}
+
+.menu__item:nth-child(2) { --i: 1; }
+.menu__item:nth-child(3) { --i: 2; }
+
+.gate:checked ~ .hud .menu__item {
+  animation: item-in 0.75s var(--ease-out) calc(0.3s + var(--i, 0) * 70ms) backwards;
+}
+
+@keyframes item-in {
+  from { opacity: 0; transform: translateX(-28px); filter: blur(8px); }
+}
+
+/* 선택 커서: 작은 검이 고른 항목 앞으로 미끄러져 온다 */
+.menu__item::before {
+  content: '';
+  position: absolute;
+  left: -56px;
+  top: 50%;
+  width: 40px;
+  height: 12px;
+  background: var(--grade);
+  -webkit-mask: var(--i-sword) center / contain no-repeat;
+  mask: var(--i-sword) center / contain no-repeat;
+  opacity: 0;
+  transform: translate(-10px, -50%);
+  transition: opacity 0.3s, transform 0.45s var(--ease-out), background-color 0.6s;
+}
+
+/* 마우스를 올리거나 Tab으로 고른 항목. 아무것도 고르지 않았으면 첫 항목 */
+.menu__item:is(:hover, :focus-visible),
+.menu:not(:hover, :focus-within) .menu__item:first-child {
+  opacity: 1;
+  transform: translateX(10px);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--grade) 60%, transparent);
+  outline: none;
+}
+
+.menu__item:is(:hover, :focus-visible)::before,
+.menu:not(:hover, :focus-within) .menu__item:first-child::before {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+/* ---------- 강화 시연 표시 (오른쪽 아래) ---------- */
+
+.forge {
+  position: absolute;
+  right: var(--gutter);
+  bottom: calc(var(--gutter) + 44px);
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    'pips pips'
+    'num name';
+  justify-content: end;
+  align-items: baseline;
+  gap: 0.75rem 0.6rem;
+  font-family: var(--font-display);
+  animation: appear 1.2s ease-out calc(var(--intro) + 1.7s) backwards;
+}
+
+.pips {
+  grid-area: pips;
+  justify-self: end;
+  display: flex;
+  gap: 13px;
+}
+
+.pips i {
+  width: 8px;
+  height: 8px;
+  margin: 2px;
+  rotate: 45deg;
+  border: 1px solid color-mix(in srgb, var(--c) 65%, transparent);
+  transition: background-color 0.4s, box-shadow 0.4s;
+}
+
+.pips i:nth-child(1) { --c: var(--g1); }
+.pips i:nth-child(2) { --c: var(--g2); }
+.pips i:nth-child(3) { --c: var(--g3); }
+.pips i:nth-child(4) { --c: var(--g4); }
+.pips i:nth-child(5) { --c: var(--g5); }
+
+:root[data-grade='1'] .pips i:nth-child(-n + 1),
+:root[data-grade='2'] .pips i:nth-child(-n + 2),
+:root[data-grade='3'] .pips i:nth-child(-n + 3),
+:root[data-grade='4'] .pips i:nth-child(-n + 4),
+:root[data-grade='5'] .pips i:nth-child(-n + 5) {
+  background: var(--c);
+  box-shadow: 0 0 10px var(--c);
+}
+
+/* 방금 오른 등급의 표시가 톡 튀어 오른다 */
+:root[data-grade='1'] .pips i:nth-child(1),
+:root[data-grade='2'] .pips i:nth-child(2),
+:root[data-grade='3'] .pips i:nth-child(3),
+:root[data-grade='4'] .pips i:nth-child(4),
+:root[data-grade='5'] .pips i:nth-child(5) {
+  animation: pop 0.7s cubic-bezier(0.34, 1.8, 0.5, 1);
+}
+
+@keyframes pop {
+  from { scale: 2.2; }
+}
+
+.forge::before {
+  content: var(--grade-num);
+  grid-area: num;
+  font-size: 1rem;
+  color: var(--mist);
+}
+
+.forge::after {
+  content: var(--grade-name);
+  grid-area: name;
+  font-size: 1.5rem;
+  color: var(--grade);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--grade) 60%, transparent);
+  transition: color 0.5s;
+}
+
+/* 등급이 바뀔 때마다 이름이 아래에서 올라온다.
+   애니메이션 이름이 바뀌어야 다시 재생되므로 같은 동작을 세 이름으로 번갈아 쓴다 */
+:root[data-grade='1'] .forge::after { animation: name-c 0.45s var(--ease-out); }
+:root[data-grade='2'] .forge::after,
+:root[data-grade='4'] .forge::after { animation: name-b 0.45s var(--ease-out); }
+:root[data-grade='3'] .forge::after,
+:root[data-grade='5'] .forge::after { animation: name-a 0.45s var(--ease-out); }
+
+@keyframes name-a { from { opacity: 0; transform: translateY(8px); } }
+@keyframes name-b { from { opacity: 0; transform: translateY(8px); } }
+@keyframes name-c { from { opacity: 0; transform: translateY(8px); } }
+
+/* ---------- 아래쪽 ---------- */
+
+.keys {
+  grid-area: foot;
+  justify-self: start;
+  align-self: end;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--mist);
+  visibility: hidden;
+}
+
+.gate:checked ~ .hud .keys {
+  visibility: visible;
+  animation: appear 0.8s ease-out 0.5s backwards;
+}
+
+.keys kbd:not(:first-child) {
+  margin-left: 10px;
+}
+
+kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 24px;
+  padding: 0 7px;
+  border: 1px solid rgba(169, 175, 219, 0.36);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  font: 0.75rem/1 var(--font-ui);
+  color: var(--moon);
+}
+
+.build {
+  grid-area: foot;
+  justify-self: end;
+  align-self: end;
+  margin: 0;
+  font-size: 0.875rem;
+  color: rgba(169, 175, 219, 0.75);
+  animation: appear 1.2s ease-out calc(var(--intro) + 1.7s) backwards;
+}
+
+/* ---------- 버튼 (작별 화면의 "다시 열기") ---------- */
+
+.btn {
+  display: inline-block;
+  padding: 0.7rem 1.4rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--lamp);
+  color: var(--lamp-ink);
+  font: 1rem/1.2 var(--font-ui);
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.15s;
+}
+
+.btn:hover {
+  filter: brightness(1.08);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: rgba(169, 175, 219, 0.4);
+  color: var(--moon);
+}
+
+/* ---------- 준비 중 알림 ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 9vh;
+  z-index: 40;
+  max-width: calc(100vw - 32px);
+  margin: 0;
+  padding: 0.8rem 1.4rem;
+  border: 1px solid rgba(169, 175, 219, 0.26);
+  border-radius: 999px;
+  background: var(--night-2);
+  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.7);
+  translate: -50% 0;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.toast:target {
+  animation: toast 3.2s var(--ease-out) forwards;
+}
+
+@keyframes toast {
+  0% { opacity: 0; visibility: visible; transform: translateY(12px); }
+  12% { opacity: 1; transform: none; }
+  85% { opacity: 1; visibility: visible; transform: none; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+/* ---------- 작별 화면 ---------- */
+
+.farewell {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 22px;
+  background: #04050f;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.8s ease-in-out, visibility 0s 0.8s;
+}
+
+.farewell:target {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 1.4s ease-out 0.2s, visibility 0s;
+}
+
+.farewell p {
+  margin: 0;
+  font: 400 1.375rem/1.5 var(--font-display);
+  text-align: center;
+}
+
+/* 3D를 켤 수 없는 브라우저 안내 (JS가 data-webgl="off"를 붙인다) */
+:root[data-webgl='off'] body::after {
+  content: '이 브라우저에서 3D 화면(WebGL)을 켤 수 없어요. 그래픽 가속을 켜거나 다른 브라우저로 열어 주세요.';
+  position: fixed;
+  left: 50%;
+  bottom: 14vh;
+  z-index: 20;
+  width: min(520px, calc(100vw - 32px));
+  padding: 0.8rem 1.2rem;
+  border-radius: 12px;
+  background: var(--night-2);
+  text-align: center;
+  line-height: 1.5;
+  translate: -50% 0;
+}
+
+/* ---------- 좁은 화면: 검을 가운데 두고 제목은 위, 메뉴는 아래 ---------- */
+
+@media (max-width: 860px), (max-aspect-ratio: 6/5) {
+  .hud {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto 1fr auto auto auto;
+    grid-template-areas:
+      'top'
+      'logo'
+      'tag'
+      '.'
+      'forge'
+      'action'
+      'foot';
+    text-align: center;
+  }
+
+  .hud::after {
+    content: '';
+    position: fixed;
+    inset: auto 0 0 0;
+    height: 48vh;
+    background: linear-gradient(to top, rgba(8, 10, 28, 0.85), transparent);
+    z-index: -1;
+  }
+
+  .logo {
+    margin-top: 3vh;
+    font-size: clamp(2.5rem, 13vw, 4rem);
+  }
+
+  .logo::after,
+  .tagline {
+    margin-left: 0;
+  }
+
+  .press {
+    justify-self: center;
+    margin: 0 0 6vh;
+  }
+
+  .menu {
+    justify-self: center;
+    justify-items: center;
+    margin: 0 0 3vh;
+    padding-left: 0;
+  }
+
+  .menu__item:is(:hover, :focus-visible),
+  .menu:not(:hover, :focus-within) .menu__item:first-child {
+    transform: none;
+  }
+
+  .menu__item::before,
+  .keys {
+    display: none;
+  }
+
+  .forge {
+    grid-area: forge;
+    position: static;
+    justify-self: center;
+    margin-bottom: 1rem;
+  }
+
+  .build {
+    justify-self: center;
+  }
+}
+
+/* ---------- 움직임 줄이기 설정을 켠 사용자 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .toast:target {
+    animation-duration: 3.2s !important;
+  }
+}
