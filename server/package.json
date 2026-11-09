@@ -1,0 +1,18 @@
+{
+  "name": "weapon-game-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "다섯 빛 공방 서버: 화면(frontend) 제공 + 회원가입·로그인 API",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node --env-file=.env src/app.js",
+    "dev": "node --env-file=.env --watch src/app.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "express": "^5.3.0",
+    "express-session": "^1.19.0",
+    "mysql2": "^3.24.6"
+  }
+}

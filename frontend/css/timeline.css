@@ -1,0 +1,109 @@
+/* =========================================================
+   다섯 빛 공방 - 강화 타임라인
+   :root의 forge-cycle 애니메이션 하나가 16초마다 1→5등급을 돌며 아래 값을 바꾼다.
+     --level(지금 등급), --grade(빛 색), --charge(기 모으기), --pulse(내려치는 순간),
+     --burst(불꽃 퍼짐), --finale(빛 기둥), --spin(검 회전), --push(게임 시작 줌)
+   화면 글자(title.css)와 3D 장면(js/function/timeline.js가 읽음)은 이 값만 보고 따라 움직인다.
+   ========================================================= */
+
+@property --level { syntax: '<integer>'; inherits: true; initial-value: 1; }
+@property --grade { syntax: '<color>'; inherits: true; initial-value: #8d93a6; }
+@property --charge { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --pulse { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --burst { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --finale { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --spin { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --push { syntax: '<number>'; inherits: true; initial-value: 0; }
+
+:root {
+  --cycle: 16s;
+  --cycle-start: calc(var(--intro) + 2.4s); /* 장면이 다 들어온 뒤 강화가 시작된다 */
+
+  /* 바닥 마법진 그림: 다섯 등급을 뜻하는 오각별과 룬 띠 (js/design/shared/textures.js가 텍스처로 쓴다) */
+  --i-circle: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-100 -100 200 200' fill='none' stroke='black'><circle r='97' stroke-width='2'/><circle r='93' stroke-width='.7'/><circle r='95' stroke-width='4' stroke-dasharray='.6 5.37'/><circle r='85' stroke-width='6' stroke-dasharray='2 4 5 3 1 5 3 4' opacity='.85'/><circle r='78' stroke-width='1.6'/><circle r='75' stroke-width='.6'/><path d='M0 -75L44.08 60.68L-71.33 -23.18L71.33 -23.18L-44.08 60.68Z' stroke-width='1.6' stroke-linejoin='round'/><path d='M0 42L39.94 12.98L24.69 -33.98L-24.69 -33.98L-39.94 12.98Z' stroke-width='.8'/><circle r='42' stroke-width='1.2'/><circle r='30' stroke-width='24' stroke-dasharray='.8 18.05' opacity='.7'/><circle r='17' stroke-width='1.2'/><g stroke-width='1.4'><circle cy='-75' r='7'/><circle cx='71.33' cy='-23.18' r='7'/><circle cx='44.08' cy='60.68' r='7'/><circle cx='-44.08' cy='60.68' r='7'/><circle cx='-71.33' cy='-23.18' r='7'/></g></svg>");
+
+  animation: forge-cycle var(--cycle) linear var(--cycle-start) infinite both;
+}
+
+/* ---------- 강화 의식 타임라인 (16초) ----------
+   10% 2등급 · 25% 3등급 · 40% 4등급 · 55% 5등급 · 60~80% 빛 기둥 · 80~92% 고리가 풀림 · 85% 1등급으로 */
+@keyframes forge-cycle {
+  0%, 9.95% { --level: 1; --grade-num: '1등급'; --grade-name: '무쇠'; }
+  10%, 24.95% { --level: 2; --grade-num: '2등급'; --grade-name: '청동'; }
+  25%, 39.95% { --level: 3; --grade-num: '3등급'; --grade-name: '비취'; }
+  40%, 54.95% { --level: 4; --grade-num: '4등급'; --grade-name: '자수정'; }
+  55%, 84.95% { --level: 5; --grade-num: '5등급'; --grade-name: '성광'; }
+  85%, 100% { --level: 1; --grade-num: '1등급'; --grade-name: '무쇠'; }
+
+  0%, 9.95% { --grade: var(--g1); }
+  10.5%, 24.95% { --grade: var(--g2); }
+  25.5%, 39.95% { --grade: var(--g3); }
+  40.5%, 54.95% { --grade: var(--g4); }
+  55.5%, 82% { --grade: var(--g5); }
+  90%, 100% { --grade: var(--g1); }
+
+  /* 기 모으기: 내려치기 직전 0.6초 */
+  0%, 6.25%, 10%, 21.25%, 25%, 36.25%, 40%, 51.25%, 55%, 100% { --charge: 0; }
+  8%, 23%, 38%, 53% { --charge: 0.4; }
+  9.2%, 24.2%, 39.2%, 54.2% { --charge: 0.9; }
+  9.95%, 24.95%, 39.95%, 54.95% { --charge: 1; }
+
+  /* 내려치는 순간의 번쩍임 */
+  0%, 9.95%, 14.4%, 24.95%, 29.4%, 39.95%, 44.4%, 54.95%, 59.4%, 59.95%, 68%, 100% { --pulse: 0; }
+  10%, 25%, 40%, 55% { --pulse: 1; }
+  10.6%, 25.6%, 40.6%, 55.6% { --pulse: 0.55; }
+  11.5%, 26.5%, 41.5%, 56.5% { --pulse: 0.25; }
+  13%, 28%, 43%, 58% { --pulse: 0.08; }
+  60% { --pulse: 1.2; }
+  61% { --pulse: 0.6; }
+  62.5% { --pulse: 0.3; }
+  65% { --pulse: 0.1; }
+
+  /* 불꽃과 충격파가 퍼지는 정도 (1이면 다 퍼져 보이지 않음) */
+  0%, 9.95%, 14.5%, 24.95%, 29.5%, 39.95%, 44.5%, 54.95%, 59.5%, 59.95%, 68%, 100% { --burst: 1; }
+  10%, 25%, 40%, 55%, 60% { --burst: 0; }
+  10.8%, 25.8%, 40.8%, 55.8%, 61.5% { --burst: 0.45; }
+  12%, 27%, 42%, 57%, 63.5% { --burst: 0.78; }
+  13.5%, 28.5%, 43.5%, 58.5%, 66% { --burst: 0.94; }
+
+  /* 5등급 달성: 빛 기둥과 회전 */
+  0%, 60%, 90%, 100% { --finale: 0; }
+  61% { --finale: 0.6; }
+  63%, 80% { --finale: 1; }
+  84% { --finale: 0.6; }
+  88% { --finale: 0.15; }
+
+  0%, 60% { --spin: 0; }
+  62% { --spin: 0.08; }
+  66% { --spin: 0.5; }
+  71% { --spin: 0.92; }
+  73.75%, 100% { --spin: 1; }
+}
+
+/* "게임 시작"을 누르면(로그인 창 또는 공방 입장) 카메라가 검 쪽으로 다가갔다 돌아온다 */
+:root:has(#login:target, #play:target) {
+  animation:
+    forge-cycle var(--cycle) linear var(--cycle-start) infinite both,
+    camera-push 2.2s ease-in-out;
+}
+
+@keyframes camera-push {
+  30% { --push: 1; }
+}
+
+/* 3D 장면을 그리는 캔버스 (js/function/main.js) */
+#scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 움직임 줄이기: 강화 타임라인을 멈춘다 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    animation: none !important;
+  }
+}

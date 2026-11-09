@@ -1,0 +1,43 @@
+{
+  "grades": [
+    { "grade": 1, "name": "일반", "drawRatePct": 60 },
+    { "grade": 2, "name": "고급", "drawRatePct": 25 },
+    { "grade": 3, "name": "희귀", "drawRatePct": 10 },
+    { "grade": 4, "name": "영웅", "drawRatePct": 4 },
+    { "grade": 5, "name": "전설", "drawRatePct": 1 }
+  ],
+  "enhanceRules": [
+    { "targetLevel": 1, "costRatio": 0.1, "successPct": 90, "valueMultiplier": 1.2 },
+    { "targetLevel": 2, "costRatio": 0.2, "successPct": 80, "valueMultiplier": 1.5 },
+    { "targetLevel": 3, "costRatio": 0.4, "successPct": 60, "valueMultiplier": 2.0 }
+  ],
+  "weapons": [
+    {
+      "id": 1,
+      "name": "나무검",
+      "type": "SWORD",
+      "grade": 1,
+      "baseSellPrice": 100,
+      "imageUrl": null,
+      "description": "연습용으로 깎은 가벼운 나무검"
+    },
+    {
+      "id": 2,
+      "name": "강철검",
+      "type": "SWORD",
+      "grade": 2,
+      "baseSellPrice": 300,
+      "imageUrl": null,
+      "description": "대장간에서 두드려 만든 튼튼한 검"
+    },
+    {
+      "id": 3,
+      "name": "불꽃검",
+      "type": "SWORD",
+      "grade": 3,
+      "baseSellPrice": 1000,
+      "imageUrl": null,
+      "description": "칼날에 불꽃이 깃든 검"
+    }
+  ]
+}

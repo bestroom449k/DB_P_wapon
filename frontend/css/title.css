@@ -1,10 +1,9 @@
 /* =========================================================
-   다섯 빛 공방 - 타이틀 화면
-   3D 장면만 JS가 맡고 나머지 화면 동작은 모두 이 파일이 맡는다.
+   다섯 빛 공방 - 타이틀 화면의 글자와 메뉴 (강화 타임라인은 timeline.css, 3D 장면은 js/). 이 파일은 JS 없이 동작한다.
    - 로딩 → 제목 등장 → "공방 문 열기" → 메뉴: 시간차 애니메이션
    - 공방 문 열기: 숨은 라디오 버튼(#gate)의 :checked
    - 준비 중 알림, 작별 화면: 주소의 #해시를 쓰는 :target
-   - 강화 등급 표시: JS가 <html data-grade="n">만 바꾸면 이름, 색, 표시가 따라 바뀐다
+   - 강화 등급 표시: timeline.css의 강화 타임라인이 바꾸는 --level, --grade, --grade-name을 따라간다
    ========================================================= */
 
 :root {
@@ -21,7 +20,7 @@
   --gutter: clamp(16px, 4vw, 64px);
   --intro: 2.4s; /* 로딩 화면이 걷히는 시점. 등장 연출은 모두 이 뒤에 이어진다 */
 
-  /* 무기 등급 5단계의 색. 3D 장면(js/grades.js)도 이 값을 읽어 간다 */
+  /* 무기 등급 5단계의 색. 3D 장면(js/function/timeline.js)도 이 값을 읽어 간다 */
   --g1: #8d93a6;
   --g2: #d08c4a;
   --g3: #46d9a0;
@@ -38,30 +37,6 @@
   --i-star: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'><style>path,circle{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1}path{stroke:%23ffcf8a;stroke-width:1.8;animation:d 2.4s ease-in-out infinite}circle{stroke:%23a9afdb;stroke-opacity:.3;animation:d 3.2s ease-in-out infinite reverse}@keyframes d{from{stroke-dashoffset:1}55%25{stroke-dashoffset:0}to{stroke-dashoffset:-1}}</style><circle r='46' pathLength='1'/><path pathLength='1' d='M0 -40L23.51 32.36L-38.04 -12.36L38.04 -12.36L-23.51 32.36Z'/></svg>");
 
   color-scheme: dark;
-}
-
-:root[data-grade='2'] {
-  --grade: var(--g2);
-  --grade-num: '2등급';
-  --grade-name: '청동';
-}
-
-:root[data-grade='3'] {
-  --grade: var(--g3);
-  --grade-num: '3등급';
-  --grade-name: '비취';
-}
-
-:root[data-grade='4'] {
-  --grade: var(--g4);
-  --grade-num: '4등급';
-  --grade-name: '자수정';
-}
-
-:root[data-grade='5'] {
-  --grade: var(--g5);
-  --grade-num: '5등급';
-  --grade-name: '성광';
 }
 
 /* ---------- 기본 ---------- */
@@ -103,13 +78,6 @@ button {
   color: inherit;
 }
 
-#scene {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  display: block;
-}
 
 @keyframes appear {
   from { opacity: 0; }
@@ -393,41 +361,29 @@ button {
   gap: 13px;
 }
 
+/* 지금 등급(--level)까지 칸이 채워진다. --at은 그 칸이 채워지는 순간(강화 타임라인 기준) */
 .pips i {
+  --lit: clamp(0, var(--level) - var(--n) + 1, 1);
   width: 8px;
   height: 8px;
   margin: 2px;
   rotate: 45deg;
   border: 1px solid color-mix(in srgb, var(--c) 65%, transparent);
-  transition: background-color 0.4s, box-shadow 0.4s;
+  background: color-mix(in srgb, var(--c) calc(var(--lit) * 100%), transparent);
+  box-shadow: 0 0 calc(var(--lit) * 10px) var(--c);
+  animation: pip-pop var(--cycle) linear calc(var(--cycle-start) + var(--at)) infinite;
 }
 
-.pips i:nth-child(1) { --c: var(--g1); }
-.pips i:nth-child(2) { --c: var(--g2); }
-.pips i:nth-child(3) { --c: var(--g3); }
-.pips i:nth-child(4) { --c: var(--g4); }
-.pips i:nth-child(5) { --c: var(--g5); }
+.pips i:nth-child(1) { --c: var(--g1); --n: 1; --at: 13.6s; }
+.pips i:nth-child(2) { --c: var(--g2); --n: 2; --at: 1.6s; }
+.pips i:nth-child(3) { --c: var(--g3); --n: 3; --at: 4s; }
+.pips i:nth-child(4) { --c: var(--g4); --n: 4; --at: 6.4s; }
+.pips i:nth-child(5) { --c: var(--g5); --n: 5; --at: 8.8s; }
 
-:root[data-grade='1'] .pips i:nth-child(-n + 1),
-:root[data-grade='2'] .pips i:nth-child(-n + 2),
-:root[data-grade='3'] .pips i:nth-child(-n + 3),
-:root[data-grade='4'] .pips i:nth-child(-n + 4),
-:root[data-grade='5'] .pips i:nth-child(-n + 5) {
-  background: var(--c);
-  box-shadow: 0 0 10px var(--c);
-}
-
-/* 방금 오른 등급의 표시가 톡 튀어 오른다 */
-:root[data-grade='1'] .pips i:nth-child(1),
-:root[data-grade='2'] .pips i:nth-child(2),
-:root[data-grade='3'] .pips i:nth-child(3),
-:root[data-grade='4'] .pips i:nth-child(4),
-:root[data-grade='5'] .pips i:nth-child(5) {
-  animation: pop 0.7s cubic-bezier(0.34, 1.8, 0.5, 1);
-}
-
-@keyframes pop {
-  from { scale: 2.2; }
+/* 방금 채워진 칸이 톡 튀어 오른다 */
+@keyframes pip-pop {
+  0% { scale: 2.2; animation-timing-function: cubic-bezier(0.34, 1.8, 0.5, 1); }
+  4.4%, 100% { scale: 1; }
 }
 
 .forge::before {
@@ -443,20 +399,14 @@ button {
   font-size: 1.5rem;
   color: var(--grade);
   text-shadow: 0 0 14px color-mix(in srgb, var(--grade) 60%, transparent);
-  transition: color 0.5s;
+  animation: name-pop var(--cycle) linear var(--cycle-start) infinite;
 }
 
-/* 등급이 바뀔 때마다 이름이 아래에서 올라온다.
-   애니메이션 이름이 바뀌어야 다시 재생되므로 같은 동작을 세 이름으로 번갈아 쓴다 */
-:root[data-grade='1'] .forge::after { animation: name-c 0.45s var(--ease-out); }
-:root[data-grade='2'] .forge::after,
-:root[data-grade='4'] .forge::after { animation: name-b 0.45s var(--ease-out); }
-:root[data-grade='3'] .forge::after,
-:root[data-grade='5'] .forge::after { animation: name-a 0.45s var(--ease-out); }
-
-@keyframes name-a { from { opacity: 0; transform: translateY(8px); } }
-@keyframes name-b { from { opacity: 0; transform: translateY(8px); } }
-@keyframes name-c { from { opacity: 0; transform: translateY(8px); } }
+/* 등급이 바뀌는 순간(10%, 25%, 40%, 55%, 85%)마다 이름이 아래에서 올라온다 */
+@keyframes name-pop {
+  0%, 9.99%, 12.8%, 24.99%, 27.8%, 39.99%, 42.8%, 54.99%, 57.8%, 84.99%, 87.8%, 100% { opacity: 1; translate: 0 0; }
+  10%, 25%, 40%, 55%, 85% { opacity: 0; translate: 0 8px; }
+}
 
 /* ---------- 아래쪽 ---------- */
 
@@ -505,7 +455,7 @@ kbd {
   animation: appear 1.2s ease-out calc(var(--intro) + 1.7s) backwards;
 }
 
-/* ---------- 버튼 (작별 화면의 "다시 열기") ---------- */
+/* ---------- 버튼 (로그인, 회원가입, 작별 화면) ---------- */
 
 .btn {
   display: inline-block;
@@ -533,7 +483,128 @@ kbd {
   color: var(--moon);
 }
 
-/* ---------- 준비 중 알림 ---------- */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* ---------- 로그인, 회원가입 창 (주소 뒤 #login, #signup일 때 열린다 = :target) ---------- */
+
+.panel {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  width: min(420px, calc(100vw - 32px));
+  height: fit-content;
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  overflow-y: auto;
+  padding: 28px 28px 22px;
+  border: 1px solid rgba(169, 175, 219, 0.24);
+  border-radius: 18px;
+  background: var(--night-1);
+  box-shadow:
+    0 30px 80px -24px rgba(0, 0, 0, 0.75),
+    0 0 0 100vmax rgba(4, 5, 18, 0.55); /* 두 번째 그림자가 뒤 화면을 어둡게 덮는 막이 된다 */
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(18px) scale(0.98);
+  transition: opacity 0.22s ease-in, transform 0.22s ease-in, visibility 0s 0.22s;
+}
+
+.panel:target {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.35s ease-out, transform 0.45s var(--ease-out), visibility 0s;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.form__title {
+  margin: 0 0 4px;
+  font: 400 1.65rem/1.3 var(--font-display);
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 0.9375rem;
+}
+
+.field small {
+  font-size: 0.8125rem;
+  color: var(--mist);
+}
+
+.field input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(169, 175, 219, 0.3);
+  border-radius: 10px;
+  background: var(--night-0);
+  color: var(--moon);
+  font: 1rem/1.3 var(--font-ui);
+  caret-color: var(--lamp);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--lamp);
+  box-shadow: 0 0 0 3px rgba(255, 207, 138, 0.18);
+}
+
+.form__error {
+  min-height: 1.4em; /* 오류 글자가 생겨도 창이 들썩이지 않게 */
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #ffadb8;
+}
+
+.form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.form__switch {
+  margin: 0;
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--mist);
+}
+
+.form__switch a {
+  color: var(--lamp);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* 왼쪽 위 회원 표시: 로그인했을 때만 (js/function/auth.js가 <html data-auth="in">을 붙인다) */
+.player {
+  grid-area: top;
+  justify-self: start;
+  align-self: center;
+  display: none;
+  margin: 0;
+  padding: 0.45rem 1rem;
+  border: 1px solid rgba(169, 175, 219, 0.2);
+  border-radius: 999px;
+  background: rgba(11, 14, 38, 0.55);
+  font-size: 0.9375rem;
+  color: var(--moon);
+}
+
+:root[data-auth='in'] .player {
+  display: block;
+}
+
+/* ---------- 알림 ---------- */
 
 .toast {
   position: fixed;
@@ -591,21 +662,6 @@ kbd {
   text-align: center;
 }
 
-/* 3D를 켤 수 없는 브라우저 안내 (JS가 data-webgl="off"를 붙인다) */
-:root[data-webgl='off'] body::after {
-  content: '이 브라우저에서 3D 화면(WebGL)을 켤 수 없어요. 그래픽 가속을 켜거나 다른 브라우저로 열어 주세요.';
-  position: fixed;
-  left: 50%;
-  bottom: 14vh;
-  z-index: 20;
-  width: min(520px, calc(100vw - 32px));
-  padding: 0.8rem 1.2rem;
-  border-radius: 12px;
-  background: var(--night-2);
-  text-align: center;
-  line-height: 1.5;
-  translate: -50% 0;
-}
 
 /* ---------- 좁은 화면: 검을 가운데 두고 제목은 위, 메뉴는 아래 ---------- */
 
