@@ -20,7 +20,14 @@ const HASH_ROUNDS = 10; // bcrypt 암호화 강도 (높을수록 안전하지만
 const DUMMY_HASH = bcrypt.hashSync('no-such-user', HASH_ROUNDS); // 없는 아이디도 같은 시간이 걸리게 할 가짜 해시
 const USER_COLUMNS = 'user_id, login_id, nickname, gold_balance'; // 화면에 보내도 되는 칸만
 
+export const SESSION_COOKIE = 'wg.sid'; // 로그인 쿠키 이름 (app.js의 세션 설정도 이 값을 씀)
+
 const toPublic = (row) => ({ userId: row.user_id, loginId: row.login_id, nickname: row.nickname, gold: row.gold_balance }); // DB 행 → 화면용
+
+async function findUser(userId) { // 회원 번호로 화면용 회원 정보 찾기 (없으면 null)
+  const [[row]] = await pool.query(`SELECT ${USER_COLUMNS} FROM users WHERE user_id = ?`, [userId]);
+  return row ? toPublic(row) : null;
+}
 
 // 로그인 상태로 만들기: 세션 번호를 새로 발급하고(세션 고정 공격 방지) 회원 번호를 기억한다
 function startSession(req, userId) {
@@ -54,8 +61,7 @@ router.post('/signup', async (req, res) => { // 회원가입
   }
 
   await startSession(req, result.insertId); // 가입하면 바로 로그인
-  const [[user]] = await pool.query(`SELECT ${USER_COLUMNS} FROM users WHERE user_id = ?`, [result.insertId]);
-  res.status(201).json({ user: toPublic(user) });
+  res.status(201).json({ user: await findUser(result.insertId) });
 });
 
 router.post('/login', async (req, res) => { // 로그인
@@ -74,15 +80,14 @@ router.post('/login', async (req, res) => { // 로그인
 router.post('/logout', (req, res, next) => { // 로그아웃
   req.session.destroy((err) => {
     if (err) return next(err);
-    res.clearCookie('wg.sid');
+    res.clearCookie(SESSION_COOKIE);
     res.json({ ok: true });
   });
 });
 
 router.get('/me', async (req, res) => { // 내 정보 (새로고침해도 로그인 상태를 이어 가기 위해)
   if (!req.session.userId) return res.json({ user: null }); // 로그인 전 (오류가 아니라 정상 상태)
-  const [[user]] = await pool.query(`SELECT ${USER_COLUMNS} FROM users WHERE user_id = ?`, [req.session.userId]);
-  res.json({ user: user ? toPublic(user) : null });
+  res.json({ user: await findUser(req.session.userId) });
 });
 
 export default router;

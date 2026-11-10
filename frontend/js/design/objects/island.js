@@ -2,6 +2,7 @@
 // 그 위에서 서로 반대로 도는 마법진 두 겹과 바닥에 번지는 빛.
 import * as THREE from 'three';
 import { circleTexture, glowTexture } from '../shared/textures.js';
+import { GLOW } from '../shared/materials.js';
 
 export const ISLAND_TOP = -2.15; // 제단 윗면 높이
 
@@ -37,7 +38,7 @@ export function create({ scene }) { // 섬 만들기
   // 마법진 한 겹: 빛을 더하듯 그려지는(Additive) 원판
   const texture = circleTexture(); // 마법진 그림
   const magicCircle = (radius, lift) => { // 마법진
-    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+    const material = new THREE.MeshBasicMaterial({ ...GLOW, map: texture, toneMapped: false });
     const disc = new THREE.Mesh(new THREE.CircleGeometry(radius, 96), material);
     disc.rotation.x = -Math.PI / 2;
     disc.position.y = ISLAND_TOP + lift;
@@ -49,7 +50,7 @@ export function create({ scene }) { // 섬 만들기
 
   const ground = new THREE.Mesh( // 바닥에 번지는 빛
     new THREE.PlaneGeometry(6, 6),
-    new THREE.MeshBasicMaterial({ map: glowTexture(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }),
+    new THREE.MeshBasicMaterial({ ...GLOW, map: glowTexture() }),
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = ISLAND_TOP + 0.02;

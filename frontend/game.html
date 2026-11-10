@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>뽑기 · 다섯 빛 공방</title>
+    <meta name="description" content="하늘 위 공방에서 검을 뽑아요" />
+    <meta name="theme-color" content="#5d86e2" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Ccircle r='48' fill='%230b0e26'/%3E%3Cpath d='M0 -40L23.51 32.36L-38.04 -12.36L38.04 -12.36L-23.51 32.36Z' fill='none' stroke='%23ffcf8a' stroke-width='4' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Diphylleia&family=Gowun+Dodum&display=swap"
+    />
+    <!-- 게임 화면의 글자와 버튼: 색·글꼴·알림(base.css), 위쪽(hud.css), 아래쪽(actions.css), 뽑기 연출 타임라인(timeline.css) -->
+    <link rel="stylesheet" href="css/game/base.css" />
+    <link rel="stylesheet" href="css/game/hud.css" />
+    <link rel="stylesheet" href="css/game/actions.css" />
+    <link rel="stylesheet" href="css/game/timeline.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <!-- 3D 장면(js/game/main.js), 버튼과 골드 표시(js/game/function/hud.js) -->
+    <script type="module" src="js/game/main.js"></script>
+    <script type="module" src="js/game/function/hud.js"></script>
+  </head>
+  <body>
+    <!-- 아이콘 묶음: 아래에서 <use href="#i-이름">으로 불러 쓴다 -->
+    <svg class="icons" aria-hidden="true">
+      <defs>
+        <linearGradient id="g-gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fbe7b0" />
+          <stop offset=".55" stop-color="#e2b866" />
+          <stop offset="1" stop-color="#b98a3e" />
+        </linearGradient>
+        <linearGradient id="g-card" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#a3a9f5" />
+          <stop offset="1" stop-color="#6c6fd4" />
+        </linearGradient>
+      </defs>
+      <symbol id="i-back" viewBox="0 0 24 24">
+        <path d="M19 12H5.5M11 5.5 4.5 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <!-- 네 갈래 별: 버튼 장식, 확률 버튼 -->
+      <symbol id="i-spark" viewBox="0 0 24 24">
+        <path d="M12 1.5c.5 5.6 2.9 8 8.5 10.5-5.6 2.5-8 4.9-8.5 10.5-.5-5.6-2.9-8-8.5-10.5C9.1 9.5 11.5 7.1 12 1.5Z" fill="currentColor" />
+      </symbol>
+      <!-- 골드 동전: 다섯 등급의 별이 새겨져 있다 -->
+      <symbol id="i-coin" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" fill="url(#g-gold)" />
+        <circle cx="12" cy="12" r="7.4" fill="none" stroke="#9c7130" stroke-opacity=".55" stroke-width="1" />
+        <path d="M12 7.2 13.3 10.6 16.8 10.8 14.1 13 15 16.4 12 14.5 9 16.4 9.9 13 7.2 10.8 10.7 10.6Z" fill="#fff6dc" />
+      </symbol>
+      <!-- 뽑기 카드 -->
+      <symbol id="i-card" viewBox="0 0 24 24">
+        <rect x="5" y="2.5" width="14" height="19" rx="2.4" fill="url(#g-card)" stroke="#fff" stroke-width="1.2" />
+        <path d="M12 7.6 12.9 11.1 16.4 12 12.9 12.9 12 16.4 11.1 12.9 7.6 12 11.1 11.1Z" fill="#fff" />
+      </symbol>
+      <symbol id="i-hammer" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m13.2 3.8 7 7-2.4 2.4-7-7Z" />
+          <path d="m11.9 8.5-8 8a1.6 1.6 0 0 0 0 2.3l1.3 1.3a1.6 1.6 0 0 0 2.3 0l8-8" />
+          <path d="m15.4 4.4 1.6-1.6M20.6 8.6l.9-.9" />
+        </g>
+      </symbol>
+      <symbol id="i-book" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 5.6c3.2-1.2 6.2-.9 9 1.2 2.8-2.1 5.8-2.4 9-1.2v13c-3.2-1.2-6.2-.9-9 1.2-2.8-2.1-5.8-2.4-9-1.2Z" />
+          <path d="M12 6.8v13" />
+        </g>
+      </symbol>
+      <symbol id="i-shop" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4.5 4.5h15L21 9a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0Z" />
+          <path d="M5 11.8V20h14v-8.2M10 20v-4.5h4V20" />
+        </g>
+      </symbol>
+      <symbol id="i-trade" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 8.5h14.5M15 4.5l4 4-4 4" />
+          <path d="M20 15.5H5.5M9 11.5l-4 4 4 4" />
+        </g>
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="m6.5 6.5 11 11m0-11-11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </symbol>
+    </svg>
+
+    <!-- 3D 장면: 하늘, 떠 있는 섬과 성, 대리석 테라스, 마법진, 카드 다섯 장, 빛 기둥 -->
+    <canvas id="stage" aria-hidden="true"></canvas>
+    <div class="veil" aria-hidden="true"></div>
+
+    <!-- 위쪽: 뒤로가기와 제목, 골드, 확률 -->
+    <header class="top">
+      <a class="back" href="index.html" aria-label="타이틀 화면으로">
+        <svg class="icon"><use href="#i-back" /></svg>
+      </a>
+      <h1 class="top__title">뽑기</h1>
+      <span class="top__rule" aria-hidden="true"></span>
+
+      <div class="top__right">
+        <p class="gold" aria-live="polite">
+          <svg class="icon icon--color"><use href="#i-coin" /></svg>
+          <span class="gold__value" id="goldValue">-</span>
+          <span class="gold__unit">골드</span>
+        </p>
+        <button class="chip" type="button" popovertarget="rates" aria-label="뽑기 확률 보기">
+          <svg class="icon"><use href="#i-spark" /></svg>
+          <span class="chip__text">확률</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 확률 창: 값은 db/gameData.json의 grades와 같다 -->
+    <section class="rates" id="rates" popover aria-labelledby="ratesTitle">
+      <h2 class="rates__title" id="ratesTitle">뽑기 확률</h2>
+      <ol class="rates__list">
+        <li style="--c: var(--g1)"><span class="rates__name">1등급 <b>일반</b></span><span class="rates__pct">60%</span></li>
+        <li style="--c: var(--g2)"><span class="rates__name">2등급 <b>고급</b></span><span class="rates__pct">25%</span></li>
+        <li style="--c: var(--g3)"><span class="rates__name">3등급 <b>희귀</b></span><span class="rates__pct">10%</span></li>
+        <li style="--c: var(--g4)"><span class="rates__name">4등급 <b>영웅</b></span><span class="rates__pct">4%</span></li>
+        <li style="--c: var(--g5)"><span class="rates__name">5등급 <b>전설</b></span><span class="rates__pct">1%</span></li>
+      </ol>
+      <p class="rates__note">한 번 뽑을 때마다 검 한 자루를 얻어요.</p>
+      <button class="rates__close" type="button" popovertarget="rates" popovertargetaction="hide" aria-label="확률 창 닫기">
+        <svg class="icon"><use href="#i-close" /></svg>
+      </button>
+    </section>
+
+    <!-- 아래 왼쪽: 다른 기능으로 가는 메뉴 -->
+    <nav class="dock" aria-label="공방 메뉴">
+      <a class="dock__item" href="#" data-soon="강화는 아직 준비 중이에요">
+        <svg class="icon"><use href="#i-hammer" /></svg>
+        <span>강화</span>
+      </a>
+      <a class="dock__item" href="#" data-soon="도감은 아직 준비 중이에요">
+        <svg class="icon"><use href="#i-book" /></svg>
+        <span>도감</span>
+      </a>
+      <a class="dock__item" href="#" data-soon="상점은 아직 준비 중이에요">
+        <svg class="icon"><use href="#i-shop" /></svg>
+        <span>상점</span>
+      </a>
+      <a class="dock__item" href="#" data-soon="거래소는 아직 준비 중이에요">
+        <svg class="icon"><use href="#i-trade" /></svg>
+        <span>거래소</span>
+      </a>
+    </nav>
+
+    <!-- 아래 오른쪽: 주 버튼 (가격은 임시 값) -->
+    <button class="draw" id="drawButton" type="button">
+      <span class="draw__label">
+        <svg class="icon icon--color"><use href="#i-card" /></svg>
+        <span class="draw__text" id="drawText">1회 뽑기</span>
+      </span>
+      <span class="draw__cost">
+        <svg class="icon icon--color"><use href="#i-coin" /></svg>
+        <span>1,000</span>
+        <span class="sr-only">골드</span>
+      </span>
+    </button>
+
+    <p class="toast" id="toast" role="status"></p>
+  </body>
+</html>

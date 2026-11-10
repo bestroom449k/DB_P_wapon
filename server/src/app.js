@@ -6,7 +6,7 @@ import express from 'express';
 import session from 'express-session';
 import { fileURLToPath } from 'node:url';
 import { pool } from './db.js';
-import authRouter from './routes/auth.js';
+import authRouter, { SESSION_COOKIE } from './routes/auth.js';
 
 if (!process.env.SESSION_SECRET || !process.env.DB_USER) {
   console.error('server/.env 파일이 없거나 비어 있어요. .env.example을 복사해 .env를 만들고 값을 채워 주세요.');
@@ -16,9 +16,10 @@ if (!process.env.SESSION_SECRET || !process.env.DB_USER) {
 const app = express();
 const frontendDir = fileURLToPath(new URL('../../frontend', import.meta.url)); // 화면 파일 위치
 
+app.use(express.static(frontendDir)); // 화면 (먼저 처리해서 화면 파일 요청은 아래 세션 처리를 거치지 않음)
 app.use(express.json({ limit: '10kb' })); // 요청 본문(JSON) 읽기
 app.use(session({ // 로그인 유지
-  name: 'wg.sid', // 쿠키 이름
+  name: SESSION_COOKIE, // 쿠키 이름
   secret: process.env.SESSION_SECRET, // 쿠키 위조 방지용 비밀 값
   resave: false, // 바뀐 것이 없으면 다시 저장하지 않음
   saveUninitialized: false, // 로그인 전에는 세션을 만들지 않음
@@ -26,7 +27,6 @@ app.use(session({ // 로그인 유지
 }));
 
 app.use('/api/auth', authRouter); // 회원 API
-app.use(express.static(frontendDir)); // 화면
 
 app.use((err, req, res, next) => { // 처리 중 오류
   if (err.type === 'entity.parse.failed') return res.status(400).json({ message: '요청 형식이 올바르지 않아요' });

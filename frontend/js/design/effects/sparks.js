@@ -3,6 +3,7 @@
 // 불꽃 하나하나는 중력과 공기 저항을 받으며 떨어지다 사라진다.
 import * as THREE from 'three';
 import { SWORD_Y } from '../objects/sword.js';
+import { GLOW } from '../shared/materials.js';
 
 const COUNT = 900; // 한꺼번에 날 수 있는 불꽃 수
 const WHITE = new THREE.Color(1, 1, 1); // 흰빛 (불꽃 색을 섞을 때)
@@ -32,7 +33,7 @@ const fragmentShader = /* glsl */ ` // 불꽃 색 셰이더 (가운데가 뜨거
   }
 `;
 
-export function create({ scene }) { // 불꽃 만들기
+export function create({ scene, renderer }) { // 불꽃 만들기
   const position = new Float32Array(COUNT * 3); // 위치
   const velocity = new Float32Array(COUNT * 3); // 속도
   const color = new Float32Array(COUNT * 3); // 색
@@ -48,18 +49,17 @@ export function create({ scene }) { // 불꽃 만들기
   geometry.setAttribute('aAlpha', attribute(alpha, 1));
   geometry.setAttribute('aSize', attribute(size, 1));
   const points = new THREE.Points(geometry, new THREE.ShaderMaterial({ // 불꽃 (빛을 더하듯 그려짐)
-    uniforms: { uPixelRatio: { value: Math.min(devicePixelRatio, 1.75) } },
+    ...GLOW,
+    uniforms: { uPixelRatio: { value: renderer.getPixelRatio() } }, // 선명도는 stage.js에서 정한 값
     vertexShader,
     fragmentShader,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
   }));
   points.frustumCulled = false;
   scene.add(points);
 
   let next = 0; // 다음에 쓸 불꽃 번호 (다 쓰면 처음부터 다시)
   let armed = true; // 한 번 터진 뒤 --pulse가 잦아들어야 다시 터질 수 있다
+  let activeUntil = 0; // 마지막 불꽃이 다 사라지는 시각 (그 뒤로는 계산을 쉰다)
   const tint = new THREE.Color(); // 불꽃 하나의 색
 
   function burst(light, amount, power) { // 불꽃 터뜨리기
@@ -80,8 +80,11 @@ export function create({ scene }) { // 불꽃 만들기
     if (s.pulse > 0.6 && armed) { // 내려치는 순간 감지
       const finale = s.pulse > 1.1; // 5등급 순간에는 더 크게
       burst(s.light, finale ? 200 : 50 + s.level * 10, finale ? 1.6 : 1);
+      activeUntil = t + 1.6; // 가장 오래 사는 불꽃(1.55초)이 사라질 때까지
     }
     armed = s.pulse < 0.3;
+    points.visible = t < activeUntil; // 날아다니는 불꽃이 없으면 그리지도 계산하지도 않음
+    if (!points.visible) return;
 
     const drag = Math.max(0, 1 - 1.8 * dt); // 공기 저항
     for (let i = 0; i < COUNT; i++) { // 불꽃 하나씩 움직이기

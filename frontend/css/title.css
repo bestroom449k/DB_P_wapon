@@ -2,7 +2,7 @@
    다섯 빛 공방 - 타이틀 화면의 글자와 메뉴 (강화 타임라인은 timeline.css, 3D 장면은 js/). 이 파일은 JS 없이 동작한다.
    - 로딩 → 제목 등장 → "공방 문 열기" → 메뉴: 시간차 애니메이션
    - 공방 문 열기: 숨은 라디오 버튼(#gate)의 :checked
-   - 준비 중 알림, 작별 화면: 주소의 #해시를 쓰는 :target
+   - 로그인·회원가입 창, 알림, 작별 화면: 주소의 #해시를 쓰는 :target (키보드로 쓸 때의 보조는 js/function/menu.js)
    - 강화 등급 표시: timeline.css의 강화 타임라인이 바꾸는 --level, --grade, --grade-name을 따라간다
    ========================================================= */
 
@@ -71,11 +71,6 @@ body {
 a {
   color: inherit;
   text-decoration: none;
-}
-
-button {
-  font: inherit;
-  color: inherit;
 }
 
 
@@ -152,7 +147,7 @@ button {
   pointer-events: none;
 }
 
-.hud :is(a, button, label) {
+.hud :is(a, label) {
   pointer-events: auto;
 }
 
@@ -296,6 +291,12 @@ button {
 
 .menu__item:nth-child(2) { --i: 1; }
 .menu__item:nth-child(3) { --i: 2; }
+.menu__item:nth-child(4) { --i: 3; }
+
+/* 로그인 전에만 보이는 메뉴 ("로그인") */
+:root[data-auth='in'] .menu__item--guest {
+  display: none;
+}
 
 .gate:checked ~ .hud .menu__item {
   animation: item-in 0.75s var(--ease-out) calc(0.3s + var(--i, 0) * 70ms) backwards;
@@ -321,8 +322,10 @@ button {
   transition: opacity 0.3s, transform 0.45s var(--ease-out), background-color 0.6s;
 }
 
-/* 마우스를 올리거나 Tab으로 고른 항목. 아무것도 고르지 않았으면 첫 항목 */
-.menu__item:is(:hover, :focus-visible),
+/* 고른 항목: 마우스를 올린 항목, 마우스가 없으면 포커스가 있는 항목, 둘 다 없으면 첫 항목
+   (공방 문을 열면 js/function/menu.js가 "게임 시작"에 포커스를 줘서 Enter로 바로 고를 수 있다) */
+.menu__item:hover,
+.menu:not(:hover) .menu__item:focus,
 .menu:not(:hover, :focus-within) .menu__item:first-child {
   opacity: 1;
   transform: translateX(10px);
@@ -330,43 +333,51 @@ button {
   outline: none;
 }
 
-.menu__item:is(:hover, :focus-visible)::before,
+.menu__item:hover::before,
+.menu:not(:hover) .menu__item:focus::before,
 .menu:not(:hover, :focus-within) .menu__item:first-child::before {
   opacity: 1;
   transform: translate(0, -50%);
 }
 
-/* ---------- 강화 시연 표시 (오른쪽 아래) ---------- */
+/* 키보드로 고른 항목에는 밑줄도 (커서 색은 등급 따라 바뀌지만, 밑줄은 늘 같은 등불 색) */
+.menu__item:focus-visible {
+  text-decoration: underline 1px var(--lamp);
+  text-underline-offset: 8px;
+}
+
+/* ---------- 강화 시연 표시 (검 바로 아래, 제단 앞의 명판) ---------- */
 
 .forge {
   position: absolute;
-  right: var(--gutter);
-  bottom: calc(var(--gutter) + 44px);
+  left: 66%; /* 검이 서 있는 자리 (js/function/stage.js가 넓은 화면에서 검을 약 66%에 둔다) */
+  bottom: calc(var(--gutter) * 0.5);
+  translate: -50% 0;
   display: grid;
-  grid-template-columns: auto auto;
-  grid-template-areas:
-    'pips pips'
-    'num name';
-  justify-content: end;
+  grid-template-columns: auto auto auto;
+  grid-template-areas: 'pips num name';
   align-items: baseline;
-  gap: 0.75rem 0.6rem;
+  gap: 1.1rem;
+  padding: 0.9rem 2.6rem;
+  background: radial-gradient(closest-side, rgba(6, 8, 22, 0.88) 40%, transparent); /* 제단 위에서도 글자가 읽히게 뒤를 어둡게 */
   font-family: var(--font-display);
+  white-space: nowrap;
   animation: appear 1.2s ease-out calc(var(--intro) + 1.7s) backwards;
 }
 
 .pips {
   grid-area: pips;
-  justify-self: end;
+  align-self: center;
   display: flex;
-  gap: 13px;
+  gap: 10px;
 }
 
 /* 지금 등급(--level)까지 칸이 채워진다. --at은 그 칸이 채워지는 순간(강화 타임라인 기준) */
 .pips i {
   --lit: clamp(0, var(--level) - var(--n) + 1, 1);
-  width: 8px;
-  height: 8px;
-  margin: 2px;
+  width: 13px;
+  height: 13px;
+  margin: 3px;
   rotate: 45deg;
   border: 1px solid color-mix(in srgb, var(--c) 65%, transparent);
   background: color-mix(in srgb, var(--c) calc(var(--lit) * 100%), transparent);
@@ -374,11 +385,12 @@ button {
   animation: pip-pop var(--cycle) linear calc(var(--cycle-start) + var(--at)) infinite;
 }
 
-.pips i:nth-child(1) { --c: var(--g1); --n: 1; --at: 13.6s; }
-.pips i:nth-child(2) { --c: var(--g2); --n: 2; --at: 1.6s; }
-.pips i:nth-child(3) { --c: var(--g3); --n: 3; --at: 4s; }
-.pips i:nth-child(4) { --c: var(--g4); --n: 4; --at: 6.4s; }
-.pips i:nth-child(5) { --c: var(--g5); --n: 5; --at: 8.8s; }
+/* --at: 그 등급이 되는 순간 (timeline.css forge-cycle의 85%, 10%, 25%, 40%, 55%) */
+.pips i:nth-child(1) { --c: var(--g1); --n: 1; --at: calc(var(--cycle) * 0.85); }
+.pips i:nth-child(2) { --c: var(--g2); --n: 2; --at: calc(var(--cycle) * 0.1); }
+.pips i:nth-child(3) { --c: var(--g3); --n: 3; --at: calc(var(--cycle) * 0.25); }
+.pips i:nth-child(4) { --c: var(--g4); --n: 4; --at: calc(var(--cycle) * 0.4); }
+.pips i:nth-child(5) { --c: var(--g5); --n: 5; --at: calc(var(--cycle) * 0.55); }
 
 /* 방금 채워진 칸이 톡 튀어 오른다 */
 @keyframes pip-pop {
@@ -389,23 +401,31 @@ button {
 .forge::before {
   content: var(--grade-num);
   grid-area: num;
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: var(--mist);
+  text-shadow: 0 1px 8px rgba(4, 5, 18, 0.9);
 }
 
 .forge::after {
   content: var(--grade-name);
   grid-area: name;
-  font-size: 1.5rem;
+  font-size: clamp(1.75rem, 2.2vw, 2.4rem);
+  line-height: 1;
   color: var(--grade);
-  text-shadow: 0 0 14px color-mix(in srgb, var(--grade) 60%, transparent);
+  text-shadow:
+    0 1px 10px rgba(4, 5, 18, 0.9),
+    0 0 14px color-mix(in srgb, var(--grade) 50%, transparent);
+  transform-origin: 0 60%; /* 커질 때 왼쪽 끝은 제자리 */
   animation: name-pop var(--cycle) linear var(--cycle-start) infinite;
 }
 
-/* 등급이 바뀌는 순간(10%, 25%, 40%, 55%, 85%)마다 이름이 아래에서 올라온다 */
+/* 내려치는 순간(10%, 25%, 40%, 55%) 새 등급 이름이 크게 찍혔다가 제자리를 잡는다.
+   85%(완성된 검이 올라가고 새 검이 올 때)에는 조용히 사라졌다 나타난다 */
 @keyframes name-pop {
-  0%, 9.99%, 12.8%, 24.99%, 27.8%, 39.99%, 42.8%, 54.99%, 57.8%, 84.99%, 87.8%, 100% { opacity: 1; translate: 0 0; }
-  10%, 25%, 40%, 55%, 85% { opacity: 0; translate: 0 8px; }
+  0%, 9.99%, 12.8%, 24.99%, 27.8%, 39.99%, 42.8%, 54.99%, 57.8%, 100% { scale: 1; }
+  10%, 25%, 40%, 55% { scale: 1.32; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+  84.99%, 88.5% { opacity: 1; }
+  85% { opacity: 0; }
 }
 
 /* ---------- 아래쪽 ---------- */
@@ -445,16 +465,6 @@ kbd {
   color: var(--moon);
 }
 
-.build {
-  grid-area: foot;
-  justify-self: end;
-  align-self: end;
-  margin: 0;
-  font-size: 0.875rem;
-  color: rgba(169, 175, 219, 0.75);
-  animation: appear 1.2s ease-out calc(var(--intro) + 1.7s) backwards;
-}
-
 /* ---------- 버튼 (로그인, 회원가입, 작별 화면) ---------- */
 
 .btn {
@@ -490,6 +500,23 @@ kbd {
 
 /* ---------- 로그인, 회원가입 창 (주소 뒤 #login, #signup일 때 열린다 = :target) ---------- */
 
+/* 창 뒤를 덮는 어두운 막. 이 막도 href="#" 링크라서 누르면 창이 닫히고, 뒤의 메뉴는 눌리지 않는다 */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  background: rgba(4, 5, 18, 0.55);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.22s ease-in, visibility 0s 0.22s;
+}
+
+:root:has(.panel:target) .scrim {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.35s ease-out, visibility 0s;
+}
+
 .panel {
   position: fixed;
   inset: 0;
@@ -503,9 +530,7 @@ kbd {
   border: 1px solid rgba(169, 175, 219, 0.24);
   border-radius: 18px;
   background: var(--night-1);
-  box-shadow:
-    0 30px 80px -24px rgba(0, 0, 0, 0.75),
-    0 0 0 100vmax rgba(4, 5, 18, 0.55); /* 두 번째 그림자가 뒤 화면을 어둡게 덮는 막이 된다 */
+  box-shadow: 0 30px 80px -24px rgba(0, 0, 0, 0.75);
   visibility: hidden;
   opacity: 0;
   transform: translateY(18px) scale(0.98);
@@ -711,7 +736,8 @@ kbd {
     padding-left: 0;
   }
 
-  .menu__item:is(:hover, :focus-visible),
+  .menu__item:hover,
+  .menu:not(:hover) .menu__item:focus,
   .menu:not(:hover, :focus-within) .menu__item:first-child {
     transform: none;
   }
@@ -724,12 +750,10 @@ kbd {
   .forge {
     grid-area: forge;
     position: static;
+    translate: none;
     justify-self: center;
-    margin-bottom: 1rem;
-  }
-
-  .build {
-    justify-self: center;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1.6rem;
   }
 }
 

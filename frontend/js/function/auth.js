@@ -1,7 +1,7 @@
 // 회원가입, 로그인 기능
 //   폼에 적은 값을 서버(server/src/routes/auth.js)로 보내고 결과에 따라 화면을 바꾼다.
-//   로그인하면 메뉴가 "게임 시작 → 공방 입장", "회원가입 → 로그아웃"으로 바뀌고, 왼쪽 위에 닉네임과 골드가 보인다.
-//   창을 열고 닫는 것은 CSS(:target)가 맡고, 이 파일은 서버와 주고받는 일만 한다.
+//   로그인하면 "게임 시작"은 공방 입장(#play)으로 이어지고, "회원가입"은 "로그아웃"으로 바뀌며, 왼쪽 위에 닉네임과 골드가 보인다.
+//   창을 열고 닫는 것은 CSS(:target), 키보드 동작은 menu.js가 맡고, 이 파일은 서버와 주고받는 일만 한다.
 
 const root = document.documentElement;
 const player = document.getElementById('player'); // 왼쪽 위 회원 표시
@@ -31,7 +31,7 @@ function showUser(user) { // 로그인 상태를 화면에 반영 (user가 null�
   root.dataset.auth = user ? 'in' : 'out';
   player.textContent = user ? `${user.nickname}님, ${Number(user.gold).toLocaleString('ko-KR')} 골드` : '';
   menuStart.href = user ? '#play' : '#login';
-  menuAccount.href = user ? '#logout' : '#signup';
+  menuAccount.href = user ? '#logged-out' : '#signup'; // 로그아웃을 누르면 "로그아웃했어요" 알림이 바로 뜬다 (CSS :target)
   menuAccount.textContent = user ? '로그아웃' : '회원가입';
 }
 
@@ -86,21 +86,11 @@ for (const form of document.querySelectorAll('form[data-auth]')) { // 로그인 
   });
 }
 
-menuAccount.addEventListener('click', async (event) => { // "로그아웃"
+menuAccount.addEventListener('click', async () => { // "로그아웃"
   if (root.dataset.auth !== 'in') return; // 로그인 전에는 그냥 회원가입 창이 열린다
-  event.preventDefault();
   await request('logout', {}).catch(() => {});
   showUser(null);
-  location.hash = 'logged-out';
 });
-
-function focusOpenPanel() { // 창이 열리면 첫 입력칸에 바로 쓸 수 있게
-  const panel = document.querySelector('.panel:target');
-  for (const message of document.querySelectorAll('.form__error')) message.textContent = '';
-  panel?.querySelector('input')?.focus({ preventScroll: true });
-}
-addEventListener('hashchange', focusOpenPanel);
-focusOpenPanel();
 
 request('me') // 새로고침해도 로그인 상태 이어 가기
   .then(({ user }) => showUser(user))

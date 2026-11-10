@@ -1,3 +1,6 @@
 .claude/
 node_modules/
 server/.env
+LIBRARIES.md
+PRODUCT.md
+.impeccable/

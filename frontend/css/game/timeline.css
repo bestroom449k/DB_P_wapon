@@ -1,0 +1,40 @@
+/* =========================================================
+   게임 화면 - 뽑기 연출 타임라인
+   "1회 뽑기"를 누르면 js/game/function/hud.js가 <html>에 is-drawing을 붙이고, 아래 draw-cycle이 한 번 돈다.
+     --charge: 기 모으기 (0 → 1 → 0). 고리가 빨라지고, 옆 카드가 모이고, 가운데 카드가 떠올라 돈다
+     --flash:  번쩍임 (기가 다 모인 순간 1, 곧 0으로)
+   3D 장면(js/game/function/timeline.js)은 이 값만 읽어서 움직인다. 타이틀 화면의 css/timeline.css와 같은 방식.
+   ========================================================= */
+
+@property --charge { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --flash { syntax: '<number>'; inherits: false; initial-value: 0; }
+
+:root.is-drawing {
+  animation: draw-cycle 3.2s linear;
+}
+
+/* 0~58% 기 모으기 (점점 빠르게), 60% 번쩍, 62~100% 제자리로 */
+@keyframes draw-cycle {
+  0% { --charge: 0; animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6); }
+  58% { --charge: 1; }
+  66% { --charge: 0.85; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+  100% { --charge: 0; }
+
+  0%, 56% { --flash: 0; }
+  60%, 62% { --flash: 1; }
+  68% { --flash: 0.55; }
+  78% { --flash: 0.15; }
+  90%, 100% { --flash: 0; }
+}
+
+/* 움직임 줄이기: 기 모으기 없이 짧게 빛나기만 한다 */
+@media (prefers-reduced-motion: reduce) {
+  :root.is-drawing {
+    animation: draw-still 1s linear;
+  }
+
+  @keyframes draw-still {
+    0%, 100% { --flash: 0; }
+    20% { --flash: 0.6; }
+  }
+}

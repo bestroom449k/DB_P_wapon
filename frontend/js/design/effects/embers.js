@@ -1,6 +1,7 @@
 // 떠오르는 불씨와 반딧불: 점 560개를 셰이더 안에서 위로 흘려보낸다 (CPU 계산 없음).
 // 각 점은 높이가 끝까지 올라가면 아래에서 다시 시작하고, 깜빡이며 좌우로 흔들린다.
 import * as THREE from 'three';
+import { GLOW } from '../shared/materials.js';
 
 const COUNT = 560; // 불씨 개수
 const PALETTE = [0xffb35a, 0xffd28a, 0xffc06b, 0xd8ff9a, 0xc8a6ff].map((c) => new THREE.Color(c)); // 불씨 색 (호박색, 금색, 연두, 보라)
@@ -38,7 +39,7 @@ const fragmentShader = /* glsl */ ` // 불씨 색 셰이더 (둥글고 부드러
   }
 `;
 
-export function create({ scene }) { // 불씨 만들기
+export function create({ scene, renderer }) { // 불씨 만들기
   const position = new Float32Array(COUNT * 3); // 처음 위치
   const color = new Float32Array(COUNT * 3); // 색
   const seed = new Float32Array(COUNT); // 저마다 다른 속도와 깜빡임
@@ -55,8 +56,8 @@ export function create({ scene }) { // 불씨 만들기
   geometry.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
   geometry.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
 
-  const uniforms = { uTime: { value: 0 }, uPixelRatio: { value: Math.min(devicePixelRatio, 1.75) } }; // 셰이더에 넘길 값
-  const points = new THREE.Points(geometry, new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); // 불씨 (빛을 더하듯 그려짐)
+  const uniforms = { uTime: { value: 0 }, uPixelRatio: { value: renderer.getPixelRatio() } }; // 셰이더에 넘길 값 (선명도는 stage.js에서 정한 값)
+  const points = new THREE.Points(geometry, new THREE.ShaderMaterial({ ...GLOW, uniforms, vertexShader, fragmentShader })); // 불씨 (빛을 더하듯 그려짐)
   points.frustumCulled = false;
   scene.add(points);
 

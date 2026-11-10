@@ -1,0 +1,185 @@
+/* =========================================================
+   다섯 빛 공방 - 게임 화면 기본: 색, 글꼴, 아이콘, 장면 위 빛 막, 알림
+   위쪽 막대는 hud.css, 아래쪽 메뉴와 뽑기 버튼은 actions.css, 뽑기 연출 타임라인은 timeline.css.
+   ========================================================= */
+
+:root {
+  /* 낮 하늘 (3D 하늘 js/game/design/background/sky.js와 같은 색) */
+  --sky-top: #3a66d4;
+  --sky-mid: #79a3ee;
+  --sky-low: #d4e5fb;
+
+  /* 버튼 판: 크림에서 연분홍으로, 금색 가는 테두리 */
+  --cream: #fffaf2;
+  --blush: #f6d8dd;
+  --gold: #d6ad62;
+  --gold-hi: #f7e1a6;
+  --gold-deep: #a47a36;
+
+  /* 글자: 남보라 (크림 판 위), 흰색 (하늘 위, 남색 띠를 깔고) */
+  --ink: #36316a;
+  --ink-soft: #625c95;
+  --navy: rgba(26, 36, 104, 0.52); /* 하늘 위 글자 뒤에 까는 반투명 남색 */
+  --navy-line: rgba(255, 255, 255, 0.42);
+  --lilac: #c7c0ff;
+
+  /* 무기 등급 5단계의 색 (타이틀 화면 css/title.css의 --g1~--g5와 같은 값) */
+  --g1: #8d93a6;
+  --g2: #d08c4a;
+  --g3: #46d9a0;
+  --g4: #a477ff;
+  --g5: #fff1cf;
+
+  --font-display: 'Diphylleia', 'Noto Serif KR', serif;
+  --font-ui: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --gutter: clamp(16px, 2.4vw, 40px);
+
+  /* 네 갈래 별 (가장자리 장식에 mask로 쓴다) */
+  --i-spark: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 1.5c.5 5.6 2.9 8 8.5 10.5-5.6 2.5-8 4.9-8.5 10.5-.5-5.6-2.9-8-8.5-10.5C9.1 9.5 11.5 7.1 12 1.5Z'/></svg>");
+
+  color-scheme: light;
+}
+
+/* ---------- 기본 ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  /* 3D 장면이 뜨기 전(또는 WebGL을 못 쓸 때)에도 하늘이 보이게 */
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 42%, var(--sky-low) 72%, #e9eefb 100%);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: var(--lilac);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgba(54, 49, 106, 0.55);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* 아이콘 묶음 자체는 보이지 않는다 */
+.icons {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.icon {
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+}
+
+/* ---------- 3D 장면 ---------- */
+
+#stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* 들어올 때 하얀 빛이 걷히며 장면이 드러난다 */
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: radial-gradient(ellipse at 50% 45%, #ffffff 0%, #f1f3ff 60%, #dfe7fb 100%);
+  pointer-events: none;
+  animation: veil-lift 1.6s var(--ease-out) 0.25s forwards;
+}
+
+@keyframes veil-lift {
+  to { opacity: 0; visibility: hidden; }
+}
+
+/* ---------- 알림 ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--gutter) + 104px);
+  z-index: 40;
+  max-width: calc(100vw - 32px);
+  margin: 0;
+  padding: 0.75rem 1.4rem;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--cream), #fbeaea);
+  box-shadow: 0 12px 28px -12px rgba(40, 40, 110, 0.5);
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.4;
+  text-align: center;
+  translate: -50% 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.toast.is-shown {
+  animation: toast 3s var(--ease-out) forwards;
+}
+
+@keyframes toast {
+  0% { opacity: 0; visibility: visible; transform: translateY(10px); }
+  12% { opacity: 1; transform: none; }
+  84% { opacity: 1; visibility: visible; transform: none; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+/* ---------- 움직임 줄이기 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .veil {
+    animation-duration: 0.3s;
+    animation-delay: 0s;
+  }
+
+  .toast.is-shown {
+    animation-name: toast-still;
+  }
+
+  @keyframes toast-still {
+    0%, 90% { opacity: 1; visibility: visible; }
+    100% { opacity: 0; visibility: hidden; }
+  }
+}

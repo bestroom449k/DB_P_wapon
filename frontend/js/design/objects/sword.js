@@ -1,7 +1,9 @@
 // 검: 코드로 깎은 칼날, 등급 색으로 빛나는 혈조(칼날의 홈)와 보석, 놋쇠 가드와 폼멜.
 // 기를 모을 때 떠오르고, 내려치는 순간 가라앉고, 5등급에서는 높이 떠 한 바퀴 돈다.
+// 다 만든 검은 빛 기둥을 타고 위로 올라가 보관되고(--reforge), 새 무쇠 검이 위에서 내려온다.
 import * as THREE from 'three';
 import { glowTexture } from '../shared/textures.js';
+import { GLOW } from '../shared/materials.js';
 
 export const SWORD_Y = 0.25; // 검 가운데 높이
 
@@ -56,12 +58,14 @@ export function create({ scene }) { // 검 만들기
   // 가드, 가운데 장식, 앞뒤 보석
   part(new THREE.ExtrudeGeometry(guardShape(), { depth: 0.1, bevelThickness: 0.025, bevelSize: 0.02, bevelSegments: 3 }), brass, 0, 0, -0.05); // 가드
   part(new THREE.SphereGeometry(0.17, 32, 20), brass).scale.set(1, 0.78, 0.62); // 가드 가운데 장식
-  for (const z of [0.1, -0.1]) part(new THREE.OctahedronGeometry(0.075), gem, 0, 0, z).scale.set(1, 1.35, 0.55); // 보석 (앞뒤)
+  const gemShape = new THREE.OctahedronGeometry(0.075); // 보석 모양 (앞뒤가 같이 씀)
+  for (const z of [0.1, -0.1]) part(gemShape, gem, 0, 0, z).scale.set(1, 1.35, 0.55); // 보석 (앞뒤)
 
   // 손잡이와 가죽 감개, 폼멜
   part(new THREE.CylinderGeometry(0.058, 0.066, 0.7, 24), leather, 0, 0.43); // 손잡이
+  const wrapShape = new THREE.TorusGeometry(0.064, 0.011, 8, 32); // 감개 모양 (7줄이 같이 씀)
   for (let i = 0; i < 7; i++) {
-    part(new THREE.TorusGeometry(0.064, 0.011, 8, 32), leather, 0, 0.14 + i * 0.096).rotation.set(Math.PI / 2, i % 2 ? 0.22 : -0.22, 0);
+    part(wrapShape, leather, 0, 0.14 + i * 0.096).rotation.set(Math.PI / 2, i % 2 ? 0.22 : -0.22, 0);
   } // 손잡이 가죽 감개 7줄
   part(new THREE.SphereGeometry(0.105, 32, 20), brass, 0, 0.9).scale.set(1, 0.9, 0.75); // 폼멜 (손잡이 끝 둥근 장식)
   part(new THREE.ConeGeometry(0.034, 0.1, 16), brass, 0, 1.03); // 폼멜 꼭지
@@ -72,12 +76,13 @@ export function create({ scene }) { // 검 만들기
   sword.scale.setScalar(1.1); // 크기
   scene.add(sword);
 
-  const aura = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), blending: THREE.AdditiveBlending, depthWrite: false })); // 검 뒤의 후광
+  const aura = new THREE.Sprite(new THREE.SpriteMaterial({ ...GLOW, map: glowTexture() })); // 검 뒤의 후광
   aura.scale.setScalar(6.5);
   scene.add(aura);
 
   return (s, t) => { // 매 프레임: 검
-    sword.position.y = SWORD_Y + Math.sin(t * 0.9) * 0.07 + s.charge * 0.22 - s.pulse * 0.1 + s.finale * 0.3; // 높이 (둥실 + 기 모으기 + 내려치기 + 5등급)
+    const away = THREE.MathUtils.smoothstep(s.reforge, 0, 1) * 7; // 화면 위로 올라간 거리 (완성된 검 보관 → 새 검 등장)
+    sword.position.y = SWORD_Y + Math.sin(t * 0.9) * 0.07 + s.charge * 0.22 - s.pulse * 0.1 + s.finale * 0.3 + away; // 높이 (둥실 + 기 모으기 + 내려치기 + 5등급 + 보관)
     sword.rotation.y = t * 0.32 + s.spin * Math.PI * 2; // 회전 (천천히 + 5등급 한 바퀴)
     sword.rotation.z = Math.sin(t * 0.5) * 0.035; // 살짝 기우뚱
     inlay.color.copy(s.light).multiplyScalar(2.2 - s.charge * 0.9 + s.pulse * 0.8); // 혈조 빛

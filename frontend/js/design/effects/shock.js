@@ -3,14 +3,9 @@
 import * as THREE from 'three';
 import { SWORD_Y } from '../objects/sword.js';
 import { ISLAND_TOP } from '../objects/island.js';
-
-const vertexShader = /* glsl */ ` // 충격파 판 셰이더 (UV 전달)
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
+import { FLAT_TILT } from '../objects/rings.js';
+import { UV_VERTEX as vertexShader } from '../shared/glsl.js'; // 충격파 판 셰이더는 공용 (UV 전달)
+import { GLOW } from '../shared/materials.js';
 
 // 평면 위에 테두리가 부드러운 고리 하나를 그린다
 const fragmentShader = /* glsl */ ` // 충격파 고리 셰이더
@@ -31,14 +26,14 @@ export function create({ scene }) { // 충격파 만들기
     const uniforms = { uColor: { value: new THREE.Color() }, uOpacity: { value: 0 }, uWidth: { value: width } };
     const mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(1, 1),
-      new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }),
+      new THREE.ShaderMaterial({ ...GLOW, uniforms, vertexShader, fragmentShader, side: THREE.DoubleSide }),
     );
     mesh.position.y = y;
     mesh.rotation.x = tilt;
     scene.add(mesh);
     return { mesh, uniforms, size };
   };
-  const waves = [wave(SWORD_Y, Math.PI / 2 + 0.38, 0.03, 6.4), wave(ISLAND_TOP + 0.03, -Math.PI / 2, 0.035, 5.6)]; // 공중 충격파, 바닥 충격파
+  const waves = [wave(SWORD_Y, FLAT_TILT, 0.03, 6.4), wave(ISLAND_TOP + 0.03, -Math.PI / 2, 0.035, 5.6)]; // 공중 충격파 (고리가 정렬되는 면), 바닥 충격파
 
   return (s) => { // 매 프레임: 충격파
     const bigger = 1 + s.finale * 0.6; // 5등급에서는 더 크게
