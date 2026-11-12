@@ -8,7 +8,7 @@ const ISLANDS = [
   [-30, 12, -52, 4.2, 1], // 왼쪽 위 큰 섬
   [-19, 5.5, -40, 2.4, 2], // 왼쪽 가운데
   [-42, 4, -78, 3.6, 3], // 왼쪽 멀리
-  [-26, 19, -92, 1.8, 4], // 위쪽 작은 섬
+  [-44, 26, -105, 2.2, 4], // 왼쪽 위 작은 섬
   [52, 16, -120, 3, 5], // 오른쪽 성 너머
 ];
 
@@ -35,7 +35,7 @@ export function island(size, seed) { // 섬 하나 만들기 (성도 이 섬 위
     tree.add(trunk);
     for (let k = 0; k < 3; k++) { // 둥근 잎 덩어리 세 개
       const r = size * (0.16 + rand() * 0.12);
-      const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 1), leaves[Math.floor(rand() * leaves.length)]);
+      const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 3), leaves[Math.floor(rand() * leaves.length)]);
       crown.position.set((rand() - 0.5) * r, h + (k - 0.6) * r * 0.7, (rand() - 0.5) * r);
       tree.add(crown);
     }

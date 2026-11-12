@@ -23,12 +23,14 @@ const fragmentShader = /* glsl */ ` // 하늘 색 셰이더 (하늘 색, 밝은 
     vec3 d = normalize(vDir);
     float h = d.y; // 위로 갈수록 1, 지평선이 0
 
-    vec3 col = mix(uLow, uMid, smoothstep(-0.02, 0.3, h));
-    col = mix(col, uTop, smoothstep(0.3, 0.95, h));
+    // 화면에 보이는 하늘은 지평선 위 20도 정도까지라서, 그 안에서 흰 하늘색 → 맑은 파랑이 다 드러나게 짧게 바꾼다
+    vec3 col = mix(uLow, uMid, smoothstep(-0.01, 0.11, h));
+    col = mix(col, uTop, smoothstep(0.12, 0.42, h));
     col = mix(col, uBelow, smoothstep(0.0, -0.1, h)); // 지평선 아래는 구름바다처럼 뿌옇게
 
-    float glow = pow(max(dot(d, normalize(vec3(0.0, 0.28, -1.0))), 0.0), 5.0); // 빛 기둥 쪽이 밝게
-    col = mix(col, vec3(0.92, 0.92, 1.0), glow * 0.35);
+    float side = atan(d.x, -d.z); // 빛 기둥(정면)에서 좌우로 벌어진 각도
+    float glow = exp(-side * side * 40.0) * smoothstep(-0.05, 0.2, h); // 빛 기둥 둘레 좁은 세로 띠만 밝게
+    col = mix(col, vec3(0.92, 0.92, 1.0), glow * 0.2);
 
     if (h > 0.03) { // 새털구름: 옆으로 길게 늘인 노이즈
       vec2 p = vec2(atan(d.x, -d.z) * 2.6, h * 5.0);
@@ -43,8 +45,8 @@ const fragmentShader = /* glsl */ ` // 하늘 색 셰이더 (하늘 색, 밝은 
 
 export function create({ scene, camera }) { // 하늘 만들기
   const uniforms = { // 셰이더에 넘길 값 (색은 css/game/base.css의 --sky-* 와 같다)
-    uTop: { value: new THREE.Color(0x3a66d4) },
-    uMid: { value: new THREE.Color(0x79a3ee) },
+    uTop: { value: new THREE.Color(0x3d6bd9) },
+    uMid: { value: new THREE.Color(0x6f9cf0) },
     uLow: { value: new THREE.Color(0xd4e5fb) },
     uBelow: { value: new THREE.Color(0xe9eefb) },
     uTime: { value: 0 },

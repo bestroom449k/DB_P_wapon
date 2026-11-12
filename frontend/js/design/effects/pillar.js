@@ -44,7 +44,7 @@ export function create({ scene }) { // 빛 기둥 만들기
     pillar.visible = s.finale > 0.002; // 5등급 때만 보이기
     uniforms.uTime.value = t; // 빛줄기가 흐르게
     uniforms.uColor.value.copy(s.light); // 무지갯빛
-    uniforms.uOpacity.value = s.finale * 0.25; // 나타났다 사라지기 (검을 가리지 않을 만큼만)
+    uniforms.uOpacity.value = s.finale * 0.25; // 나타났다 사라지기 (책을 가리지 않을 만큼만)
     const breathe = 1 + Math.sin(t * 9) * 0.04; // 굵기가 살짝 떨림
     pillar.scale.set(breathe, 1, breathe);
   };

@@ -22,7 +22,7 @@ export function create(canvas) { // 무대 만들기
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 400); // 카메라
   let distance = 11.5; // 카메라 거리
 
-  // 넓은 화면에서는 검을 오른쪽(약 66%)에 두고, 좁은 화면에서는 가운데에 두고 멀리서 본다
+  // 넓은 화면에서는 책을 오른쪽(약 66%)에 두고, 좁은 화면에서는 가운데에 두고 멀리서 본다
   function resize() { // 화면 크기 맞추기
     const aspect = innerWidth / innerHeight;
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75)); // 선명도 상한 (다른 부품은 renderer.getPixelRatio()로 읽음)
@@ -44,7 +44,7 @@ export function create(canvas) { // 무대 만들기
       Math.sin(t * 0.11) * 0.15 + intro * 3.4 + (Math.random() - 0.5) * shake, // 위아래
       distance + intro * 10 - s.push * 4.5, // 앞뒤 ("게임 시작" 줌 포함)
     );
-    camera.lookAt(0, 0.15 + intro * 1.2, 0); // 검 쪽 바라보기
+    camera.lookAt(0, 0.15 + intro * 1.2, 0); // 책 쪽 바라보기
   }
 
   return { renderer, scene, camera, update };

@@ -1,7 +1,7 @@
 // 강화 충격파: 내려치는 순간 고리가 정렬되는 면과 섬 바닥에서 빛 고리가 퍼진다.
 // 타임라인의 --burst(0→1)를 그대로 크기와 투명도로 쓴다.
 import * as THREE from 'three';
-import { SWORD_Y } from '../objects/sword.js';
+import { BOOK_Y } from '../objects/grimoire.js';
 import { ISLAND_TOP } from '../objects/island.js';
 import { FLAT_TILT } from '../objects/rings.js';
 import { UV_VERTEX as vertexShader } from '../shared/glsl.js'; // 충격파 판 셰이더는 공용 (UV 전달)
@@ -33,7 +33,7 @@ export function create({ scene }) { // 충격파 만들기
     scene.add(mesh);
     return { mesh, uniforms, size };
   };
-  const waves = [wave(SWORD_Y, FLAT_TILT, 0.03, 6.4), wave(ISLAND_TOP + 0.03, -Math.PI / 2, 0.035, 5.6)]; // 공중 충격파 (고리가 정렬되는 면), 바닥 충격파
+  const waves = [wave(BOOK_Y, FLAT_TILT, 0.03, 6.4), wave(ISLAND_TOP + 0.03, -Math.PI / 2, 0.035, 5.6)]; // 공중 충격파 (고리가 정렬되는 면), 바닥 충격파
 
   return (s) => { // 매 프레임: 충격파
     const bigger = 1 + s.finale * 0.6; // 5등급에서는 더 크게

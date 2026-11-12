@@ -31,7 +31,7 @@ export function create({ renderer, scene, camera }) { // 빛 번짐 만들기
   const target = new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4 }); // 장면을 그릴 화면 (4배 샘플링으로 계단 현상 줄이기)
   const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, camera)); // 1단계: 장면 그리기
-  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), BLOOM, 0.35, 1.0); // 2단계: 빛 번짐 (세기, 퍼지는 넓이, 밝기 1을 넘는 곳만)
+  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), BLOOM, 0.1, 1.0); // 2단계: 빛 번짐 (세기, 퍼지는 넓이, 밝기 1을 넘는 곳만). 넓이를 작게 해서 빛이 하늘 전체를 뿌옇게 덮지 않게
   composer.addPass(bloom);
   composer.addPass(new OutputPass()); // 3단계: 색 맞추기
   const finish = new ShaderPass(finishShader); // 4단계: 마무리

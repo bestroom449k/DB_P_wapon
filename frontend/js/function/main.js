@@ -9,7 +9,7 @@
 //     auth.js              회원가입, 로그인 (서버와 주고받기)
 //   design/                디자인: 화면에 보이는 것을 그리는 코드
 //     background/          배경: 하늘, 산맥, 구름바다
-//     objects/             물체: 섬, 돌 조각, 검, 등급 고리
+//     objects/             물체: 섬, 돌 조각, 마도서, 등급 고리
 //     effects/             효과: 불씨, 불꽃, 충격파, 빛 기둥, 빛 번짐
 //     shared/              공용 그림 도구: 셰이더 노이즈, 텍스처
 //
@@ -27,7 +27,7 @@ import * as mountains from "../design/background/mountains.js"; // 산맥
 import * as clouds from "../design/background/clouds.js"; // 구름바다
 import * as island from "../design/objects/island.js"; // 섬과 마법진
 import * as rocks from "../design/objects/rocks.js"; // 돌 조각
-import * as sword from "../design/objects/sword.js"; // 검
+import * as grimoire from "../design/objects/grimoire.js"; // 마도서
 import * as rings from "../design/objects/rings.js"; // 등급 고리
 import * as embers from "../design/effects/embers.js"; // 불씨
 import * as sparks from "../design/effects/sparks.js"; // 불꽃
@@ -43,7 +43,7 @@ const parts = [
   clouds,
   island,
   rocks,
-  sword,
+  grimoire,
   rings,
   embers,
   sparks,

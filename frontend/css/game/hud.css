@@ -133,7 +133,7 @@
 
 .gold__unit {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .chip {
@@ -233,7 +233,6 @@
   rotate: 45deg;
   border: 1px solid color-mix(in srgb, var(--c) 45%, var(--ink));
   background: var(--c);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--c) 70%, transparent);
 }
 
 .rates__name {

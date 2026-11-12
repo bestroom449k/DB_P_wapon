@@ -2,13 +2,13 @@
    다섯 빛 공방 - 강화 타임라인
    :root의 forge-cycle 애니메이션 하나가 16초마다 1→5등급을 돌며 아래 값을 바꾼다.
      --level(지금 등급), --grade(빛 색), --charge(기 모으기), --pulse(내려치는 순간),
-     --burst(불꽃 퍼짐), --finale(빛 기둥), --spin(검 회전), --reforge(완성된 검 보관, 새 검 등장), --push(게임 시작 줌)
+     --burst(불꽃 퍼짐), --finale(빛 기둥), --spin(책 회전), --reforge(완성된 책 보관, 새 책 등장), --push(게임 시작 줌)
    화면 글자(title.css)와 3D 장면(js/function/timeline.js가 읽음)은 이 값만 보고 따라 움직인다.
    ========================================================= */
 
 /* 화면 글자(title.css)도 쓰는 값: 아래 요소들에게 물려줌 (inherits: true) */
 @property --level { syntax: '<integer>'; inherits: true; initial-value: 1; }
-@property --grade { syntax: '<color>'; inherits: true; initial-value: #8d93a6; }
+@property --grade { syntax: '<color>'; inherits: true; initial-value: #aab3c8; }
 /* 3D(JS)만 읽는 값: :root에서 바로 읽으므로 물려주지 않음 (매 프레임 다른 요소의 스타일을 다시 계산하지 않게) */
 @property --charge { syntax: '<number>'; inherits: false; initial-value: 0; }
 @property --pulse { syntax: '<number>'; inherits: false; initial-value: 0; }
@@ -28,13 +28,13 @@
 
 /* ---------- 강화 의식 타임라인 (16초) ----------
    10% 2등급 · 25% 3등급 · 40% 4등급 · 55% 5등급 (내려치기가 갈수록 세진다) · 60~80% 빛 기둥
-   82~86% 완성된 검이 빛을 타고 올라가 보관됨 · 85% 1등급으로 · 88~94% 새 무쇠 검이 내려옴 · 80~92% 고리가 풀림 */
+   82~86% 완성된 책이 빛을 타고 올라가 보관됨 · 85% 1등급으로 · 88~94% 사슬에 묶인 새 책이 내려옴 · 80~92% 고리가 풀림 */
 @keyframes forge-cycle {
   0%, 9.95% { --level: 1; --grade-num: '1등급'; --grade-name: '무쇠'; }
-  10%, 24.95% { --level: 2; --grade-num: '2등급'; --grade-name: '청동'; }
-  25%, 39.95% { --level: 3; --grade-num: '3등급'; --grade-name: '비취'; }
-  40%, 54.95% { --level: 4; --grade-num: '4등급'; --grade-name: '자수정'; }
-  55%, 84.95% { --level: 5; --grade-num: '5등급'; --grade-name: '성광'; }
+  10%, 24.95% { --level: 2; --grade-num: '2등급'; --grade-name: '비취'; }
+  25%, 39.95% { --level: 3; --grade-num: '3등급'; --grade-name: '자수정'; }
+  40%, 54.95% { --level: 4; --grade-num: '4등급'; --grade-name: '홍옥'; }
+  55%, 84.95% { --level: 5; --grade-num: '5등급'; --grade-name: '황금'; }
   85%, 100% { --level: 1; --grade-num: '1등급'; --grade-name: '무쇠'; }
 
   0%, 9.95% { --grade: var(--g1); }
@@ -81,12 +81,12 @@
   71% { --spin: 0.92; }
   73.75%, 100% { --spin: 1; }
 
-  /* 완성된 검이 빛 기둥을 타고 올라가 보관되고(82~86%), 그사이 1등급이 된 새 검이 위에서 내려온다(88~94%) */
+  /* 완성된 책이 빛 기둥을 타고 올라가 보관되고(82~86%), 그사이 1등급이 된 새 책이 위에서 내려온다(88~94%) */
   0%, 82%, 94%, 100% { --reforge: 0; }
   86%, 88% { --reforge: 1; }
 }
 
-/* "게임 시작"을 누르면(로그인 창 또는 공방 입장) 카메라가 검 쪽으로 다가갔다 돌아온다 */
+/* "게임 시작"을 누르면(로그인 창 또는 공방 입장) 카메라가 책 쪽으로 다가갔다 돌아온다 */
 :root:has(#login:target, #play:target) {
   animation: var(--forge), camera-push 2.2s ease-in-out;
 }
@@ -112,6 +112,6 @@
     --level: 5;
     --grade: var(--g5);
     --grade-num: '5등급';
-    --grade-name: '성광';
+    --grade-name: '황금';
   }
 }

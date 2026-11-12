@@ -12,7 +12,7 @@ export function create(canvas) { // 무대 만들기
   const scene = new THREE.Scene(); // 장면
   scene.fog = new THREE.Fog(0xd4e5fb, 20, 150); // 멀수록 지평선 하늘색에 묻히는 안개 (먼 섬과 성이 아련하게)
   // 조명은 흰 대리석의 가장 밝은 면이 1을 넘지 않을 만큼만 (넘으면 빛 번짐이 건물까지 번진다)
-  scene.add(new THREE.HemisphereLight(0xdbe7ff, 0xc4c1ec, 2.1)); // 위는 하늘빛, 아래는 라벤더빛 (그늘이 회색이 아니라 보랏빛이 되게)
+  scene.add(new THREE.HemisphereLight(0xdbe7ff, 0xd2d0f3, 2.1)); // 위는 하늘빛, 아래는 라벤더빛 (그늘이 회색이 아니라 보랏빛이 되게)
   const sun = new THREE.DirectionalLight(0xfff5ea, 1.7); // 햇빛 (왼쪽 위 앞에서)
   sun.position.set(-9, 16, 12);
   scene.add(sun);

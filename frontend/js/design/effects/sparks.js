@@ -2,7 +2,7 @@
 // 타임라인의 --pulse가 0에서 1로 뛰는 순간을 감지해 불꽃을 터뜨리고,
 // 불꽃 하나하나는 중력과 공기 저항을 받으며 떨어지다 사라진다.
 import * as THREE from 'three';
-import { SWORD_Y } from '../objects/sword.js';
+import { BOOK_Y } from '../objects/grimoire.js';
 import { GLOW } from '../shared/materials.js';
 
 const COUNT = 900; // 한꺼번에 날 수 있는 불꽃 수
@@ -66,7 +66,7 @@ export function create({ scene, renderer }) { // 불꽃 만들기
     for (let k = 0; k < amount; k++, next = (next + 1) % COUNT) {
       const angle = Math.random() * Math.PI * 2;
       const speed = (1.8 + Math.random() * 3.4) * power;
-      position.set([0, SWORD_Y - 1.6 + Math.random() * 2.5, 0], next * 3); // 칼날 어딘가에서
+      position.set([0, BOOK_Y - 1.1 + Math.random() * 2.2, 0], next * 3); // 책 어딘가에서
       velocity.set([Math.cos(angle) * speed, (0.15 + Math.random() * 0.85) * speed * 0.7, Math.sin(angle) * speed], next * 3); // 사방으로, 살짝 위로
       tint.copy(light).lerp(WHITE, Math.random() * 0.35).multiplyScalar(0.9 + Math.random() * 1.1).toArray(color, next * 3); // 등급 색 + 흰빛
       life[next] = lifespan[next] = 0.55 + Math.random(); // 0.5~1.5초 동안

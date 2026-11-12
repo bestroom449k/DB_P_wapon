@@ -4,8 +4,8 @@ import * as THREE from 'three';
 export const marble = new THREE.MeshStandardMaterial({ color: 0xf3f0f9, roughness: 0.55 }); // 흰 대리석
 export const marbleTrim = new THREE.MeshStandardMaterial({ color: 0xe4e0f0, roughness: 0.6 }); // 대리석 받침과 띠 (조금 어둡게 해서 모양이 읽히게)
 export const rock = new THREE.MeshLambertMaterial({ color: 0xe0d2d8, flatShading: true }); // 섬 바위 (연한 베이지 라벤더)
-export const grass = new THREE.MeshLambertMaterial({ color: 0x8cc673, flatShading: true }); // 섬 윗면 풀
-export const leaves = [0x5f9f58, 0x76b866, 0x92cb76].map((color) => new THREE.MeshLambertMaterial({ color, flatShading: true })); // 나뭇잎 세 가지 초록
+export const grass = new THREE.MeshLambertMaterial({ color: 0x8cc673 }); // 섬 윗면 풀
+export const leaves = [0x5f9f58, 0x76b866, 0x92cb76].map((color) => new THREE.MeshLambertMaterial({ color })); // 나뭇잎 세 가지 초록 (각지지 않게 부드럽게)
 export const bark = new THREE.MeshLambertMaterial({ color: 0x8d7a72 }); // 나무 줄기
 export const wall = new THREE.MeshLambertMaterial({ color: 0xf6f1fa }); // 성벽
 export const roof = new THREE.MeshLambertMaterial({ color: 0xb4b9ee }); // 성 지붕 (옅은 라벤더 파랑)

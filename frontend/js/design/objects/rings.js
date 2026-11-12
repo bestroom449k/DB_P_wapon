@@ -1,7 +1,7 @@
 // 등급 고리 5개: 평소에는 혼천의처럼 제각각 돌다가, 제 등급이 되면 수평으로 정렬된다.
 // 타임라인이 1등급으로 돌아가면(85%) 다시 풀려난다. 방금 오른 등급의 고리는 번쩍인다.
 import * as THREE from 'three';
-import { SWORD_Y } from './sword.js';
+import { BOOK_Y } from './grimoire.js';
 import { GLOW } from '../shared/materials.js';
 
 export const FLAT_TILT = Math.PI / 2 + 0.38; // 정렬됐을 때의 기울기 (살짝 위에서 내려다보는 각, 충격파도 이 면에서 퍼짐)
@@ -17,7 +17,7 @@ export function create({ scene }, { colors }) { // 등급 고리 만들기
       bead.position.set(Math.cos(b * 2.1 + i) * radius, Math.sin(b * 2.1 + i) * radius, 0);
       ring.add(bead);
     } // 구슬 1~3개
-    ring.position.y = SWORD_Y; // 검 가운데 높이
+    ring.position.y = BOOK_Y; // 책 가운데 높이
     scene.add(ring);
     return { ring, color, align: i === 0 ? 1 : 0, phase: i * 1.7, speed: 0.12 + i * 0.04 }; // 고리 상태 (정렬 정도, 도는 속도)
   });

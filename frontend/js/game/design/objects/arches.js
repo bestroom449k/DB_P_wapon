@@ -95,7 +95,7 @@ function planter() { // 오른쪽 앞 화분과 덤불
   pot.position.y = 0.55;
   group.add(pot);
   [[0, 1.5, 0, 0.75], [0.5, 1.3, 0.2, 0.55], [-0.5, 1.35, -0.1, 0.6], [0.1, 1.9, -0.2, 0.5]].forEach(([x, y, z, r], i) => {
-    const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 1), leaves[i % leaves.length]);
+    const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 3), leaves[i % leaves.length]);
     bush.position.set(x, y, z);
     group.add(bush);
   });
