@@ -7,32 +7,17 @@
    ========================================================= */
 
 :root {
-  --night-0: #0b0e26;
-  --night-1: #161a44;
-  --night-2: #20255a;
-  --moon: #eef0ff;
-  --mist: #a9afdb;
-  --lamp: #ffcf8a;
-  --lamp-ink: #24180f;
-  --font-display: 'Diphylleia', 'Noto Serif KR', serif;
-  --font-ui: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* 색과 글꼴은 css/tokens.css (게임 화면과 같이 씀). 여기에는 타이틀 화면에만 쓰는 값 */
   --gutter: clamp(16px, 4vw, 64px);
   --intro: 2.4s; /* 로딩 화면이 걷히는 시점. 등장 연출은 모두 이 뒤에 이어진다 */
-
-  /* 무기 등급 5단계의 색. 3D 장면(js/function/timeline.js)도 이 값을 읽어 간다 */
-  --g1: #aab3c8; /* 무쇠: 밤하늘에 거의 녹아드는 달빛 은색 */
-  --g2: #3fd6a4; /* 비취: 파란 하늘과 겹치지 않게 초록 쪽으로 */
-  --g3: #a56bff; /* 자수정: 남색과 같은 계열이라 잘 어울림 */
-  --g4: #ff4f6d; /* 홍옥: 처음 나오는 따뜻한 색 */
-  --g5: #ffbe4d; /* 황금: 남색의 정반대 색이라 가장 튐 */
 
   --grade: var(--g1);
   --grade-num: '1등급';
   --grade-name: '무쇠';
 
   /* 그림: 이미지 파일 없이 SVG를 CSS 안에 직접 넣는다 */
-  --i-sword: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 12'><path d='M12 4.6H33L38.5 6 33 7.4H12Z'/><rect x='9.4' y='.8' width='2.2' height='10.4' rx='1.1'/><rect x='3.6' y='5' width='6' height='2' rx='1' opacity='.7'/><circle cx='2.4' cy='6' r='1.9'/></svg>");
+  /* 메뉴 커서: 오른쪽을 가리키는 깃펜 (깃털 + 펜촉) */
+  --i-quill: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 12'><path d='M39 6 33.4 4.9C27 1.2 15 .4 4 2.2c5 1.5 10.6 2.6 16.4 3.3C14.6 6.3 9 7.6 4 9.8c11 1.8 23 1 29.4-2.7Z'/><path d='M1 6h31' stroke='black' stroke-width='.9' fill='none' stroke-linecap='round'/></svg>");
   /* 로딩 표시: 다섯 등급을 뜻하는 별이 그려졌다 지워진다 (SVG 안의 애니메이션) */
   --i-star: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'><style>path,circle{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1}path{stroke:%23ffcf8a;stroke-width:1.8;animation:d 2.4s ease-in-out infinite}circle{stroke:%23a9afdb;stroke-opacity:.3;animation:d 3.2s ease-in-out infinite reverse}@keyframes d{from{stroke-dashoffset:1}55%25{stroke-dashoffset:0}to{stroke-dashoffset:-1}}</style><circle r='46' pathLength='1'/><path pathLength='1' d='M0 -40L23.51 32.36L-38.04 -12.36L38.04 -12.36L-23.51 32.36Z'/></svg>");
 
@@ -118,7 +103,6 @@ a {
   background:
     linear-gradient(var(--lamp), var(--lamp)) left / 0% 100% no-repeat,
     rgba(169, 175, 219, 0.18);
-  box-shadow: 0 0 10px rgba(255, 207, 138, 0.35);
   animation: load-bar 2.2s cubic-bezier(0.3, 0.1, 0.2, 1) forwards;
 }
 
@@ -306,7 +290,7 @@ a {
   from { opacity: 0; transform: translateX(-28px); filter: blur(8px); }
 }
 
-/* 선택 커서: 작은 검이 고른 항목 앞으로 미끄러져 온다 */
+/* 선택 커서: 작은 깃펜이 고른 항목 앞으로 미끄러져 온다 */
 .menu__item::before {
   content: '';
   position: absolute;
@@ -315,8 +299,8 @@ a {
   width: 40px;
   height: 12px;
   background: var(--grade);
-  -webkit-mask: var(--i-sword) center / contain no-repeat;
-  mask: var(--i-sword) center / contain no-repeat;
+  -webkit-mask: var(--i-quill) center / contain no-repeat;
+  mask: var(--i-quill) center / contain no-repeat;
   opacity: 0;
   transform: translate(-10px, -50%);
   transition: opacity 0.3s, transform 0.45s var(--ease-out), background-color 0.6s;
@@ -358,8 +342,14 @@ a {
   grid-template-areas: 'pips num name';
   align-items: baseline;
   gap: 1.1rem;
-  padding: 0.9rem 2.6rem;
-  background: radial-gradient(closest-side, rgba(6, 8, 22, 0.88) 40%, transparent); /* 제단 위에서도 글자가 읽히게 뒤를 어둡게 */
+  padding: 0.7rem 1.8rem;
+  border: 1px solid color-mix(in srgb, var(--lamp) 38%, transparent); /* 제단 앞에 세운 명판: 가는 금테 */
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(20, 24, 62, 0.94), rgba(8, 10, 28, 0.94)); /* 제단의 금테 위에서도 글자가 읽히는 어두운 판 */
+  box-shadow:
+    inset 0 0 0 3px rgba(8, 10, 28, 0.6),
+    inset 0 0 0 4px rgba(169, 175, 219, 0.1),
+    0 12px 26px -10px rgba(0, 0, 0, 0.85);
   font-family: var(--font-display);
   white-space: nowrap;
   animation: appear 1.2s ease-out calc(var(--intro) + 1.7s) backwards;
@@ -385,17 +375,17 @@ a {
   animation: pip-pop var(--cycle) linear calc(var(--cycle-start) + var(--at)) infinite;
 }
 
-/* --at: 그 등급이 되는 순간 (timeline.css forge-cycle의 85%, 10%, 25%, 40%, 55%) */
-.pips i:nth-child(1) { --c: var(--g1); --n: 1; --at: calc(var(--cycle) * 0.85); }
-.pips i:nth-child(2) { --c: var(--g2); --n: 2; --at: calc(var(--cycle) * 0.1); }
-.pips i:nth-child(3) { --c: var(--g3); --n: 3; --at: calc(var(--cycle) * 0.25); }
-.pips i:nth-child(4) { --c: var(--g4); --n: 4; --at: calc(var(--cycle) * 0.4); }
-.pips i:nth-child(5) { --c: var(--g5); --n: 5; --at: calc(var(--cycle) * 0.55); }
+/* --at: 그 등급이 되는 순간 (timeline.css forge-cycle의 95.9%, 20.99%, 41.98%, 62.96%, 83.95%) */
+.pips i:nth-child(1) { --c: var(--g1); --n: 1; --at: calc(var(--cycle) * 0.959); }
+.pips i:nth-child(2) { --c: var(--g2); --n: 2; --at: calc(var(--cycle) * 0.2099); }
+.pips i:nth-child(3) { --c: var(--g3); --n: 3; --at: calc(var(--cycle) * 0.4198); }
+.pips i:nth-child(4) { --c: var(--g4); --n: 4; --at: calc(var(--cycle) * 0.6296); }
+.pips i:nth-child(5) { --c: var(--g5); --n: 5; --at: calc(var(--cycle) * 0.8395); }
 
-/* 방금 채워진 칸이 톡 튀어 오른다 */
+/* 방금 룬이 새겨진 칸이 크게 찍혔다가 제자리로 줄어든다 (등급 이름과 같은 감속 곡선) */
 @keyframes pip-pop {
-  0% { scale: 2.2; animation-timing-function: cubic-bezier(0.34, 1.8, 0.5, 1); }
-  4.4%, 100% { scale: 1; }
+  0% { scale: 2.2; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+  1.73%, 100% { scale: 1; } /* 약 0.56초 동안 (한 바퀴 32.4초의 1.73%) */
 }
 
 .forge::before {
@@ -419,13 +409,13 @@ a {
   animation: name-pop var(--cycle) linear var(--cycle-start) infinite;
 }
 
-/* 내려치는 순간(10%, 25%, 40%, 55%) 새 등급 이름이 크게 찍혔다가 제자리를 잡는다.
-   85%(완성된 책이 올라가고 새 책이 올 때)에는 조용히 사라졌다 나타난다 */
+/* 룬이 새겨지는 순간(20.99%, 41.98%, 62.96%, 83.95%) 새 등급 이름이 크게 찍혔다가 약 0.36초 만에 제자리를 잡는다.
+   95.9%(완성된 책이 올라가고 새 책이 올 때)에는 조용히 사라졌다 나타난다 */
 @keyframes name-pop {
-  0%, 9.99%, 12.8%, 24.99%, 27.8%, 39.99%, 42.8%, 54.99%, 57.8%, 100% { scale: 1; }
-  10%, 25%, 40%, 55% { scale: 1.32; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
-  84.99%, 88.5% { opacity: 1; }
-  85% { opacity: 0; }
+  0%, 20.98%, 22.1%, 41.97%, 43.09%, 62.95%, 64.07%, 83.94%, 85.06%, 100% { scale: 1; }
+  20.99%, 41.98%, 62.96%, 83.95% { scale: 1.32; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+  95.89%, 97.4% { opacity: 1; }
+  95.9% { opacity: 0; }
 }
 
 /* ---------- 아래쪽 ---------- */
@@ -687,6 +677,47 @@ kbd {
   text-align: center;
 }
 
+/* ---------- 공방 입장: 로그인한 뒤 "게임 시작" (주소 뒤 #enter = :target) ----------
+   마도서가 펼쳐지고 책장이 넘어가며 카메라가 책 속으로 들어가는 동안(timeline.css의 enter-book),
+   글자와 메뉴는 먼저 사라지고, 마지막에 책장 빛이 화면을 가득 채운다. 다 차면 js/function/enter.js가 게임 화면으로 넘긴다. */
+
+:root:has(#enter:target) .hud {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.45s cubic-bezier(0.55, 0, 1, 0.45), transform 0.45s cubic-bezier(0.55, 0, 1, 0.45); /* 나갈 때는 점점 빨라지게 */
+}
+
+.portal {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  margin: 0;
+  background: radial-gradient(ellipse at 50% 50%, var(--page-light) 0%, var(--page-glow) 75%, #e2cc9c 100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.portal:target {
+  visibility: visible;
+  animation: portal-fill 3.6s linear forwards; /* enter-book과 같은 길이: 마지막 0.6초 동안 빛이 차오른다 */
+}
+
+@keyframes portal-fill {
+  0% { opacity: 0; }
+  80% { opacity: 0; animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); } /* 처음엔 천천히, 끝으로 갈수록 빨리 차오른다 (빨려 드는 느낌) */
+  97%, 100% { opacity: 1; }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 
 /* ---------- 좁은 화면: 책을 가운데 두고 제목은 위, 메뉴는 아래 ---------- */
 
@@ -753,7 +784,7 @@ kbd {
     translate: none;
     justify-self: center;
     margin-bottom: 0.5rem;
-    padding: 0.5rem 1.6rem;
+    padding: 0.5rem 1.4rem;
   }
 }
 
@@ -770,5 +801,14 @@ kbd {
 
   .toast:target {
     animation-duration: 3.2s !important;
+  }
+
+  /* 공방 입장은 책이 펼쳐지지 않고 책장 빛만 짧게 차오른다 (timeline.css의 enter-still과 같은 길이) */
+  .portal:target {
+    animation: portal-still 0.6s ease-in forwards !important;
+  }
+
+  @keyframes portal-still {
+    to { opacity: 1; }
   }
 }

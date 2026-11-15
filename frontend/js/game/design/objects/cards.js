@@ -1,4 +1,4 @@
-// 카드 다섯 장: 위로 볼록한 호를 그리며 떠 있다. 가운데 카드가 가장 크고 앞에 있으며 빛난다.
+// 마도서 카드 다섯 장 (뒷면에 사슬로 봉인된 마도서 문장): 위로 볼록한 호를 그리며 떠 있다. 가운데 카드가 가장 크고 앞에 있으며 빛난다.
 // 마우스를 올린 카드는 살짝 떠오르고, 뽑기 연출 중에는 옆 카드가 모이고 가운데 카드가 떠올라 돈다.
 import * as THREE from 'three';
 import { GLOW } from '../../../design/shared/materials.js';
@@ -7,7 +7,7 @@ import { cardTexture, cardGlowTexture, CARD_ASPECT, GLOW_SCALE } from '../shared
 
 export const CARD_CENTER = new THREE.Vector3(0, 3.1, 0.8); // 가운데 카드 자리 (궤도 고리, 빛 기둥도 여기를 기준으로 선다)
 const HEIGHT = 2.2; // 카드 세로 길이
-const GLOW_COLOR = new THREE.Color(0xd2c8ff); // 카드 테두리 빛 (라벤더)
+const GLOW_COLOR = new THREE.Color(0xffd59a); // 카드 테두리 빛 (금박에서 새어 나오는 금빛)
 
 // 카드 자리: 가운데에서 몇 번째인지(-2~2)로 정한다. 바깥으로 갈수록 낮아지고, 부채꼴로 기울고, 뒤로 물러난다
 function slot(i, spread) {
@@ -39,7 +39,7 @@ export function create(world) { // 카드 만들기 (world.spread, world.pointer
     return { i, holder, face, glow, hover: 0 };
   });
 
-  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ ...GLOW, map: glowTexture(), color: new THREE.Color(0xb9afff) })); // 가운데 카드 뒤 후광
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ ...GLOW, map: glowTexture(), color: new THREE.Color(0xa9b4ff) })); // 가운데 카드 뒤 후광 (달빛 파랑)
   halo.scale.setScalar(7.5);
   scene.add(halo);
 

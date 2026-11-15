@@ -1,4 +1,4 @@
-// 그림 파일 없이 캔버스에 직접 그리는 텍스처들: 카드 뒷면, 카드 빛 테두리, 뭉게구름, 바닥 룬 고리, 네 갈래 별빛
+// 그림 파일 없이 캔버스에 직접 그리는 텍스처들: 마도서 카드, 카드 빛 테두리, 구름, 바닥 룬 고리, 네 갈래 별빛
 // (오각별 마법진과 둥근 빛은 타이틀 화면의 js/design/shared/textures.js를 같이 쓴다)
 import * as THREE from 'three';
 import { random } from './random.js';
@@ -43,8 +43,27 @@ function facetedStar(g, cx, cy, points, outer, inner, rotation, light, shade) {
 }
 
 // ---------- 카드 뒷면 ----------
-// 페리윙클 바탕, 은색 테두리 두 겹, 모서리 장식, 가운데에는 다섯 갈래 나침반 별 (다섯 빛 공방의 오각별)
+// 깊은 밤 남색 바탕에 금박 테두리 두 겹과 모서리 장식. 가운데에는 룬 고리 안에 사슬로 봉인된 마도서 문장,
+// 표지에는 다섯 등급을 뜻하는 오각별, 위아래로 작은 별. (뽑으면 이 봉인이 풀리며 마도서가 나온다는 뜻)
 export const CARD_ASPECT = 0.64; // 카드 가로 ÷ 세로
+
+const GOLD = '#ecc983'; // 금박
+const GOLD_HI = '#fff0c8'; // 밝은 금빛 (별의 밝은 면)
+const GOLD_DEEP = '#b98a42'; // 짙은 금빛 (별의 그늘 면)
+
+function rune(g, x, y, size, rand) { // 룬 글자 하나: 세로 줄기 + 곁가지 두세 개
+  g.beginPath();
+  g.moveTo(x, y - size / 2);
+  g.lineTo(x, y + size / 2);
+  const branches = 2 + Math.floor(rand() * 2);
+  for (let k = 0; k < branches; k++) {
+    const yy = y - size / 2 + rand() * size;
+    const dir = rand() < 0.5 ? -1 : 1;
+    if (rand() < 0.5) { g.moveTo(x, yy); g.lineTo(x + dir * size * 0.42, yy - size * 0.28); } // 빗금
+    else { g.moveTo(x - size * 0.28, yy); g.lineTo(x + size * 0.28, yy); } // 가로대
+  }
+  g.stroke();
+}
 
 let card = null;
 export function cardTexture() { // 카드 뒷면 그림 (한 번 만들어 다섯 장이 같이 씀)
@@ -53,48 +72,50 @@ export function cardTexture() { // 카드 뒷면 그림 (한 번 만들어 다�
   const H = Math.round(W / CARD_ASPECT);
   const { canvas, g } = paper(W, H);
   const rand = random(11);
+  const cx = W / 2;
+  const cy = H / 2;
 
-  // 바탕
+  // 바탕: 깊은 밤 남색, 가운데가 은은히 밝다
   roundRect(g, 6, 6, W - 12, H - 12, 34);
   const body = g.createLinearGradient(0, 0, W, H);
-  body.addColorStop(0, '#a9b0f7');
-  body.addColorStop(0.5, '#8a91ea');
-  body.addColorStop(1, '#6b6cd2');
+  body.addColorStop(0, '#262a5e');
+  body.addColorStop(0.5, '#191c46');
+  body.addColorStop(1, '#0f1131');
   g.fillStyle = body;
   g.fill();
 
   g.save();
   g.clip();
-  const shine = g.createRadialGradient(W / 2, H * 0.46, 10, W / 2, H * 0.46, W * 0.8); // 가운데가 밝게
-  shine.addColorStop(0, 'rgba(232, 234, 255, 0.6)');
-  shine.addColorStop(1, 'rgba(232, 234, 255, 0)');
+  const shine = g.createRadialGradient(cx, cy, 10, cx, cy, W * 0.75); // 문장 둘레가 밝게
+  shine.addColorStop(0, 'rgba(150, 160, 230, 0.32)');
+  shine.addColorStop(1, 'rgba(150, 160, 230, 0)');
   g.fillStyle = shine;
   g.fillRect(0, 0, W, H);
-  for (let i = 0; i < 90; i++) { // 별가루
-    g.fillStyle = `rgba(255, 255, 255, ${0.12 + rand() * 0.4})`;
+  for (let i = 0; i < 110; i++) { // 별가루 (흰 별과 금빛 별)
+    g.fillStyle = rand() < 0.3 ? `rgba(255, 224, 160, ${0.2 + rand() * 0.5})` : `rgba(255, 255, 255, ${0.1 + rand() * 0.4})`;
     g.beginPath();
-    g.arc(rand() * W, rand() * H, 0.7 + rand() * 1.5, 0, Math.PI * 2);
+    g.arc(rand() * W, rand() * H, 0.6 + rand() * 1.4, 0, Math.PI * 2);
     g.fill();
   }
   g.restore();
 
-  // 테두리: 바깥 은색 띠, 안쪽 가는 선 두 겹
-  g.strokeStyle = '#f1f2ff';
+  // 테두리: 바깥 금박 띠, 안쪽 가는 금선 두 겹
+  g.strokeStyle = GOLD;
   g.lineWidth = 8;
   roundRect(g, 10, 10, W - 20, H - 20, 30);
   g.stroke();
-  g.strokeStyle = 'rgba(255, 255, 255, 0.9)';
   g.lineWidth = 2.2;
   roundRect(g, 34, 34, W - 68, H - 68, 14);
   g.stroke();
-  g.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+  g.globalAlpha = 0.5;
   g.lineWidth = 1.2;
   roundRect(g, 44, 44, W - 88, H - 88, 8);
   g.stroke();
+  g.globalAlpha = 1;
 
   // 모서리 장식: 작은 마름모와 안쪽으로 감기는 덩굴
-  g.strokeStyle = 'rgba(255, 255, 255, 0.95)';
-  g.fillStyle = '#ffffff';
+  g.strokeStyle = GOLD;
+  g.fillStyle = GOLD_HI;
   g.lineWidth = 2;
   for (const [x, y, sx, sy] of [[34, 34, 1, 1], [W - 34, 34, -1, 1], [34, H - 34, 1, -1], [W - 34, H - 34, -1, -1]]) {
     g.save();
@@ -110,46 +131,90 @@ export function cardTexture() { // 카드 뒷면 그림 (한 번 만들어 다�
     g.stroke();
     g.restore();
   }
-  for (const [x, y] of [[W / 2, 34], [W / 2, H - 34]]) { // 위아래 가운데 작은 마름모
+
+  // 위아래 작은 오각별
+  for (const y of [86, H - 86]) facetedStar(g, cx, y, 5, 20, 7, -Math.PI / 2, GOLD_HI, GOLD_DEEP);
+
+  // 룬 고리: 두 겹 원 사이에 룬 글자가 둥글게 늘어선다
+  g.strokeStyle = GOLD;
+  g.lineWidth = 2.4;
+  for (const r of [176, 146]) { g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke(); }
+  g.lineWidth = 2.2;
+  for (let i = 0; i < 30; i++) {
+    g.save();
+    g.translate(cx, cy);
+    g.rotate((i / 30) * Math.PI * 2);
+    rune(g, 0, -161, 18, rand);
+    g.restore();
+  }
+  g.strokeStyle = 'rgba(236, 201, 131, 0.22)'; // 문장 뒤 가는 빛살
+  g.lineWidth = 1;
+  for (let k = 0; k < 48; k++) {
+    const a = (k / 48) * Math.PI * 2;
     g.beginPath();
-    g.moveTo(x, y - 7); g.lineTo(x + 7, y); g.lineTo(x, y + 7); g.lineTo(x - 7, y);
+    g.moveTo(...polar(cx, cy, 112, a));
+    g.lineTo(...polar(cx, cy, 142, a));
+    g.stroke();
+  }
+
+  // 마도서: 가죽 표지, 금박 테두리, 모서리 가시, 책등
+  const bw = 150, bh = 196, bx = cx - bw / 2, by = cy - bh / 2;
+  g.save();
+  g.shadowColor = 'rgba(8, 6, 30, 0.7)';
+  g.shadowBlur = 18;
+  roundRect(g, bx, by, bw, bh, 10);
+  const leather = g.createLinearGradient(bx, by, bx + bw, by + bh);
+  leather.addColorStop(0, '#5a2472');
+  leather.addColorStop(1, '#2b1142');
+  g.fillStyle = leather;
+  g.fill();
+  g.restore();
+  g.strokeStyle = GOLD;
+  g.lineWidth = 4;
+  roundRect(g, bx, by, bw, bh, 10);
+  g.stroke();
+  g.lineWidth = 1.5;
+  roundRect(g, bx + 12, by + 12, bw - 24, bh - 24, 5);
+  g.stroke();
+  g.lineWidth = 3; // 책등 쪽 금박 줄
+  g.beginPath(); g.moveTo(bx + 18, by + 4); g.lineTo(bx + 18, by + bh - 4); g.stroke();
+  g.fillStyle = GOLD;
+  for (const [x, y, sx, sy] of [[bx, by, -1, -1], [bx + bw, by, 1, -1], [bx, by + bh, -1, 1], [bx + bw, by + bh, 1, 1]]) { // 모서리 가시
+    g.beginPath();
+    g.moveTo(x - sx * 16, y);
+    g.lineTo(x + sx * 12, y + sy * 12);
+    g.lineTo(x, y - sy * 16);
     g.closePath();
     g.fill();
   }
 
-  // 가운데 문양: 고리, 빛살, 나침반 별
-  const cx = W / 2;
-  const cy = H / 2;
-  g.strokeStyle = 'rgba(255, 255, 255, 0.28)';
-  g.lineWidth = 1;
-  for (let k = 0; k < 40; k++) { // 가는 빛살
-    const a = (k / 40) * Math.PI * 2;
+  // 표지 문장: 빛나는 원 안의 오각별
+  const ey = cy - 18;
+  g.save();
+  g.shadowColor = 'rgba(255, 226, 160, 0.9)';
+  g.shadowBlur = 16;
+  g.strokeStyle = GOLD_HI;
+  g.lineWidth = 3;
+  g.beginPath(); g.arc(cx + 6, ey, 38, 0, Math.PI * 2); g.stroke();
+  facetedStar(g, cx + 6, ey, 5, 32, 11, -Math.PI / 2, GOLD_HI, GOLD);
+  g.restore();
+
+  // 봉인 사슬과 자물쇠: 책 허리를 가로지른다
+  const chainY = cy + 54;
+  g.strokeStyle = '#c9cde6';
+  g.lineWidth = 3;
+  for (let x = bx - 26; x < bx + bw + 26; x += 15) {
     g.beginPath();
-    g.moveTo(...polar(cx, cy, 58, a));
-    g.lineTo(...polar(cx, cy, 134, a));
+    if (Math.round((x - bx) / 15) % 2) g.ellipse(x, chainY, 8, 4, 0, 0, Math.PI * 2); // 눕힌 고리
+    else g.ellipse(x, chainY, 3, 5, 0, 0, Math.PI * 2); // 세운 고리
     g.stroke();
   }
-  g.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-  g.lineWidth = 2.4;
-  g.beginPath(); g.arc(cx, cy, 148, 0, Math.PI * 2); g.stroke();
-  g.lineWidth = 1.2;
-  g.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-  g.beginPath(); g.arc(cx, cy, 136, 0, Math.PI * 2); g.stroke();
-  g.fillStyle = 'rgba(255, 255, 255, 0.85)';
-  for (let k = 0; k < 60; k++) { // 점 고리
-    g.beginPath();
-    g.arc(...polar(cx, cy, 160, (k / 60) * Math.PI * 2), 1.6, 0, Math.PI * 2);
-    g.fill();
-  }
-
-  g.save();
-  g.shadowColor = 'rgba(255, 255, 255, 0.85)';
-  g.shadowBlur = 22;
-  facetedStar(g, cx, cy, 5, 104, 26, -Math.PI / 2 + Math.PI / 5, '#e9ebff', '#bfc4f6'); // 짧은 별 (뒤)
-  facetedStar(g, cx, cy, 5, 206, 34, -Math.PI / 2, '#ffffff', '#d3d6fb'); // 긴 별 (앞, 고리 밖으로 뻗는다)
-  g.restore();
-  g.fillStyle = '#ffffff';
-  g.beginPath(); g.arc(cx, cy, 9, 0, Math.PI * 2); g.fill();
+  roundRect(g, cx - 13, chainY + 4, 26, 26, 5); // 자물쇠
+  g.fillStyle = GOLD;
+  g.fill();
+  g.fillStyle = '#2b1142';
+  g.beginPath(); g.arc(cx, chainY + 15, 3.5, 0, Math.PI * 2); g.fill();
+  g.fillRect(cx - 1.5, chainY + 16, 3, 8);
 
   card = finish(canvas);
   return card;

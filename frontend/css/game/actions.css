@@ -1,6 +1,7 @@
 /* =========================================================
    게임 화면 아래쪽: 기능 메뉴 (왼쪽), 1회 뽑기 버튼 (오른쪽)
-   둘 다 크림에서 연분홍으로 가는 판에 금색 가는 테두리. 주 행동인 뽑기 버튼이 더 크고, 금별 장식이 붙는다.
+   기능 메뉴는 타이틀의 창과 같은 남색 판에 가는 금색 선, 주 행동인 뽑기 버튼은 등불 금색 판이라
+   밤 장면에서 가장 먼저 눈에 들어온다. 버튼 가장자리에는 네 갈래 별 장식.
    ========================================================= */
 
 /* ---------- 기능 메뉴: 강화, 도감, 상점, 거래소 ---------- */
@@ -13,12 +14,13 @@
   display: flex;
   gap: 4px;
   padding: 6px;
-  border: 1.5px solid var(--gold);
-  border-radius: 22px;
-  background: linear-gradient(180deg, var(--cream) 0%, #fbeeee 100%);
+  border: 1px solid color-mix(in srgb, var(--lamp) 40%, transparent);
+  border-radius: 20px;
+  background: var(--panel);
   box-shadow:
-    inset 0 0 0 3px rgba(255, 255, 255, 0.75),
-    0 14px 30px -14px rgba(34, 34, 110, 0.55);
+    inset 0 0 0 3px rgba(11, 14, 38, 0.55),
+    inset 0 0 0 4px rgba(169, 175, 219, 0.08),
+    0 16px 34px -14px rgba(0, 0, 0, 0.85);
 }
 
 .dock__item {
@@ -26,11 +28,11 @@
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 4px;
+  gap: 5px;
   width: 74px;
   height: 66px;
-  border-radius: 16px;
-  color: var(--ink);
+  border-radius: 14px;
+  color: var(--moon);
   font-size: 0.9375rem;
   line-height: 1;
   transition: background-color 0.25s, color 0.25s, transform 0.35s var(--ease-out);
@@ -39,26 +41,26 @@
 .dock__item .icon {
   width: 26px;
   height: 26px;
-  color: var(--ink-soft);
+  color: var(--mist);
   transition: color 0.25s, transform 0.35s var(--ease-out);
 }
 
-/* 항목 사이 금색 점선 */
+/* 항목 사이 달빛 점선 */
 .dock__item + .dock__item::before {
   content: '';
   position: absolute;
   left: -3px;
   top: 18px;
   bottom: 18px;
-  border-left: 1px dotted rgba(164, 122, 54, 0.55);
+  border-left: 1px dotted rgba(169, 175, 219, 0.35);
 }
 
 .dock__item:hover {
-  background: rgba(214, 173, 98, 0.16);
+  background: rgba(255, 207, 138, 0.1);
 }
 
 .dock__item:hover .icon {
-  color: var(--ink);
+  color: var(--lamp);
   transform: translateY(-2px);
 }
 
@@ -66,7 +68,7 @@
   transform: scale(0.96);
 }
 
-/* ---------- 1회 뽑기 ---------- */
+/* ---------- 1회 뽑기: 등불 금색 판 ---------- */
 
 .draw {
   position: fixed;
@@ -78,29 +80,29 @@
   gap: 8px;
   width: clamp(260px, 21vw, 340px);
   padding: 20px 24px 15px;
-  border: 1.5px solid var(--gold);
-  border-radius: 28px;
+  border: 1px solid var(--lamp-hi);
+  border-radius: 26px;
   background:
-    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.95) 0%, transparent 60%),
-    linear-gradient(180deg, var(--cream) 0%, #fbe8e7 55%, var(--blush) 100%);
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 246, 226, 0.75) 0%, transparent 60%),
+    linear-gradient(180deg, var(--lamp-hi) 0%, var(--lamp) 55%, #e9ad62 100%);
   box-shadow:
-    inset 0 0 0 4px rgba(255, 255, 255, 0.75),
-    inset 0 0 0 5.5px rgba(214, 173, 98, 0.5),
-    0 16px 32px -12px rgba(40, 36, 120, 0.55),
-    0 8px 24px -8px rgba(255, 228, 176, 0);
-  color: var(--ink);
+    inset 0 0 0 4px rgba(255, 246, 226, 0.35),
+    inset 0 0 0 5px rgba(140, 90, 30, 0.35),
+    0 18px 36px -14px rgba(0, 0, 0, 0.85),
+    0 12px 40px -12px rgba(255, 190, 110, 0.5); /* 버튼 아래 바닥으로 떨어지는 등불빛 */
+  color: var(--lamp-ink);
   cursor: pointer;
   transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out), filter 0.25s;
 }
 
-/* 금별 장식: 위 가운데 하나 (::before), 양옆 가운데 둘 (::after) */
+/* 별 장식: 위 가운데 하나 (::before), 양옆 가운데 둘 (::after). 금색 판과 밤하늘 양쪽에서 보이게 달빛 흰색 */
 .draw::before,
 .draw::after {
   content: '';
   position: absolute;
   pointer-events: none;
-  background: linear-gradient(180deg, var(--gold-hi), var(--gold) 60%, var(--gold-deep));
-  filter: drop-shadow(0 0 5px rgba(255, 232, 178, 0.95));
+  background: linear-gradient(180deg, #ffffff, var(--lamp-hi));
+  filter: drop-shadow(0 0 5px rgba(255, 207, 138, 0.95));
 }
 
 .draw::before {
@@ -134,22 +136,22 @@
 .draw__label .icon {
   width: 1.15em;
   height: 1.15em;
-  filter: drop-shadow(0 2px 3px rgba(80, 70, 170, 0.35));
+  filter: drop-shadow(0 2px 3px rgba(60, 36, 10, 0.4));
 }
 
-/* 가격: 금색 가는 줄 사이에 */
+/* 가격: 짙은 금색 가는 줄 아래에 */
 .draw__cost {
   display: flex;
   align-items: center;
   gap: 6px;
   padding-top: 9px;
-  border-top: 1px solid rgba(164, 122, 54, 0.32);
+  border-top: 1px solid rgba(90, 58, 20, 0.3);
   min-width: 62%;
   justify-content: center;
   font-size: 1.0625rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: var(--ink-soft);
+  color: #4a3218;
 }
 
 .draw__cost .icon {
@@ -160,10 +162,10 @@
 .draw:hover {
   transform: translateY(-3px);
   box-shadow:
-    inset 0 0 0 4px rgba(255, 255, 255, 0.75),
-    inset 0 0 0 5.5px rgba(214, 173, 98, 0.6),
-    0 22px 38px -14px rgba(40, 36, 120, 0.6),
-    0 8px 24px -8px rgba(255, 228, 176, 0.9); /* 버튼 아래로 번지는 따뜻한 빛 */
+    inset 0 0 0 4px rgba(255, 246, 226, 0.45),
+    inset 0 0 0 5px rgba(140, 90, 30, 0.4),
+    0 24px 40px -14px rgba(0, 0, 0, 0.85),
+    0 16px 48px -10px rgba(255, 190, 110, 0.7);
 }
 
 .draw:active {
@@ -174,7 +176,7 @@
 /* 뽑는 중: 누를 수 없고, 별 장식이 천천히 돈다 */
 .draw:disabled {
   cursor: progress;
-  filter: saturate(0.85);
+  filter: saturate(0.8) brightness(0.92);
   transform: none;
 }
 

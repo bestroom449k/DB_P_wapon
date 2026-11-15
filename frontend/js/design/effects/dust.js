@@ -1,12 +1,12 @@
-// 떠오르는 불씨와 반딧불: 점 560개를 셰이더 안에서 위로 흘려보낸다 (CPU 계산 없음).
-// 각 점은 높이가 끝까지 올라가면 아래에서 다시 시작하고, 깜빡이며 좌우로 흔들린다.
+// 떠오르는 마력 가루: 점 560개를 셰이더 안에서 위로 흘려보낸다 (CPU 계산 없음).
+// 각 점은 높이가 끝까지 올라가면 아래에서 다시 시작하고, 별처럼 깜빡이며 좌우로 흔들린다.
 import * as THREE from 'three';
 import { GLOW } from '../shared/materials.js';
 
-const COUNT = 560; // 불씨 개수
-const PALETTE = [0xffb35a, 0xffd28a, 0xffc06b, 0xd8ff9a, 0xc8a6ff].map((c) => new THREE.Color(c)); // 불씨 색 (호박색, 금색, 연두, 보라)
+const COUNT = 560; // 가루 개수
+const PALETTE = [0xdfe6ff, 0xb9c6ff, 0xd9c8ff, 0xffe2b0, 0xa8f0d6].map((c) => new THREE.Color(c)); // 가루 색 (달빛 흰색, 하늘 파랑, 연보라, 옅은 금빛, 옅은 비취)
 
-const vertexShader = /* glsl */ ` // 불씨 위치 셰이더 (위로 흐르기, 흔들기, 깜빡이기)
+const vertexShader = /* glsl */ ` // 가루 위치 셰이더 (위로 흐르기, 흔들기, 깜빡이기)
   attribute float aSeed;
   attribute float aSize;
   attribute vec3 aColor;
@@ -16,7 +16,7 @@ const vertexShader = /* glsl */ ` // 불씨 위치 셰이더 (위로 흐르기, 
   varying float vAlpha;
   void main() {
     vec3 p = position;
-    float travel = mod(p.y + 4.0 + uTime * 0.2 * (0.5 + aSeed), 10.0); // 높이 -4 ~ 6 사이를 돈다
+    float travel = mod(p.y + 4.0 + uTime * 0.14 * (0.5 + aSeed), 10.0); // 높이 -4 ~ 6 사이를 돈다
     p.y = travel - 4.0;
     p.x += sin(uTime * 0.55 + aSeed * 23.0) * 0.35;
     p.z += cos(uTime * 0.45 + aSeed * 17.0) * 0.35;
@@ -30,7 +30,7 @@ const vertexShader = /* glsl */ ` // 불씨 위치 셰이더 (위로 흐르기, 
   }
 `;
 
-const fragmentShader = /* glsl */ ` // 불씨 색 셰이더 (둥글고 부드러운 점)
+const fragmentShader = /* glsl */ ` // 가루 색 셰이더 (둥글고 부드러운 점)
   varying vec3 vColor;
   varying float vAlpha;
   void main() {
@@ -39,16 +39,16 @@ const fragmentShader = /* glsl */ ` // 불씨 색 셰이더 (둥글고 부드러
   }
 `;
 
-export function create({ scene, renderer }) { // 불씨 만들기
+export function create({ scene, renderer }) { // 마력 가루 만들기
   const position = new Float32Array(COUNT * 3); // 처음 위치
   const color = new Float32Array(COUNT * 3); // 색
   const seed = new Float32Array(COUNT); // 저마다 다른 속도와 깜빡임
   const size = new Float32Array(COUNT); // 크기
-  for (let i = 0; i < COUNT; i++) { // 불씨마다 값 정하기
+  for (let i = 0; i < COUNT; i++) { // 가루마다 값 정하기
     position.set([(Math.random() * 2 - 1) * 9, Math.random() * 10 - 4, (Math.random() * 2 - 1) * 6], i * 3);
     PALETTE[i % PALETTE.length].toArray(color, i * 3);
     seed[i] = Math.random();
-    size[i] = 2 + Math.random() * 5;
+    size[i] = 1.5 + Math.random() * 4;
   }
   const geometry = new THREE.BufferGeometry(); // 점 묶음
   geometry.setAttribute('position', new THREE.BufferAttribute(position, 3));
@@ -57,11 +57,11 @@ export function create({ scene, renderer }) { // 불씨 만들기
   geometry.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
 
   const uniforms = { uTime: { value: 0 }, uPixelRatio: { value: renderer.getPixelRatio() } }; // 셰이더에 넘길 값 (선명도는 stage.js에서 정한 값)
-  const points = new THREE.Points(geometry, new THREE.ShaderMaterial({ ...GLOW, uniforms, vertexShader, fragmentShader })); // 불씨 (빛을 더하듯 그려짐)
+  const points = new THREE.Points(geometry, new THREE.ShaderMaterial({ ...GLOW, uniforms, vertexShader, fragmentShader })); // 마력 가루 (빛을 더하듯 그려짐)
   points.frustumCulled = false;
   scene.add(points);
 
-  return (s, t) => { // 매 프레임: 불씨
+  return (s, t) => { // 매 프레임: 마력 가루
     uniforms.uTime.value = t; // 움직임은 셰이더가 시간으로 계산
   };
 }

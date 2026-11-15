@@ -6,7 +6,7 @@ import { circleTexture, glowTexture } from '../../../design/shared/textures.js';
 import { runeRingTexture } from '../shared/textures.js';
 
 const CENTER = new THREE.Vector3(0, 0, 0.6); // 마법진 중심 (가운데 카드 바로 아래)
-const LIGHT = new THREE.Color(0xd9d2ff); // 마법진 빛 색 (흰 라벤더)
+const LIGHT = new THREE.Color(0xc9d1ff); // 마법진 빛 색 (달빛 흰 파랑)
 
 function disc(texture, radius, lift) { // 바닥에 눕힌 빛 원판
   const material = new THREE.MeshBasicMaterial({ ...GLOW, map: texture, color: LIGHT.clone() });

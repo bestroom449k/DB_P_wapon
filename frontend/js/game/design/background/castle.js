@@ -1,8 +1,10 @@
-// 하늘 성: 오른쪽 위 큰 떠 있는 섬 위에 선 흰 성. 가운데 높은 탑과 뾰족한 첨탑, 둘레의 낮은 탑과 성벽.
-// 멀리 있어서 안개에 묻혀 아련하게 보인다.
+// 하늘 성: 오른쪽 위 큰 떠 있는 섬 위에 선 성. 가운데 높은 탑과 뾰족한 첨탑, 둘레의 낮은 탑과 성벽.
+// 달빛에 하얗게 비치고, 탑마다 불 켜진 창이 몇 개씩 있다. 멀리 있어서 밤 안개에 묻혀 아련하게 보인다.
 import * as THREE from 'three';
 import { island } from './islands.js';
-import { wall, roof, rock, roughen } from '../shared/stone.js';
+import { wall, roof, rock, roughen, windowLight } from '../shared/stone.js';
+
+const windowShape = new THREE.PlaneGeometry(0.16, 0.3); // 창 하나 (모든 창이 같이 씀)
 
 // 탑: [가로, 깊이, 굵기, 높이, 지붕 높이]
 const TOWERS = [
@@ -20,7 +22,7 @@ const TOWERS = [
 const RING = 6; // 성벽 반지름
 const RING_TOWERS = 9; // 성벽 둘레 탑 수
 
-function tower(radius, height, roofHeight) { // 탑 하나: 원통 몸통, 처마 띠, 원뿔 지붕
+function tower(radius, height, roofHeight, seed = 0) { // 탑 하나: 원통 몸통, 처마 띠, 원뿔 지붕, 불 켜진 창
   const group = new THREE.Group();
   const body = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius * 1.04, height, 14), wall);
   body.position.y = height / 2;
@@ -29,6 +31,19 @@ function tower(radius, height, roofHeight) { // 탑 하나: 원통 몸통, 처�
   const cone = new THREE.Mesh(new THREE.ConeGeometry(radius * 1.24, roofHeight, 14), roof);
   cone.position.y = height + roofHeight / 2 + radius * 0.16;
   group.add(body, eave, cone);
+
+  const floors = Math.max(1, Math.floor(height / 2.6)); // 층 수
+  for (let floor = 0; floor < floors; floor++) {
+    for (let k = 0; k < 3; k++) { // 한 층에 창 세 개 (몇 개는 불이 꺼져 있다)
+      if ((floor * 3 + k + Math.abs(Math.round(seed))) % 4 === 3) continue;
+      const a = (k / 3) * Math.PI * 2 + floor * 0.9 + seed; // 창이 난 방향
+      const pane = new THREE.Mesh(windowShape, windowLight);
+      pane.position.set(Math.sin(a) * (radius * 1.02 + 0.01), 1.3 + floor * 2.4, Math.cos(a) * (radius * 1.02 + 0.01));
+      pane.rotation.y = a; // 바깥을 향하게
+      pane.scale.setScalar(Math.max(0.7, radius));
+      group.add(pane);
+    }
+  }
   return group;
 }
 
@@ -45,7 +60,7 @@ export function create({ scene }) { // 성 만들기
   }
 
   for (const [x, z, r, h, roofH] of TOWERS) { // 안쪽 탑들
-    const t = tower(r, h, roofH);
+    const t = tower(r, h, roofH, x * 3 + z);
     t.position.set(x, 0.8, z);
     castle.add(t);
   }
@@ -53,7 +68,7 @@ export function create({ scene }) { // 성 만들기
   for (let i = 0; i < RING_TOWERS; i++) { // 성벽과 둘레 탑
     const a = (i / RING_TOWERS) * Math.PI * 2;
     const next = ((i + 1) / RING_TOWERS) * Math.PI * 2;
-    const t = tower(0.62, 3.6 + (i % 3) * 0.6, 2);
+    const t = tower(0.62, 3.6 + (i % 3) * 0.6, 2, i);
     t.position.set(Math.cos(a) * RING, 0.8, Math.sin(a) * RING);
     castle.add(t);
     const length = 2 * RING * Math.sin(Math.PI / RING_TOWERS);

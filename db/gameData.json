@@ -1,15 +1,50 @@
 {
   "grades": [
-    { "grade": 1, "name": "일반", "drawRatePct": 60 },
-    { "grade": 2, "name": "고급", "drawRatePct": 25 },
-    { "grade": 3, "name": "희귀", "drawRatePct": 10 },
-    { "grade": 4, "name": "영웅", "drawRatePct": 4 },
-    { "grade": 5, "name": "전설", "drawRatePct": 1 }
+    {
+      "grade": 1,
+      "name": "무쇠",
+      "drawRatePct": 60
+    },
+    {
+      "grade": 2,
+      "name": "비취",
+      "drawRatePct": 25
+    },
+    {
+      "grade": 3,
+      "name": "자수정",
+      "drawRatePct": 10
+    },
+    {
+      "grade": 4,
+      "name": "홍옥",
+      "drawRatePct": 4
+    },
+    {
+      "grade": 5,
+      "name": "황금",
+      "drawRatePct": 1
+    }
   ],
   "enhanceRules": [
-    { "targetLevel": 1, "costRatio": 0.1, "successPct": 90, "valueMultiplier": 1.2 },
-    { "targetLevel": 2, "costRatio": 0.2, "successPct": 80, "valueMultiplier": 1.5 },
-    { "targetLevel": 3, "costRatio": 0.4, "successPct": 60, "valueMultiplier": 2.0 }
+    {
+      "targetLevel": 1,
+      "costRatio": 0.1,
+      "successPct": 90,
+      "valueMultiplier": 1.2
+    },
+    {
+      "targetLevel": 2,
+      "costRatio": 0.2,
+      "successPct": 80,
+      "valueMultiplier": 1.5
+    },
+    {
+      "targetLevel": 3,
+      "costRatio": 0.4,
+      "successPct": 60,
+      "valueMultiplier": 2
+    }
   ],
   "weapons": [
     {

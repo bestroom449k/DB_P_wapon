@@ -1,7 +1,9 @@
-// 테라스를 둘러싼 흰 대리석 건축: 왼쪽 아치문, 오른쪽 끝 큰 아치 기둥, 오른쪽 뒤 기둥 회랑, 왼쪽 앞 받침돌과 등.
-// 장면의 양 끝을 액자처럼 감싸서 가운데 카드로 눈이 가게 한다.
+// 테라스를 둘러싼 대리석 건축: 왼쪽 아치문, 오른쪽 끝 큰 아치 기둥, 오른쪽 뒤 기둥 회랑, 왼쪽 앞 받침돌과 등불.
+// 장면의 양 끝을 액자처럼 감싸서 가운데 카드로 눈이 가게 한다. 밤이라 왼쪽 앞 등불이 둘레를 따뜻하게 비춘다.
 import * as THREE from 'three';
-import { marble, marbleTrim, leaves } from '../shared/stone.js';
+import { GLOW } from '../../../design/shared/materials.js';
+import { glowTexture } from '../../../design/shared/textures.js';
+import { marble, marbleTrim, leaves, lanternLight } from '../shared/stone.js';
 
 function column(height, radius = 0.32) { // 기둥: 네모 받침, 둥근 몸통, 머리
   const group = new THREE.Group();
@@ -83,9 +85,14 @@ function pedestal() { // 계단 받침 위 짧은 기둥과 둥근 등
   }, 0);
   const c = column(1.9, 0.36);
   c.position.y = 0.9;
-  const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.34, 20, 14), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.5, 1.5, 1.65) })); // 은은히 빛나는 등 (1보다 밝아서 빛이 번진다)
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.34, 20, 14), lanternLight); // 따뜻하게 빛나는 등 (1보다 밝아서 빛이 번진다)
   lamp.position.y = 3.15;
-  group.add(c, lamp);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ ...GLOW, map: glowTexture(), color: 0xffb769, opacity: 0.85 })); // 등 둘레로 번지는 빛
+  halo.position.y = 3.15;
+  halo.scale.setScalar(3.4);
+  const light = new THREE.PointLight(0xffc27a, 9, 14, 2); // 둘레의 기둥과 바닥을 비추는 등불빛
+  light.position.y = 3.4;
+  group.add(c, lamp, halo, light);
   return group;
 }
 
@@ -127,5 +134,12 @@ export function create({ scene }) { // 건축물 배치
   pot.scale.setScalar(0.85);
 
   scene.add(leftArch, rightArch, frame, hall, lamp, pot);
+  for (const building of [leftArch, rightArch, frame, hall, lamp, pot]) { // 돌과 화분은 달빛 그림자를 드리우고 받는다 (등불 빛 무리는 빼고)
+    building.traverse((part) => {
+      if (!part.isMesh) return;
+      part.castShadow = true;
+      part.receiveShadow = true;
+    });
+  }
   return () => {}; // 건축물은 움직이지 않는다
 }

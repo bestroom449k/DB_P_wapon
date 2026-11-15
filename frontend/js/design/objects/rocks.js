@@ -1,4 +1,5 @@
-// 섬 둘레를 천천히 도는 돌 조각들. 궤도를 앞뒤로 눌러 카메라 바로 앞을 가로막지 않게 한다.
+// 섬 둘레를 천천히 도는 돌 조각들. 궤도를 앞뒤로 눌러 카메라 바로 앞을 가로막지 않게 하고,
+// 왼쪽(제목과 메뉴가 있는 쪽)으로는 덜 나가게 눌러 글자 위를 지나가지 않게 한다.
 import * as THREE from "three";
 import { ISLAND_TOP, roughen } from "./island.js";
 
@@ -30,11 +31,15 @@ export function create({ scene }) {
 
   return (s, t, dt) => {
     // 매 프레임: 돌 조각
+    const leave = THREE.MathUtils.smoothstep(s.open, 0, 0.6); // 공방 입장 때 책이 펼쳐지면 돌은 작아지며 사라진다 (책 앞을 가리지 않게)
     for (const rock of rocks) {
+      rock.mesh.visible = leave < 0.999;
+      rock.mesh.scale.setScalar(Math.max(0.001, 1 - leave));
       rock.angle += rock.speed * dt; // 궤도 따라 이동
+      const x = Math.cos(rock.angle) * rock.radius; // 좌우 위치
       rock.mesh.position.set(
         // 위치 (위아래로 둥실둥실)
-        Math.cos(rock.angle) * rock.radius,
+        x < 0 ? x * 0.55 : x, // 왼쪽으로는 반쯤만 나간다 (메뉴 글자 위를 지나가지 않게)
         rock.height + Math.sin(t * 0.6 + rock.radius) * 0.14,
         Math.sin(rock.angle) * rock.radius * 0.55,
       );

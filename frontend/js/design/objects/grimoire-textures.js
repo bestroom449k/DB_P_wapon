@@ -167,6 +167,33 @@ export function leatherGrain() { // 가죽 결 (요철 + 거칠기), 이어 붙�
   return t;
 }
 
+export function runeBandTexture() { // 등급 고리의 룬 띠: 위아래 가는 선 사이로 룬 글자가 한 줄로 흐른다 (가로로 이어 붙여도 이음매가 없다)
+  const W = 2048, H = 96;
+  const [c, g] = makeCanvas(W, H);
+  const r = mulberry32(57);
+  g.strokeStyle = '#fff';
+  g.fillStyle = '#fff';
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
+  g.shadowColor = '#fff';
+  g.shadowBlur = 6;
+  g.lineWidth = 3; // 위아래 테두리 선
+  for (const y of [9, H - 9]) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+  g.lineWidth = 1.2;
+  for (const y of [17, H - 17]) { g.globalAlpha = 0.5; g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+  g.globalAlpha = 1;
+  g.lineWidth = 4; // 룬 글자: 몇 글자씩 한 낱말, 낱말 사이에 점
+  let x = 30;
+  while (x < W - 40) {
+    const word = 3 + Math.floor(r() * 4);
+    for (let k = 0; k < word && x < W - 40; k++, x += 38) glyph(g, x, H / 2, 40, r);
+    if (x < W - 40) { g.beginPath(); g.arc(x - 2, H / 2, 3.5, 0, TAU); g.fill(); x += 34; }
+  }
+  const t = colorTexture(c);
+  t.wrapS = THREE.RepeatWrapping;
+  return t;
+}
+
 export function glyphTextures() { // 펼친 책에서 떠오르는 글자 조각 6종
   const r = mulberry32(99);
   return Array.from({ length: 6 }, () => {

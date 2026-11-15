@@ -1,6 +1,6 @@
 // 회원가입, 로그인 기능
 //   폼에 적은 값을 서버(server/src/routes/auth.js)로 보내고 결과에 따라 화면을 바꾼다.
-//   로그인하면 "게임 시작"은 공방 입장(#play)으로 이어지고, "회원가입"은 "로그아웃"으로 바뀌며, 왼쪽 위에 닉네임과 골드가 보인다.
+//   로그인하면 "게임 시작"은 공방 입장(#enter: 책이 펼쳐지며 게임 화면으로, js/function/enter.js)으로 이어지고, "회원가입"은 "로그아웃"으로 바뀌며, 왼쪽 위에 닉네임과 골드가 보인다.
 //   창을 열고 닫는 것은 CSS(:target), 키보드 동작은 menu.js가 맡고, 이 파일은 서버와 주고받는 일만 한다.
 
 const root = document.documentElement;
@@ -30,7 +30,7 @@ async function request(path, body) { // 서버에 요청 보내기 (body가 있�
 function showUser(user) { // 로그인 상태를 화면에 반영 (user가 null이면 로그아웃 상태)
   root.dataset.auth = user ? 'in' : 'out';
   player.textContent = user ? `${user.nickname}님, ${Number(user.gold).toLocaleString('ko-KR')} 골드` : '';
-  menuStart.href = user ? '#play' : '#login';
+  menuStart.href = user ? '#enter' : '#login'; // 로그인 전에는 로그인 창, 로그인한 뒤에는 공방 입장
   menuAccount.href = user ? '#logged-out' : '#signup'; // 로그아웃을 누르면 "로그아웃했어요" 알림이 바로 뜬다 (CSS :target)
   menuAccount.textContent = user ? '로그아웃' : '회원가입';
 }

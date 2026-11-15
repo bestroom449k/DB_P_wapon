@@ -1,9 +1,11 @@
-// 대리석 테라스: 하늘이 비치는 반질반질한 둥근 바닥과, 그 뒤를 반원으로 두른 돌 난간.
-// 바닥은 Reflector(거울)로 위의 장면을 비추고, 셰이더에서 살짝 흐리게 한 뒤 대리석 타일 색과 섞는다.
+// 검은 대리석 테라스: 빛 기둥과 카드가 비치는 반질반질한 둥근 바닥과, 그 뒤를 반원으로 두른 돌 난간과 등불.
+// 바닥은 Reflector(거울)로 위의 장면을 비추고, 셰이더에서 살짝 흐리게 한 뒤 짙은 대리석 타일 색과 섞는다.
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { NOISE } from '../../../design/shared/glsl.js';
-import { marble, marbleTrim } from '../shared/stone.js';
+import { GLOW } from '../../../design/shared/materials.js';
+import { glowTexture } from '../../../design/shared/textures.js';
+import { marble, marbleTrim, lanternLight } from '../shared/stone.js';
 
 export const FLOOR_RADIUS = 18; // 바닥 반지름
 const FLOOR_Z = 1.5; // 바닥 중심의 깊이
@@ -15,9 +17,9 @@ const floorShader = { // 바닥 셰이더: 흐린 거울 + 대리석 타일
     color: { value: null }, // Reflector가 채우는 값 (거울 색)
     tDiffuse: { value: null }, // Reflector가 채우는 값 (비친 장면)
     textureMatrix: { value: null }, // Reflector가 채우는 값
-    uBase: { value: new THREE.Color(0xeef0fc) }, // 대리석 바탕
-    uLine: { value: new THREE.Color(0xc3c8ee) }, // 타일 줄눈
-    uHaze: { value: new THREE.Color(0xe2ebfb) }, // 먼 바닥이 묻히는 색
+    uBase: { value: new THREE.Color(0x101220) }, // 검은 대리석 바탕 (아주 짙은 남색)
+    uLine: { value: new THREE.Color(0x272c48) }, // 타일 줄눈 (바탕보다 조금 밝은 달빛 선)
+    uHaze: { value: new THREE.Color(0x0d1222) }, // 먼 바닥이 묻히는 밤 안개 색
     uBlur: { value: 0.006 }, // 비친 모습 흐림 정도
   },
   vertexShader: /* glsl */ `
@@ -86,12 +88,19 @@ export function create({ scene, renderer }) { // 테라스 만들기
     textureWidth: innerWidth * ratio,
     textureHeight: innerHeight * ratio,
     clipBias: 0.003,
-    color: 0xd8dcff,
+    color: 0x7a82a8, // 비친 모습의 밝기 (어둡게 해서 검은 대리석에 빛나는 것만 또렷이 비치게)
     multisample: 0,
   });
   floor.rotation.x = -Math.PI / 2;
   floor.position.z = FLOOR_Z;
   scene.add(floor);
+
+  // 그림자 받이: 거울 바닥은 조명을 계산하지 않아서 그림자가 안 생긴다. 그래서 바로 위에 그림자만 그리는 투명한 판을 깐다
+  const shadowCatcher = new THREE.Mesh(new THREE.CircleGeometry(FLOOR_RADIUS, 96), new THREE.ShadowMaterial({ color: 0x03040c, opacity: 0.5 }));
+  shadowCatcher.rotation.x = -Math.PI / 2;
+  shadowCatcher.position.set(0, 0.004, FLOOR_Z);
+  shadowCatcher.receiveShadow = true;
+  scene.add(shadowCatcher);
 
   const rim = new THREE.Mesh(new THREE.CylinderGeometry(FLOOR_RADIUS, FLOOR_RADIUS - 0.6, 1.2, 128, 1, true), marbleTrim); // 바닥 가장자리 돌 띠
   rim.position.set(0, -0.6, FLOOR_Z);
@@ -129,6 +138,7 @@ export function create({ scene, renderer }) { // 테라스 만들기
       q.setFromAxisAngle(THREE.Object3D.DEFAULT_UP, turn);
       mesh.setMatrixAt(i, m.compose(position, q, new THREE.Vector3(...size)));
     });
+    mesh.castShadow = true; // 달빛 그림자를 드리운다
     scene.add(mesh);
   }
 
@@ -143,12 +153,31 @@ export function create({ scene, renderer }) { // 테라스 만들기
     const p = at(angle);
     balusterMesh.setMatrixAt(i, m.makeTranslation(p.x, 0.14, p.z));
   });
+  balusterMesh.castShadow = true; // 난간 기둥 하나하나가 바닥에 줄무늬 그림자를 드리운다
   scene.add(balusterMesh);
+
+  // 등불: 큰 기둥 하나 건너 하나마다 머리 위에 작은 등불 (따뜻한 심지 + 번지는 빛)
+  const lanterns = posts.filter((_, i) => i % 2 === 0).map((angle, i) => {
+    const p = at(angle).setY(1.52);
+    const wick = new THREE.Mesh(new THREE.SphereGeometry(0.085, 12, 8), lanternLight);
+    wick.position.copy(p);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ ...GLOW, map: glowTexture(), color: 0xffb769 }));
+    halo.position.copy(p);
+    halo.scale.setScalar(1.3);
+    scene.add(wick, halo);
+    return { halo, phase: i * 2.3 };
+  });
 
   addEventListener('resize', () => { // 화면 크기가 바뀌면 거울 해상도도 맞추기
     const r = renderer.getPixelRatio() * 0.5;
     floor.getRenderTarget().setSize(innerWidth * r, innerHeight * r);
   });
 
-  return () => {}; // 테라스는 움직이지 않는다
+  return (s, t) => { // 매 프레임: 등불이 살짝 일렁인다
+    for (const { halo, phase } of lanterns) {
+      const flicker = 0.8 + Math.sin(t * 7.3 + phase) * 0.08 + Math.sin(t * 13.1 + phase * 1.7) * 0.06;
+      halo.material.opacity = flicker;
+      halo.scale.setScalar(1.25 + flicker * 0.15);
+    }
+  };
 }

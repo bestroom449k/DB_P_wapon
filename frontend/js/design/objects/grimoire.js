@@ -3,7 +3,8 @@
 //   → 4등급 사슬이 끊어지고 빛 균열, 도는 수정 조각 → 5등급 금빛 장식, 떠다니는 낱장, 빛의 날개
 // 기를 모을 때 떠오르며 떨고, 내려치는 순간 번쩍이며 가라앉고, 5등급에서는 높이 떠 한 바퀴 돈다.
 // 다 만든 책은 빛 기둥을 타고 위로 올라가 보관되고(--reforge), 사슬에 묶인 새 책이 위에서 내려온다.
-// s.open(0~1)이 오르면 사슬이 끊어지고 표지가 열리며 페이지의 주문이 떠오른다 (게임 시작 연출용).
+// 공방 입장(게임 시작): s.open이 오르면 사슬이 끊어지고 표지가 열리며 페이지의 주문이 떠오르고,
+// s.flip이 오르면 책장이 점점 빨라지며 촤르륵 넘어간다 (그다음 카메라가 책 속으로 들어가는 것은 js/function/stage.js).
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { glowTexture } from '../shared/textures.js';
@@ -83,7 +84,7 @@ export function create({ scene }) { // 마도서 만들기
   const rune = new THREE.MeshBasicMaterial({ ...GLOW, map: runeCircleTexture(), toneMapped: false }); // 표지 룬
   const backRune = rune.clone(); // 뒤표지 룬 (희미하게)
   const veins = new THREE.MeshBasicMaterial({ ...GLOW, map: veinTexture(), toneMapped: false, color: 0x000000 }); // 빛 균열
-  const paper = new THREE.MeshStandardMaterial({ map: page, roughness: 0.92 }); // 첫 장
+  const paper = new THREE.MeshStandardMaterial({ map: page, color: 0xb0a690, roughness: 0.92 }); // 첫 장 (달빛을 정면으로 받아도 하얗게 날아가지 않게 바랜 양피지 색)
   const edgeFore = new THREE.MeshStandardMaterial({ map: pageEdgeTexture(false) }); // 책장 단면 (등급이 오르면 금박)
   const edgeTop = new THREE.MeshStandardMaterial({ map: pageEdgeTexture(true) });
   const ink = new THREE.MeshBasicMaterial({ ...GLOW, map: pageInk, toneMapped: false, color: 0x000000 }); // 빛나는 주문
@@ -253,6 +254,22 @@ export function create({ scene }) { // 마도서 만들기
     letter.velocity.set((Math.random() - 0.5) * 0.12, 0.1 + Math.random() * 0.18, 0.3 + Math.random() * 0.35);
   }
 
+  // 공방 입장 때 넘어가는 책장: 책등 쪽 끝을 축으로, 오른쪽 책장 묶음에서 왼쪽으로 한 장씩 넘어간다
+  const LEAVES = 18; // 넘어가는 책장 수
+  const leafPaper = new THREE.MeshStandardMaterial({ map: page, color: 0xb0a690, roughness: 0.92, side: THREE.DoubleSide }); // 책장 (앞뒤 모두 바랜 양피지)
+  const leafInk = new THREE.MeshBasicMaterial({ ...GLOW, map: pageInk, toneMapped: false, side: THREE.DoubleSide, color: 0x000000 }); // 세 장에 한 장은 주문이 빛난다
+  const leafBase = new THREE.PlaneGeometry(PW, PH, 8, 1).translate(PW / 2, 0, 0); // 왼쪽 끝(책등 쪽)이 축
+  const leaves = Array.from({ length: LEAVES }, (_, i) => {
+    const pivot = new THREE.Group();
+    pivot.position.set(PX - PW / 2, 0, PD / 2 + 0.004 + i * 0.0006); // 책장 묶음 맨 위
+    pivot.visible = false;
+    body.add(pivot);
+    const geometry = leafBase.clone(); // 넘어가는 동안 휘어지므로 장마다 따로
+    add(pivot, geometry, leafPaper);
+    if (i % 3 === 0) add(pivot, geometry, leafInk, 0, 0, 0.001);
+    return { pivot, geometry, rest: geometry.attributes.position.array.slice() }; // rest: 휘기 전 꼭짓점 위치
+  });
+
   // 책 뒤의 후광
   const aura = new THREE.Sprite(new THREE.SpriteMaterial({ ...GLOW, map: glowTexture(), toneMapped: false }));
   book.add(aura);
@@ -317,7 +334,7 @@ export function create({ scene }) { // 마도서 만들기
 
     // 움직임
     const away = smooth(s.reforge, 0, 1) * 7; // 화면 위로 올라간 거리 (완성된 책 보관 → 새 책 등장)
-    const spin = t * 0.32 + s.spin * TAU; // 천천히 + 5등급 한 바퀴
+    const spin = t * 0.58 + s.spin * TAU; // 천천히 + 5등급 한 바퀴
     if (opened > 0 && faceTurn === null) faceTurn = Math.round(spin / TAU) * TAU; // 펼치면 가장 가까운 정면으로
     if (opened === 0) faceTurn = null;
     book.position.y = BOOK_Y + Math.sin(t * 0.9) * 0.07 + s.charge * 0.22 - s.pulse * 0.1 + s.finale * 0.3 + away + opened * 0.12; // 둥실 + 기 모으기 + 내려치기 + 5등급 + 보관 + 펼치기
@@ -362,9 +379,27 @@ export function create({ scene }) { // 마도서 만들기
     veins.color.copy(L).multiplyScalar(now.veins * (1.2 + Math.sin(t * 3) * 0.5 + surge));
     gem.emissive.copy(L);
     gem.emissiveIntensity = now.glow + Math.sin(t * 2.3) * 0.5 + opened + s.charge * 1.5 + s.pulse * 2.5;
-    ink.color.copy(L).multiplyScalar(shine * (1.3 + Math.sin(t * 2.1) * 0.25));
+    ink.color.copy(L).multiplyScalar(shine * (0.8 + Math.sin(t * 2.1) * 0.2 + s.dive * s.dive));
+    leafInk.color.copy(L).multiplyScalar(1.1);
     pageLight.color.copy(L);
-    pageLight.intensity = shine * 5;
+    pageLight.intensity = shine * 0.35 + s.dive * s.dive * 1.5; // 책 속으로 들어갈수록 페이지가 환해진다 (책장 글씨가 보일 만큼만)
+
+    // 책장 넘기기: 앞 장부터 차례로, 넘어가는 동안은 바깥쪽이 뒤처지며 휘어진다
+    const flipping = s.flip > 0 && opened > 0.95;
+    leaves.forEach((leaf, i) => {
+      const start = (i / LEAVES) * 0.78; // 이 장이 넘어가기 시작하는 순간 (s.flip 기준)
+      const p = flipping ? smooth(s.flip, start, start + 0.22) : 0; // 이 장이 넘어간 정도
+      leaf.pivot.visible = p > 0;
+      if (!leaf.pivot.visible) return;
+      leaf.pivot.rotation.y = -p * (0.9 - i * 0.002) * Math.PI; // 왼쪽에 쌓일 때 나중 장이 위로
+      const curl = Math.sin(p * Math.PI) * 0.3; // 넘어가는 한가운데서 가장 많이 휜다
+      const position = leaf.geometry.attributes.position;
+      for (let v = 0; v < position.count; v++) {
+        const x = leaf.rest[v * 3]; // 책등에서 떨어진 거리
+        position.setZ(v, curl * (x / PW) ** 1.6);
+      }
+      position.needsUpdate = true;
+    });
     const unseal = Math.sin(Math.PI * broken) * 0.6 * Math.max(now.chainA, now.chainB); // 봉인이 풀리는 순간 번쩍
     aura.material.color.copy(L);
     aura.material.opacity = now.aura + opened * 0.15 + unseal + s.pulse * 0.3;

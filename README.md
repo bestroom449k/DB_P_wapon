@@ -125,11 +125,13 @@ erDiagram
 ```
 db/schema.sql          DB 테이블 정의
 server/                Node.js 서버 (Express, MySQL 연결, 회원 API)
-frontend/              화면
-  index.html
-  css/                 글자·메뉴(title.css), 강화 타임라인(timeline.css)
-  js/function/         기능: 시작, 로그인, 카메라
-  js/design/           디자인: 하늘, 섬, 검, 효과 (Three.js 3D)
+frontend/              화면 (타이틀과 게임 화면은 같은 밤 세계)
+  index.html           타이틀 화면 (로그인한 뒤 "게임 시작" → 마도서 속으로 들어가 game.html)
+  game.html            게임 첫 화면 (뽑기)
+  css/                 공통 색과 글꼴(tokens.css), 타이틀 글자·메뉴(title.css), 룬 각인·입장 타임라인(timeline.css), 게임 화면(game/)
+  js/function/         타이틀 기능: 시작, 로그인, 메뉴 키보드, 입장, 카메라
+  js/design/           타이틀 디자인: 하늘, 섬, 마도서, 룬 띠, 효과 (Three.js 3D)
+  js/game/             게임 화면: function/(기능), design/(디자인)
 plan.md                기획서
 LIBRARIES.md           사용하는 라이브러리 설명
 ```

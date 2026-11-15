@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>뽑기 · 다섯 빛 공방</title>
-    <meta name="description" content="하늘 위 공방에서 검을 뽑아요" />
-    <meta name="theme-color" content="#5d86e2" />
+    <meta name="description" content="달빛 아래 공방에서 마도서를 뽑아요" />
+    <meta name="theme-color" content="#0b0e26" />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Ccircle r='48' fill='%230b0e26'/%3E%3Cpath d='M0 -40L23.51 32.36L-38.04 -12.36L38.04 -12.36L-23.51 32.36Z' fill='none' stroke='%23ffcf8a' stroke-width='4' stroke-linejoin='round'/%3E%3C/svg%3E"
@@ -16,7 +16,8 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Diphylleia&family=Gowun+Dodum&display=swap"
     />
-    <!-- 게임 화면의 글자와 버튼: 색·글꼴·알림(base.css), 위쪽(hud.css), 아래쪽(actions.css), 뽑기 연출 타임라인(timeline.css) -->
+    <!-- 게임 화면의 글자와 버튼: 공통 색과 글꼴(tokens.css, 타이틀과 같이 씀), 기본·알림(base.css), 위쪽(hud.css), 아래쪽(actions.css), 뽑기 연출 타임라인(timeline.css) -->
+    <link rel="stylesheet" href="css/tokens.css" />
     <link rel="stylesheet" href="css/game/base.css" />
     <link rel="stylesheet" href="css/game/hud.css" />
     <link rel="stylesheet" href="css/game/actions.css" />
@@ -25,7 +26,11 @@
       {
         "imports": {
           "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+          "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+          "postprocessing": "https://cdn.jsdelivr.net/npm/postprocessing@6.35.5/build/index.js",
+          "n8ao": "https://cdn.jsdelivr.net/npm/n8ao@1.8.4/dist/N8AO.js",
+          "astronomy-engine": "https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/esm/astronomy.js"
         }
       }
     </script>
@@ -43,8 +48,8 @@
           <stop offset="1" stop-color="#b98a3e" />
         </linearGradient>
         <linearGradient id="g-card" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#a3a9f5" />
-          <stop offset="1" stop-color="#6c6fd4" />
+          <stop offset="0" stop-color="#4a4fb8" />
+          <stop offset="1" stop-color="#22256a" />
         </linearGradient>
       </defs>
       <symbol id="i-back" viewBox="0 0 24 24">
@@ -62,14 +67,15 @@
       </symbol>
       <!-- 뽑기 카드 -->
       <symbol id="i-card" viewBox="0 0 24 24">
-        <rect x="5" y="2.5" width="14" height="19" rx="2.4" fill="url(#g-card)" stroke="#fff" stroke-width="1.2" />
+        <rect x="5" y="2.5" width="14" height="19" rx="2.4" fill="url(#g-card)" stroke="#ffe6b8" stroke-width="1.2" />
         <path d="M12 7.6 12.9 11.1 16.4 12 12.9 12.9 12 16.4 11.1 12.9 7.6 12 11.1 11.1Z" fill="#fff" />
       </symbol>
-      <symbol id="i-hammer" viewBox="0 0 24 24">
+      <!-- 강화: 룬을 새기는 깃펜과 새겨진 룬 -->
+      <symbol id="i-quill" viewBox="0 0 24 24">
         <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m13.2 3.8 7 7-2.4 2.4-7-7Z" />
-          <path d="m11.9 8.5-8 8a1.6 1.6 0 0 0 0 2.3l1.3 1.3a1.6 1.6 0 0 0 2.3 0l8-8" />
-          <path d="m15.4 4.4 1.6-1.6M20.6 8.6l.9-.9" />
+          <path d="M20.5 3.5c-6 .6-10.4 4.4-12.6 10.8l-1.4 4.2 4.2-1.4c6.4-2.2 10.2-6.6 9.8-13.6Z" />
+          <path d="M6.5 18.5 3 22M11.5 12.5l-2 2" />
+          <path d="M15.5 19.5h5M18 17v5" />
         </g>
       </symbol>
       <symbol id="i-book" viewBox="0 0 24 24">
@@ -95,7 +101,7 @@
       </symbol>
     </svg>
 
-    <!-- 3D 장면: 하늘, 떠 있는 섬과 성, 대리석 테라스, 마법진, 카드 다섯 장, 빛 기둥 -->
+    <!-- 3D 장면: 밤하늘, 떠 있는 섬과 불 켜진 성, 검은 대리석 테라스, 마법진, 카드 다섯 장, 빛 기둥 -->
     <canvas id="stage" aria-hidden="true"></canvas>
     <div class="veil" aria-hidden="true"></div>
 
@@ -110,8 +116,8 @@
       <div class="top__right">
         <p class="gold" aria-live="polite">
           <svg class="icon icon--color"><use href="#i-coin" /></svg>
-          <span class="gold__value" id="goldValue">-</span>
-          <span class="gold__unit">골드</span>
+          <span class="gold__value" id="goldValue">로그인 전</span>
+          <span class="gold__unit" id="goldUnit" hidden>골드</span>
         </p>
         <button class="chip" type="button" popovertarget="rates" aria-label="뽑기 확률 보기">
           <svg class="icon"><use href="#i-spark" /></svg>
@@ -124,13 +130,13 @@
     <section class="rates" id="rates" popover aria-labelledby="ratesTitle">
       <h2 class="rates__title" id="ratesTitle">뽑기 확률</h2>
       <ol class="rates__list">
-        <li style="--c: var(--g1)"><span class="rates__name">1등급 <b>일반</b></span><span class="rates__pct">60%</span></li>
-        <li style="--c: var(--g2)"><span class="rates__name">2등급 <b>고급</b></span><span class="rates__pct">25%</span></li>
-        <li style="--c: var(--g3)"><span class="rates__name">3등급 <b>희귀</b></span><span class="rates__pct">10%</span></li>
-        <li style="--c: var(--g4)"><span class="rates__name">4등급 <b>영웅</b></span><span class="rates__pct">4%</span></li>
-        <li style="--c: var(--g5)"><span class="rates__name">5등급 <b>전설</b></span><span class="rates__pct">1%</span></li>
+        <li style="--c: var(--g1)"><span class="rates__name">1등급 <b>무쇠</b></span><span class="rates__pct">60%</span></li>
+        <li style="--c: var(--g2)"><span class="rates__name">2등급 <b>비취</b></span><span class="rates__pct">25%</span></li>
+        <li style="--c: var(--g3)"><span class="rates__name">3등급 <b>자수정</b></span><span class="rates__pct">10%</span></li>
+        <li style="--c: var(--g4)"><span class="rates__name">4등급 <b>홍옥</b></span><span class="rates__pct">4%</span></li>
+        <li style="--c: var(--g5)"><span class="rates__name">5등급 <b>황금</b></span><span class="rates__pct">1%</span></li>
       </ol>
-      <p class="rates__note">한 번 뽑을 때마다 검 한 자루를 얻어요.</p>
+      <p class="rates__note">한 번 뽑을 때마다 마도서 한 권을 얻어요.</p>
       <button class="rates__close" type="button" popovertarget="rates" popovertargetaction="hide" aria-label="확률 창 닫기">
         <svg class="icon"><use href="#i-close" /></svg>
       </button>
@@ -139,7 +145,7 @@
     <!-- 아래 왼쪽: 다른 기능으로 가는 메뉴 -->
     <nav class="dock" aria-label="공방 메뉴">
       <a class="dock__item" href="#" data-soon="강화는 아직 준비 중이에요">
-        <svg class="icon"><use href="#i-hammer" /></svg>
+        <svg class="icon"><use href="#i-quill" /></svg>
         <span>강화</span>
       </a>
       <a class="dock__item" href="#" data-soon="도감은 아직 준비 중이에요">

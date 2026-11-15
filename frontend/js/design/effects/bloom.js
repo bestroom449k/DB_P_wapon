@@ -36,7 +36,8 @@ const finishShader = { // 마무리 셰이더 (비네트, 그레인, 섬광)
   `,
 };
 
-const BLOOM = 0.5; // 빛 번짐 세기 (높을수록 화면 전체가 뿌옇게 번짐)
+const BLOOM = 0.58; // 빛 번짐 세기 (높을수록 화면 전체가 뿌옇게 번짐)
+const PAGE_LIGHT = new THREE.Color(1, 0.95, 0.84); // 책 속으로 들어갈 때 화면을 채우는 책장 빛 (css/tokens.css의 --page-light)
 
 export function create({ renderer, scene, camera }) { // 빛 번짐 만들기
   const target = new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4 }); // 장면을 그릴 화면 (4배 샘플링으로 계단 현상 줄이기)
@@ -56,10 +57,11 @@ export function create({ renderer, scene, camera }) { // 빛 번짐 만들기
   resize();
 
   return (s, t) => { // 매 프레임 화면에 그리기
-    bloom.strength = BLOOM + s.finale * 0.1; // 5등급에서 더 번지게
+    const reading = s.open * (1 - THREE.MathUtils.smoothstep(s.dive, 0.5, 1)); // 펼친 책장을 보는 동안 (책 속으로 반쯤 들어갈 때까지)
+    bloom.strength = BLOOM + s.finale * 0.1 - reading * 0.35; // 5등급에서 더 번지게, 책장이 넘어가는 동안은 덜 번지게 (글씨와 책장 사이가 보이게)
     finish.uniforms.uTime.value = t; // 그레인 움직임
-    finish.uniforms.uFlash.value = s.pulse * 0.8; // 섬광 세기
-    finish.uniforms.uFlashColor.value.copy(s.light); // 섬광 색
+    finish.uniforms.uFlash.value = Math.max(s.pulse * 0.8, s.dive ** 3 * 2.4); // 섬광 세기 (책 속으로 거의 다 들어가서야 환해진다)
+    finish.uniforms.uFlashColor.value.copy(s.light).lerp(PAGE_LIGHT, s.dive); // 섬광 색 (들어갈수록 책장 빛)
     finish.uniforms.uFade.value = THREE.MathUtils.clamp((t - s.intro) / 1.8, 0, 1); // 로딩이 걷힐 때 1.8초 동안 서서히 밝아진다
     composer.render(); // 모든 단계를 거쳐 화면에 그리기
   };

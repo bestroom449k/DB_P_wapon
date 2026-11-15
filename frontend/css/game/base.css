@@ -1,44 +1,14 @@
 /* =========================================================
-   다섯 빛 공방 - 게임 화면 기본: 색, 글꼴, 아이콘, 장면 위 빛 막, 알림
+   다섯 빛 공방 - 게임 화면 기본: 장면 위 책장 빛 막, 알림, 아이콘
+   색과 글꼴은 타이틀 화면과 같이 쓰는 css/tokens.css. 게임 화면도 타이틀과 같은 밤 세계다.
    위쪽 막대는 hud.css, 아래쪽 메뉴와 뽑기 버튼은 actions.css, 뽑기 연출 타임라인은 timeline.css.
    ========================================================= */
 
 :root {
-  /* 낮 하늘 (3D 하늘 js/game/design/background/sky.js와 같은 색) */
-  --sky-top: #3d6bd9;
-  --sky-mid: #6f9cf0;
-  --sky-low: #d4e5fb;
-
-  /* 버튼 판: 크림에서 연분홍으로, 금색 가는 테두리 */
-  --cream: #fffaf2;
-  --blush: #f6d8dd;
-  --gold: #d6ad62;
-  --gold-hi: #f7e1a6;
-  --gold-deep: #a47a36;
-
-  /* 글자: 남보라 (크림 판 위), 흰색 (하늘 위, 남색 띠를 깔고) */
-  --ink: #36316a;
-  --ink-soft: #625c95;
-  --navy: rgba(26, 36, 104, 0.62); /* 하늘 위 글자 뒤에 까는 반투명 남색 (흰 글자 대비 4.5:1 이상) */
-  --navy-line: rgba(255, 255, 255, 0.42);
-  --lilac: #c7c0ff;
-
-  /* 무기 등급 5단계의 색 (타이틀 화면 css/title.css의 --g1~--g5와 같은 값) */
-  --g1: #8d93a6;
-  --g2: #d08c4a;
-  --g3: #46d9a0;
-  --g4: #a477ff;
-  --g5: #fff1cf;
-
-  --font-display: 'Diphylleia', 'Noto Serif KR', serif;
-  --font-ui: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --gutter: clamp(16px, 2.4vw, 40px);
 
   /* 네 갈래 별 (가장자리 장식에 mask로 쓴다) */
   --i-spark: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 1.5c.5 5.6 2.9 8 8.5 10.5-5.6 2.5-8 4.9-8.5 10.5-.5-5.6-2.9-8-8.5-10.5C9.1 9.5 11.5 7.1 12 1.5Z'/></svg>");
-
-  color-scheme: light;
 }
 
 /* ---------- 기본 ---------- */
@@ -54,23 +24,22 @@ body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  /* 3D 장면이 뜨기 전(또는 WebGL을 못 쓸 때)에도 하늘이 보이게 */
-  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 42%, var(--sky-low) 72%, #e9eefb 100%);
-  color: var(--ink);
+  /* 3D 장면이 뜨기 전(또는 WebGL을 못 쓸 때)에도 밤하늘이 보이게 */
+  background: radial-gradient(ellipse at 50% 30%, #1a2050 0%, var(--night-0) 70%);
+  color: var(--moon);
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
 
 ::selection {
-  background: var(--lilac);
-  color: var(--ink);
+  background: var(--lamp);
+  color: var(--lamp-ink);
 }
 
 :focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--lamp);
   outline-offset: 3px;
-  box-shadow: 0 0 0 5px rgba(54, 49, 106, 0.55);
 }
 
 a {
@@ -117,14 +86,14 @@ button {
   height: 100%;
 }
 
-/* 들어올 때 하얀 빛이 걷히며 장면이 드러난다 */
+/* 들어올 때: 타이틀에서 책 속으로 빨려 들어온 책장 빛(타이틀 .portal과 같은 색)이 걷히며 밤의 테라스가 드러난다 */
 .veil {
   position: fixed;
   inset: 0;
   z-index: 30;
-  background: radial-gradient(ellipse at 50% 45%, #ffffff 0%, #f1f3ff 60%, #dfe7fb 100%);
+  background: radial-gradient(ellipse at 50% 50%, var(--page-light) 0%, var(--page-glow) 75%, #e2cc9c 100%);
   pointer-events: none;
-  animation: veil-lift 1.6s var(--ease-out) 0.25s forwards;
+  animation: veil-lift 1.8s cubic-bezier(0.45, 0, 0.2, 1) 0.2s forwards;
 }
 
 @keyframes veil-lift {
@@ -141,11 +110,11 @@ button {
   max-width: calc(100vw - 32px);
   margin: 0;
   padding: 0.75rem 1.4rem;
-  border: 1px solid var(--gold);
+  border: 1px solid color-mix(in srgb, var(--lamp) 45%, transparent);
   border-radius: 999px;
-  background: linear-gradient(180deg, var(--cream), #fbeaea);
-  box-shadow: 0 12px 28px -12px rgba(40, 40, 110, 0.5);
-  color: var(--ink);
+  background: var(--night-2);
+  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.7);
+  color: var(--moon);
   font-size: 1rem;
   line-height: 1.4;
   text-align: center;
@@ -170,7 +139,7 @@ button {
 
 @media (prefers-reduced-motion: reduce) {
   .veil {
-    animation-duration: 0.3s;
+    animation-duration: 0.4s;
     animation-delay: 0s;
   }
 

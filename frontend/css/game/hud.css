@@ -1,6 +1,6 @@
 /* =========================================================
    게임 화면 위쪽: 뒤로가기 + "뽑기" 제목 + 금별 선 (왼쪽), 골드 + 확률 버튼 (오른쪽), 확률 창
-   하늘 위에 올라가므로 글자는 흰색, 뒤에는 반투명 남색을 깐다.
+   밤하늘 위에 올라가므로 글자는 달빛 흰색, 버튼은 남색 판에 달빛 테두리 (타이틀 화면과 같은 말씨).
    ========================================================= */
 
 .top {
@@ -12,7 +12,7 @@
   gap: 14px;
   padding: var(--gutter);
   padding-bottom: 0;
-  color: #fff;
+  color: var(--moon);
   pointer-events: none;
 }
 
@@ -20,7 +20,7 @@
   pointer-events: auto;
 }
 
-/* 제목 뒤 남색 띠: 왼쪽에서 오른쪽으로 옅어진다 */
+/* 제목 뒤 남색 띠: 왼쪽에서 오른쪽으로 옅어진다 (오로라 위에서도 글자가 읽히게) */
 .top::before {
   content: '';
   position: absolute;
@@ -29,7 +29,7 @@
   z-index: -1;
   width: min(560px, 62vw);
   height: calc(var(--gutter) * 2 + 52px);
-  background: linear-gradient(90deg, rgba(24, 33, 98, 0.62) 0%, rgba(24, 33, 98, 0.38) 45%, transparent 100%);
+  background: linear-gradient(90deg, rgba(8, 10, 30, 0.72) 0%, rgba(8, 10, 30, 0.4) 45%, transparent 100%);
   -webkit-mask: linear-gradient(180deg, #000 55%, transparent);
   mask: linear-gradient(180deg, #000 55%, transparent);
 }
@@ -41,16 +41,17 @@
   place-items: center;
   width: 52px;
   height: 52px;
-  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--line);
   border-radius: 50%;
-  background: rgba(26, 36, 104, 0.35);
-  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.12), 0 6px 16px -8px rgba(10, 16, 60, 0.6);
+  background: var(--panel);
+  box-shadow: inset 0 0 0 4px rgba(169, 175, 219, 0.06), 0 8px 20px -10px rgba(0, 0, 0, 0.8);
   font-size: 1.15rem;
-  transition: background-color 0.25s, transform 0.35s var(--ease-out);
+  transition: background-color 0.25s, border-color 0.25s, transform 0.35s var(--ease-out);
 }
 
 .back:hover {
-  background: rgba(26, 36, 104, 0.6);
+  background: var(--night-2);
+  border-color: color-mix(in srgb, var(--lamp) 55%, transparent);
   transform: translateX(-3px);
 }
 
@@ -64,7 +65,7 @@
   margin: 0 0 0 4px;
   font: 400 clamp(1.6rem, 2.2vw, 2.1rem) / 1 var(--font-display);
   letter-spacing: 0.02em;
-  text-shadow: 0 2px 10px rgba(16, 22, 80, 0.55);
+  text-shadow: 0 2px 12px rgba(4, 5, 18, 0.8);
 }
 
 .top__rule {
@@ -72,7 +73,7 @@
   width: clamp(80px, 12vw, 180px);
   height: 1px;
   margin-left: 8px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.9));
+  background: linear-gradient(90deg, rgba(169, 175, 219, 0.1), color-mix(in srgb, var(--lamp) 80%, transparent));
 }
 
 /* 선 끝의 금별 */
@@ -84,10 +85,10 @@
   width: 22px;
   height: 22px;
   translate: 0 -50%;
-  background: linear-gradient(180deg, var(--gold-hi), var(--gold));
+  background: linear-gradient(180deg, var(--lamp-hi), var(--lamp));
   -webkit-mask: var(--i-spark) center / contain no-repeat;
   mask: var(--i-spark) center / contain no-repeat;
-  filter: drop-shadow(0 0 6px rgba(255, 226, 160, 0.9));
+  filter: drop-shadow(0 0 6px rgba(255, 207, 138, 0.8));
   animation: twinkle 3.6s ease-in-out infinite;
 }
 
@@ -112,11 +113,11 @@
   height: 44px;
   margin: 0;
   padding: 0 16px 0 10px;
-  border: 1px solid var(--navy-line);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: var(--navy);
-  box-shadow: 0 6px 16px -8px rgba(10, 16, 60, 0.6);
-  color: #fff;
+  background: var(--panel);
+  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.8);
+  color: var(--moon);
   font-size: 1rem;
   line-height: 1;
 }
@@ -133,7 +134,7 @@
 
 .gold__unit {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--mist);
 }
 
 .chip {
@@ -145,14 +146,14 @@
 .chip .icon {
   width: 18px;
   height: 18px;
-  color: var(--gold-hi);
-  filter: drop-shadow(0 0 4px rgba(255, 226, 160, 0.8));
+  color: var(--lamp-hi);
+  filter: drop-shadow(0 0 4px rgba(255, 207, 138, 0.7));
 }
 
 .chip:hover,
 :root:has(#rates:popover-open) .chip {
-  background: rgba(26, 36, 104, 0.72);
-  border-color: rgba(255, 255, 255, 0.75);
+  background: var(--night-2);
+  border-color: color-mix(in srgb, var(--lamp) 55%, transparent);
 }
 
 /* ---------- 확률 창 (popover: 바깥을 누르거나 Esc로 닫힌다) ---------- */
@@ -163,14 +164,14 @@
   width: min(300px, calc(100vw - 32px));
   margin: 0;
   padding: 22px 22px 18px;
-  border: 1.5px solid var(--gold);
-  border-radius: 20px;
-  background: linear-gradient(180deg, var(--cream) 0%, #fdf0ee 100%);
+  border: 1px solid color-mix(in srgb, var(--lamp) 45%, transparent);
+  border-radius: 18px;
+  background: var(--night-1);
   box-shadow:
-    inset 0 0 0 4px rgba(255, 255, 255, 0.8),
-    inset 0 0 0 5px rgba(214, 173, 98, 0.45),
-    0 22px 44px -18px rgba(30, 32, 100, 0.55);
-  color: var(--ink);
+    inset 0 0 0 4px rgba(11, 14, 38, 0.6),
+    inset 0 0 0 5px color-mix(in srgb, var(--lamp) 18%, transparent),
+    0 24px 50px -18px rgba(0, 0, 0, 0.8);
+  color: var(--moon);
   opacity: 0;
   transform: translateY(-8px) scale(0.98);
   transform-origin: top right;
@@ -216,14 +217,14 @@
   align-items: center;
   gap: 12px;
   padding: 8px 4px;
-  border-bottom: 1px dashed rgba(98, 92, 149, 0.22);
+  border-bottom: 1px dashed rgba(169, 175, 219, 0.2);
 }
 
 .rates__list li:last-child {
   border-bottom: 0;
 }
 
-/* 등급 보석: 등급 색으로 채운 마름모 (연한 5등급 색도 보이도록 남보라 테두리) */
+/* 등급 보석: 등급 색으로 채운 마름모 */
 .rates__list li::before {
   content: '';
   flex: none;
@@ -231,20 +232,19 @@
   height: 11px;
   margin: 0 3px;
   rotate: 45deg;
-  border: 1px solid color-mix(in srgb, var(--c) 45%, var(--ink));
   background: var(--c);
 }
 
 .rates__name {
   flex: 1;
   font-size: 0.9375rem;
-  color: var(--ink-soft);
+  color: var(--mist);
 }
 
 .rates__name b {
   margin-left: 4px;
   font-weight: 400;
-  color: var(--ink);
+  color: var(--c);
 }
 
 .rates__pct {
@@ -256,7 +256,7 @@
   margin: 12px 0 0;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--ink-soft);
+  color: var(--mist);
 }
 
 .rates__close {
@@ -271,14 +271,14 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: var(--ink-soft);
+  color: var(--mist);
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
 }
 
 .rates__close:hover {
-  background: rgba(98, 92, 149, 0.12);
-  color: var(--ink);
+  background: rgba(169, 175, 219, 0.12);
+  color: var(--moon);
 }
 
 /* ---------- 좁은 화면 ---------- */
