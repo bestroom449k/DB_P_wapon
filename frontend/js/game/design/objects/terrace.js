@@ -2,12 +2,12 @@
 // 바닥은 Reflector(거울)로 위의 장면을 비추고, 셰이더에서 살짝 흐리게 한 뒤 짙은 대리석 타일 색과 섞는다.
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { NOISE } from '../../../design/shared/glsl.js';
-import { GLOW } from '../../../design/shared/materials.js';
-import { glowTexture } from '../../../design/shared/textures.js';
+import { NOISE } from '../../../shared/glsl.js';
+import { GLOW } from '../../../shared/materials.js';
+import { glowTexture } from '../../../shared/textures.js';
 import { marble, marbleTrim, lanternLight } from '../shared/stone.js';
 
-export const FLOOR_RADIUS = 18; // 바닥 반지름
+const FLOOR_RADIUS = 18; // 바닥 반지름
 const FLOOR_Z = 1.5; // 바닥 중심의 깊이
 const RAIL = { from: THREE.MathUtils.degToRad(196), to: THREE.MathUtils.degToRad(344), radius: 17.4 }; // 난간이 두르는 각도와 반지름
 
@@ -95,13 +95,6 @@ export function create({ scene, renderer }) { // 테라스 만들기
   floor.position.z = FLOOR_Z;
   scene.add(floor);
 
-  // 그림자 받이: 거울 바닥은 조명을 계산하지 않아서 그림자가 안 생긴다. 그래서 바로 위에 그림자만 그리는 투명한 판을 깐다
-  const shadowCatcher = new THREE.Mesh(new THREE.CircleGeometry(FLOOR_RADIUS, 96), new THREE.ShadowMaterial({ color: 0x03040c, opacity: 0.5 }));
-  shadowCatcher.rotation.x = -Math.PI / 2;
-  shadowCatcher.position.set(0, 0.004, FLOOR_Z);
-  shadowCatcher.receiveShadow = true;
-  scene.add(shadowCatcher);
-
   const rim = new THREE.Mesh(new THREE.CylinderGeometry(FLOOR_RADIUS, FLOOR_RADIUS - 0.6, 1.2, 128, 1, true), marbleTrim); // 바닥 가장자리 돌 띠
   rim.position.set(0, -0.6, FLOOR_Z);
   scene.add(rim);
@@ -138,7 +131,6 @@ export function create({ scene, renderer }) { // 테라스 만들기
       q.setFromAxisAngle(THREE.Object3D.DEFAULT_UP, turn);
       mesh.setMatrixAt(i, m.compose(position, q, new THREE.Vector3(...size)));
     });
-    mesh.castShadow = true; // 달빛 그림자를 드리운다
     scene.add(mesh);
   }
 
@@ -153,7 +145,6 @@ export function create({ scene, renderer }) { // 테라스 만들기
     const p = at(angle);
     balusterMesh.setMatrixAt(i, m.makeTranslation(p.x, 0.14, p.z));
   });
-  balusterMesh.castShadow = true; // 난간 기둥 하나하나가 바닥에 줄무늬 그림자를 드리운다
   scene.add(balusterMesh);
 
   // 등불: 큰 기둥 하나 건너 하나마다 머리 위에 작은 등불 (따뜻한 심지 + 번지는 빛)

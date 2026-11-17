@@ -2,7 +2,7 @@
 // 기둥 가운데가 밝고 가장자리와 위쪽은 흐려지며, 빛줄기가 위로 흐른다.
 import * as THREE from 'three';
 import { ISLAND_TOP } from '../objects/island.js';
-import { GLOW } from '../shared/materials.js';
+import { GLOW } from '../../shared/materials.js';
 
 const vertexShader = /* glsl */ ` // 빛 기둥 모양 셰이더 (면 방향 전달)
   varying vec2 vUv;
@@ -43,7 +43,7 @@ export function create({ scene }) { // 빛 기둥 만들기
   return (s, t) => { // 매 프레임: 빛 기둥
     pillar.visible = s.finale > 0.002; // 5등급 때만 보이기
     uniforms.uTime.value = t; // 빛줄기가 흐르게
-    uniforms.uColor.value.copy(s.light); // 무지갯빛
+    uniforms.uColor.value.copy(s.light); // 등급 빛 (5등급 황금빛)
     uniforms.uOpacity.value = s.finale * 0.25; // 나타났다 사라지기 (책을 가리지 않을 만큼만)
     const breathe = 1 + Math.sin(t * 9) * 0.04; // 굵기가 살짝 떨림
     pillar.scale.set(breathe, 1, breathe);

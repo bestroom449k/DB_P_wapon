@@ -1,7 +1,7 @@
 // 그림 파일 없이 캔버스에 직접 그리는 텍스처들: 마도서 카드, 카드 빛 테두리, 구름, 바닥 룬 고리, 네 갈래 별빛
-// (오각별 마법진과 둥근 빛은 타이틀 화면의 js/design/shared/textures.js를 같이 쓴다)
+// (오각별 마법진과 둥근 빛은 타이틀 화면과 같이 쓰는 js/shared/textures.js)
 import * as THREE from 'three';
-import { random } from './random.js';
+import { random } from '../../../shared/random.js'; // 정해진 무작위 수 (타이틀과 같이 씀)
 
 function paper(width, height) { // 빈 캔버스 만들기
   const canvas = Object.assign(document.createElement('canvas'), { width, height });
@@ -248,7 +248,9 @@ export function cardGlowTexture() { // 카드 빛 테두리 그림
 // ---------- 뭉게구름 ----------
 // 둥근 덩어리를 뒤(위)에서 앞(아래)으로 겹쳐 그리고, 덩어리마다 왼쪽 위가 밝게 칠해 뭉실뭉실한 윤곽을 만든다.
 // 밑면은 평평하게 자르고 라벤더빛 그늘을 준다.
-export function cloudTexture(seed, width = 1024, height = 512) { // 구름 한 덩이 그림
+export function cloudTexture(seed) { // 구름 한 덩이 그림
+  const width = 1024; // 그림 크기 (가로 2 : 세로 1)
+  const height = 512;
   const { canvas, g } = paper(width, height);
   const rand = random(seed);
   const base = height * 0.78; // 구름 밑면 높이

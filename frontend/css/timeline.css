@@ -26,6 +26,7 @@
   --cycle: 32.4s;
   --cycle-start: calc(var(--intro) + 2.4s); /* 장면이 다 들어온 뒤 각인이 시작된다 */
   --forge: forge-cycle var(--cycle) linear var(--cycle-start) infinite both; /* 룬 각인 타임라인 애니메이션 */
+  --enter: 3.6s; /* 공방 입장 연출 길이 (title.css의 .portal 빛도 같은 길이로 차오른다) */
 
   animation: var(--forge);
 }
@@ -102,7 +103,7 @@
    → 1.8~3.6초 카메라가 펼친 면 속으로 빨려 들어간다 (마지막에 title.css의 .portal 빛이 화면을 채움)
    그동안 각인 타임라인은 멈춰 둔다 (책이 펼쳐지는 중에 등급이 바뀌지 않게) */
 :root:has(#enter:target) {
-  animation: var(--forge), enter-book 3.6s linear forwards;
+  animation: var(--forge), enter-book var(--enter) linear forwards;
   animation-play-state: paused, running;
 }
 
@@ -135,7 +136,7 @@
 }
 
 /* 움직임 줄이기: 각인 타임라인을 멈추고 5등급이 다 된 모습을 한 장면으로 보여 준다 (3D 시간은 js/function/main.js가 멈춘다).
-   공방 입장은 책이 펼쳐지지 않고 0.6초 동안 책장 빛만 차오른다 */
+   공방 입장은 책이 펼쳐지지 않고 책장 빛만 짧게 차오른다 (title.css의 portal-still) */
 @media (prefers-reduced-motion: reduce) {
   :root {
     animation: none !important;
@@ -143,14 +144,5 @@
     --grade: var(--g5);
     --grade-num: '5등급';
     --grade-name: '황금';
-  }
-
-  :root:has(#enter:target) {
-    animation: enter-still 0.6s linear forwards !important;
-  }
-
-  @keyframes enter-still {
-    from { --dive: 0; }
-    to { --dive: 0; }
   }
 }

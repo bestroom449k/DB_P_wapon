@@ -1,17 +1,7 @@
 // 밤 구름: 캔버스로 그린 구름 그림을 멀리 세운 판에 붙이고, 남색으로 물들여 달빛 받은 밤 구름으로 만든다.
 // 왼쪽 섬들 뒤, 오른쪽 성 뒤, 위쪽 하늘, 그리고 지평선 아래 구름바다. 아주 천천히 옆으로 흘러간다.
-// 그리고 테라스와 먼 섬·성 사이에 옅은 밤 안개 띠를 깔아, 타이틀처럼 멀수록 아련하게 보이게 한다.
 import * as THREE from 'three';
-import { glowTexture } from '../../../design/shared/textures.js';
 import { cloudTexture } from '../shared/textures.js';
-
-// 밤 안개 띠: [가로 위치, 높이, 깊이, 가로 크기, 세로 크기, 불투명도]
-const MIST = [
-  [0, 0.5, -28, 90, 6, 0.22], // 난간 바로 뒤에 낮게 깔린 안개
-  [-35, 5, -42, 110, 16, 0.3], // 왼쪽 섬들 앞
-  [35, 3, -55, 130, 18, 0.28], // 오른쪽 성 앞
-  [0, 9, -75, 170, 22, 0.26], // 멀리 넓게
-];
 
 // [가로 위치, 높이, 깊이, 가로 크기, 그림 번호, 불투명도]
 const CLOUDS = [
@@ -39,22 +29,9 @@ export function create({ scene }) { // 구름 만들기
     return cloud;
   });
 
-  const haze = glowTexture(); // 가장자리가 부드럽게 사라지는 둥근 빛 그림 (옆으로 길게 늘여 안개 띠로)
-  const mists = MIST.map(([x, y, z, width, height, opacity]) => {
-    const material = new THREE.MeshBasicMaterial({ map: haze, color: 0x3b4470, transparent: true, opacity, depthWrite: false, fog: false }); // 옅은 남회색 안개
-    const mist = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
-    mist.position.set(x, y, z);
-    mist.userData.home = x;
-    scene.add(mist);
-    return mist;
-  });
-
-  return (s, t) => { // 매 프레임: 구름과 안개가 천천히 흐른다
+  return (s, t) => { // 매 프레임: 구름이 천천히 흐른다
     clouds.forEach((cloud, i) => {
       cloud.position.x = cloud.userData.home + Math.sin(t * 0.012 + i * 1.7) * 6;
-    });
-    mists.forEach((mist, i) => {
-      mist.position.x = mist.userData.home + Math.sin(t * 0.03 + i * 2.1) * 4; // 구름보다 조금 빨리, 반대로 흔들리며
     });
   };
 }

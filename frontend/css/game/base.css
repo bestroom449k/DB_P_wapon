@@ -11,13 +11,7 @@
   --i-spark: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 1.5c.5 5.6 2.9 8 8.5 10.5-5.6 2.5-8 4.9-8.5 10.5-.5-5.6-2.9-8-8.5-10.5C9.1 9.5 11.5 7.1 12 1.5Z'/></svg>");
 }
 
-/* ---------- 기본 ---------- */
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+/* ---------- 기본 (두 화면 공통 규칙은 css/tokens.css) ---------- */
 
 html,
 body {
@@ -32,33 +26,9 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-::selection {
-  background: var(--lamp);
-  color: var(--lamp-ink);
-}
-
-:focus-visible {
-  outline: 2px solid var(--lamp);
-  outline-offset: 3px;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
 button {
   font: inherit;
   color: inherit;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 /* 아이콘 묶음 자체는 보이지 않는다 */
@@ -91,7 +61,7 @@ button {
   position: fixed;
   inset: 0;
   z-index: 30;
-  background: radial-gradient(ellipse at 50% 50%, var(--page-light) 0%, var(--page-glow) 75%, #e2cc9c 100%);
+  background: var(--page-fill);
   pointer-events: none;
   animation: veil-lift 1.8s cubic-bezier(0.45, 0, 0.2, 1) 0.2s forwards;
 }

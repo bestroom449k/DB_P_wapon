@@ -1,9 +1,8 @@
 // 밤하늘: 카메라를 감싼 큰 구 안쪽에 셰이더로 그린다.
-// 아래는 차가운 남회색, 위는 짙은 남색이고, 그 위에 흰빛 파랑 오로라 커튼, 반짝이는 별, 오늘 밤 실제 모양의 작은 달을 얹는다.
+// 아래는 차가운 남회색, 위는 짙은 남색이고, 그 위에 흰빛 파랑 오로라 커튼, 반짝이는 별, 작은 달을 얹는다.
 // 하늘은 채도를 낮게 두어, 화면에서 가장 진한 색은 늘 무기 등급 색이 되게 한다.
 import * as THREE from 'three';
-import { NOISE } from '../shared/glsl.js';
-import { moonLight, moonFull } from '../../function/moon.js'; // 오늘 밤 실제 달 모양
+import { NOISE } from './glsl.js';
 
 const vertexShader = /* glsl */ ` // 하늘 모양 셰이더 (방향 전달)
   varying vec3 vDir;
@@ -16,8 +15,6 @@ const vertexShader = /* glsl */ ` // 하늘 모양 셰이더 (방향 전달)
 const fragmentShader = /* glsl */ ` // 하늘 색 셰이더 (하늘, 오로라, 별, 달)
   uniform float uTime;
   uniform vec3 uTint;
-  uniform vec3 uMoonLight; // 달 표면을 비추는 햇빛 방향 (js/function/moon.js)
-  uniform float uMoonFull; // 달이 밝게 보이는 비율 (0 삭 ~ 1 보름)
   varying vec3 vDir;
   ${NOISE}
   void main() {
@@ -54,31 +51,17 @@ const fragmentShader = /* glsl */ ` // 하늘 색 셰이더 (하늘, 오로라, 
       }
     }
 
-    // 달: 작고 차가운 빛, 오늘 밤 실제 모양 그대로 (둥근 공에 햇빛이 비친 쪽만 밝게)
-    vec3 moonDir = normalize(vec3(0.186, 0.225, -0.957));
-    float md = dot(d, moonDir);
-    vec3 moonRight = normalize(cross(moonDir, vec3(0.0, 1.0, 0.0))); // 달을 바라볼 때의 오른쪽
-    vec3 moonUp = cross(moonRight, moonDir); // 달을 바라볼 때의 위쪽
-    vec3 off = d - moonDir * md; // 달 가운데에서 벗어난 정도
-    vec2 face = vec2(dot(off, moonRight), dot(off, moonUp)) / 0.0105; // 달 원판 위의 자리 (가장자리가 1)
-    float disc = smoothstep(1.0, 0.82, length(face)) * step(0.0, md); // 달 원판
-    vec3 surface = vec3(face, sqrt(max(0.0, 1.0 - dot(face, face)))); // 달 표면이 향한 방향 (둥근 공)
-    float lit = smoothstep(-0.06, 0.06, dot(surface, uMoonLight)); // 햇빛을 받는 쪽
-    col += vec3(0.86, 0.90, 1.0) * disc * (0.04 + lit * 0.96); // 어두운 쪽도 아주 희미하게 보인다 (지구빛)
-    float halo = max(md, 0.0);
-    col += vec3(0.62, 0.70, 1.0) * (pow(halo, 80.0) * 0.06 + pow(halo, 10.0) * 0.012) * (0.25 + 0.75 * uMoonFull); // 달무리 (보름달일수록 크게)
+    // 달과 달무리: 작고 차가운 빛 (5등급 황금의 따뜻한 빛과 겹치지 않게)
+    float md = max(dot(d, normalize(vec3(0.186, 0.225, -0.957))), 0.0);
+    col += vec3(0.86, 0.90, 1.0) * smoothstep(0.99993, 0.99997, md);
+    col += vec3(0.62, 0.70, 1.0) * (pow(md, 80.0) * 0.06 + pow(md, 10.0) * 0.012);
 
     gl_FragColor = vec4(col, 1.0);
   }
 `;
 
 export function create({ scene, camera }) { // 하늘 만들기
-  const uniforms = { // 셰이더에 넘길 값
-    uTime: { value: 0 }, // 시간
-    uTint: { value: new THREE.Color(0x8fa6ff) }, // 등급 색 (게임 화면처럼 등급 색이 없으면 달빛 파랑)
-    uMoonLight: { value: new THREE.Vector3(...moonLight) }, // 오늘 달을 비추는 햇빛 방향
-    uMoonFull: { value: moonFull }, // 오늘 달이 차오른 정도
-  };
+  const uniforms = { uTime: { value: 0 }, uTint: { value: new THREE.Color(0x8fa6ff) } }; // 셰이더에 넘길 값 (시간, 등급 색. 게임 화면처럼 등급 색이 없으면 달빛 파랑)
   const sky = new THREE.Mesh( // 카메라를 감싸는 큰 구
     new THREE.SphereGeometry(150, 64, 32),
     new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader, side: THREE.BackSide, depthWrite: false }),

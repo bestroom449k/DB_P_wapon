@@ -2,10 +2,10 @@
 // 고리마다 타이틀 화면과 같은 룬 글자 띠가 흐르고, 큰 고리에는 다섯 등급 색 보석이 함께 돈다 (두 화면이 같은 세계로 보이게).
 // 뽑기 연출 중에는 기를 모을수록 빨라지고 밝아진다.
 import * as THREE from 'three';
-import { GLOW } from '../../../design/shared/materials.js';
-import { UV_VERTEX } from '../../../design/shared/glsl.js';
-import { runeBandTexture } from '../../../design/objects/grimoire-textures.js';
-import { glowTexture } from '../../../design/shared/textures.js';
+import { GLOW } from '../../../shared/materials.js';
+import { UV_VERTEX } from '../../../shared/glsl.js';
+import { runeBandTexture } from '../../../shared/grimoire-textures.js';
+import { glowTexture } from '../../../shared/textures.js';
 import { sparkTexture } from '../shared/textures.js';
 import { CARD_CENTER } from './cards.js';
 
@@ -28,10 +28,8 @@ const RINGS = [
   [2.6, 1.42, -0.1, -0.085], // 납작하게 가로로
 ];
 const BAND_COLOR = new THREE.Color(0x8e98d6); // 룬 띠 색 (달빛 파랑, 은은하게)
-const css = getComputedStyle(document.documentElement);
-const GRADES = [1, 2, 3, 4, 5].map((i) => new THREE.Color(css.getPropertyValue(`--g${i}`).trim())); // 다섯 등급 색 (css/tokens.css)
 
-export function create({ scene }) { // 궤도 고리 만들기
+export function create({ scene }, { colors }) { // 궤도 고리 만들기 (colors: 다섯 등급 색, js/game/function/timeline.js)
   const band = runeBandTexture(); // 룬 띠 그림 (타이틀의 등급 룬 띠와 같은 그림)
   const rings = RINGS.map(([radius, lie, lean, speed], k) => {
     const uniforms = { uColor: { value: new THREE.Color(0xe6e0ff) }, uPhase: { value: k * 0.37 }, uGain: { value: 1 } };
@@ -65,7 +63,7 @@ export function create({ scene }) { // 궤도 고리 만들기
     return { ring, uniforms, radius, speed, heads, map, runes };
   });
 
-  const gems = GRADES.map((color) => { // 큰 고리를 따라 도는 다섯 등급 색 보석 (등급 색 빛무리 + 반짝이는 심)
+  const gems = colors.map((color) => { // 큰 고리를 따라 도는 다섯 등급 색 보석 (등급 색 빛무리 + 반짝이는 심)
     const gem = new THREE.Group();
     const aura = new THREE.Sprite(new THREE.SpriteMaterial({ ...GLOW, map: glowTexture(), color: color.clone().multiplyScalar(1.2) }));
     aura.scale.setScalar(0.9);

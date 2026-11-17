@@ -1,7 +1,7 @@
 // 떠오르는 마력 가루: 점 560개를 셰이더 안에서 위로 흘려보낸다 (CPU 계산 없음).
 // 각 점은 높이가 끝까지 올라가면 아래에서 다시 시작하고, 별처럼 깜빡이며 좌우로 흔들린다.
 import * as THREE from 'three';
-import { GLOW } from '../shared/materials.js';
+import { GLOW } from './materials.js';
 
 const COUNT = 560; // 가루 개수
 const PALETTE = [0xdfe6ff, 0xb9c6ff, 0xd9c8ff, 0xffe2b0, 0xa8f0d6].map((c) => new THREE.Color(c)); // 가루 색 (달빛 흰색, 하늘 파랑, 연보라, 옅은 금빛, 옅은 비취)

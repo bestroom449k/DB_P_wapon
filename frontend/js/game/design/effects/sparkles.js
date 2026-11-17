@@ -1,8 +1,8 @@
 // 반짝이: 카드 둘레에서 깜빡이는 네 갈래 별 90개, 마법진에서 천천히 떠오르는 빛가루 220개 (셰이더 안에서 움직임, CPU 계산 없음).
 // 그리고 고리와 기둥 둘레에 큰 별빛 여섯 개. 뽑기 연출 중에는 빛가루가 빨리 솟는다.
 import * as THREE from 'three';
-import { GLOW } from '../../../design/shared/materials.js';
-import { random } from '../shared/random.js';
+import { GLOW } from '../../../shared/materials.js';
+import { random } from '../../../shared/random.js'; // 정해진 무작위 수 (타이틀과 같이 씀)
 import { sparkTexture } from '../shared/textures.js';
 import { CARD_CENTER } from '../objects/cards.js';
 

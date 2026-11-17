@@ -1,9 +1,9 @@
 // 룬 각인: 등급이 오르기 직전 룬 조각들이 책 둘레를 돌며 모여들고(--charge), 새겨지는 순간(--pulse) 빛나는 룬이 사방으로 퍼져 떠오른다.
-// 대장간의 불꽃과 달리 중력으로 떨어지지 않고, 마법처럼 천천히 위로 흩어지며 사라진다.
+// 불꽃처럼 중력으로 떨어지지 않고, 마법처럼 천천히 위로 흩어지며 사라진다.
 import * as THREE from 'three';
 import { BOOK_Y } from '../objects/grimoire.js';
-import { glyphTextures } from '../objects/grimoire-textures.js';
-import { GLOW } from '../shared/materials.js';
+import { glyphTextures } from '../../shared/grimoire-textures.js';
+import { GLOW } from '../../shared/materials.js';
 
 const GATHER = 12; // 모여드는 룬 조각 수
 const BURST = 90; // 한꺼번에 퍼질 수 있는 룬 수

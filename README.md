@@ -130,8 +130,9 @@ frontend/              화면 (타이틀과 게임 화면은 같은 밤 세계)
   game.html            게임 첫 화면 (뽑기)
   css/                 공통 색과 글꼴(tokens.css), 타이틀 글자·메뉴(title.css), 룬 각인·입장 타임라인(timeline.css), 게임 화면(game/)
   js/function/         타이틀 기능: 시작, 로그인, 메뉴 키보드, 입장, 카메라
-  js/design/           타이틀 디자인: 하늘, 섬, 마도서, 룬 띠, 효과 (Three.js 3D)
+  js/design/           타이틀 디자인: 산맥, 섬, 마도서, 룬 띠, 효과 (Three.js 3D)
   js/game/             게임 화면: function/(기능), design/(디자인)
+  js/shared/           두 화면이 같이 쓰는 디자인: 밤하늘, 마력 가루, 마도서 그림, 셰이더, 텍스처, 재질
 plan.md                기획서
 LIBRARIES.md           사용하는 라이브러리 설명
 ```

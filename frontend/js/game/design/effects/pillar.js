@@ -1,9 +1,9 @@
 // 빛 기둥: 하늘에서 가운데 카드 뒤를 지나 바닥까지 내리꽂히는 흰 빛. 바닥에 닿는 곳에서는 가로로 빛이 번진다.
 // 늘 카메라 쪽을 보는 판에 셰이더로 그린다. 뽑기 연출 중에는 굵어지고 밝아진다.
 import * as THREE from 'three';
-import { GLOW } from '../../../design/shared/materials.js';
-import { UV_VERTEX } from '../../../design/shared/glsl.js';
-import { glowTexture } from '../../../design/shared/textures.js';
+import { GLOW } from '../../../shared/materials.js';
+import { UV_VERTEX } from '../../../shared/glsl.js';
+import { glowTexture } from '../../../shared/textures.js';
 import { CARD_CENTER } from '../objects/cards.js';
 
 const beamShader = /* glsl */ ` // 기둥 색 셰이더 (가는 심지 + 부드러운 빛 + 위로 흐르는 결)

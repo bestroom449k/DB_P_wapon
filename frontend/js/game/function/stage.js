@@ -9,19 +9,12 @@ const BASE_FOV = 36; // 넓은 화면의 시야각
 export function create(canvas) { // 무대 만들기
   const renderer = new THREE.WebGLRenderer({ canvas, powerPreference: 'high-performance' }); // 렌더러 (계단 현상 줄이기는 bloom.js가 맡음)
   renderer.toneMapping = THREE.ACESFilmicToneMapping; // 밝기 압축 (타이틀 화면과 같은 영화 같은 색감)
-  renderer.shadowMap.enabled = true; // 달빛 그림자 켜기
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap; // 가장자리가 부드러운 그림자
 
   const scene = new THREE.Scene(); // 장면
-  scene.fog = new THREE.FogExp2(0x0d1222, 0.0075); // 멀수록 밤 안개에 묻힌다 (먼 섬과 성이 아련하게)
+  scene.fog = new THREE.FogExp2(0x0d1222, 0.0065); // 멀수록 밤 안개에 묻힌다 (먼 섬과 성이 아련하게)
   scene.add(new THREE.HemisphereLight(0x48527a, 0x0e0f1c, 1.1)); // 위는 차분한 하늘빛, 아래는 짙은 남색 (채도를 낮춰 등급 색만 진하게)
-  const moon = new THREE.DirectionalLight(0xc8d2ff, 1.5); // 달빛 (하늘의 달이 있는 오른쪽 위 뒤에서: 건물 윤곽이 빛나고 그림자가 앞으로 길게 드리운다)
-  moon.position.set(9, 16, -26);
-  moon.castShadow = true; // 기둥과 난간이 바닥에 그림자를 드리운다
-  moon.shadow.mapSize.set(2048, 2048); // 그림자 선명도
-  Object.assign(moon.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22, near: 5, far: 70 }); // 그림자를 계산할 범위 (테라스 전체)
-  moon.shadow.bias = -0.0004; // 그림자 줄무늬 방지
-  moon.shadow.normalBias = 0.03;
+  const moon = new THREE.DirectionalLight(0xc8d2ff, 1.5); // 달빛 (오른쪽 위 뒤에서: 건물 윤곽이 빛난다)
+  moon.position.set(14, 18, -12);
   scene.add(moon);
   const fill = new THREE.DirectionalLight(0x8a96d8, 0.55); // 달빛이 구름에 되비친 빛 (앞 왼쪽에서 약하게)
   fill.position.set(-10, 8, 14);
@@ -48,10 +41,9 @@ export function create(canvas) { // 무대 만들기
   resize();
 
   // 마우스: 장면 위에 있을 때만 카드에 반응한다 (버튼 위에서는 반응하지 않음)
-  const target = new THREE.Vector2(); // 마우스가 가리키는 곳 (-1 ~ 1)
+  const target = world.pointer; // 마우스가 가리키는 곳 (-1 ~ 1). 카메라 시차와 카드(cards.js)가 같이 읽는다
   addEventListener('pointermove', (event) => {
     target.set((event.clientX / innerWidth) * 2 - 1, -(event.clientY / innerHeight) * 2 + 1);
-    world.pointer.copy(target);
     world.pointerOver = event.target === canvas;
   });
   document.documentElement.addEventListener('pointerleave', () => {

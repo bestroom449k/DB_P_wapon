@@ -1,7 +1,8 @@
 // 떠 있는 섬: 풀 덮인 윗면, 아래로 뾰족한 바위, 둥근 나무 몇 그루. 왼쪽 하늘에 크기가 다른 섬 다섯 개가 천천히 오르내린다.
 import * as THREE from 'three';
-import { random } from '../shared/random.js';
-import { rock, grass, leaves, bark, roughen } from '../shared/stone.js';
+import { random } from '../../../shared/random.js'; // 정해진 무작위 수 (타이틀과 같이 씀)
+import { rock, grass, leaves, bark } from '../shared/stone.js';
+import { roughen } from '../../../shared/roughen.js'; // 바위 표면 다듬기 (타이틀과 같이 씀)
 
 // [가로 위치, 높이, 깊이, 크기, 씨앗]
 const ISLANDS = [

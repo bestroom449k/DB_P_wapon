@@ -19,7 +19,6 @@
   /* 등불 금색: 주 행동 버튼, 포커스, 별 장식 */
   --lamp: #ffcf8a;
   --lamp-hi: #ffe6b8; /* 밝은 금빛 (그러데이션 위쪽) */
-  --lamp-deep: #c9924a; /* 짙은 금빛 (그러데이션 아래쪽, 가는 선) */
   --lamp-ink: #24180f; /* 금색 판 위의 글자 */
 
   /* 무기 등급 5단계: 밤하늘에서 등급이 오를수록 더 튀는 색 */
@@ -32,12 +31,45 @@
   /* 책장 빛: 타이틀에서 책 속으로 빨려 들어갈 때 화면을 채우고, 게임 화면은 이 빛이 걷히며 시작한다 */
   --page-light: #fff6e2;
   --page-glow: #f1e2c0;
+  --page-fill: radial-gradient(ellipse at 50% 50%, var(--page-light) 0%, var(--page-glow) 75%, #e2cc9c 100%); /* 화면을 채우는 책장 빛 (타이틀 .portal, 게임 .veil) */
 
   --font-display: 'Diphylleia', 'Noto Serif KR', serif; /* 제목, 메뉴 */
   --font-ui: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; /* 본문 */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* 대부분의 움직임: 빠르게 시작해 부드럽게 멈춤 */
 
   color-scheme: dark;
+}
+
+/* ---------- 두 화면 공통 기본 규칙 ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: var(--lamp);
+  color: var(--lamp-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--lamp);
+  outline-offset: 3px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sr-only { /* 화면에는 안 보이고 화면 낭독기만 읽는 글 */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* 타이틀 → 게임 화면으로 넘어갈 때: 브라우저가 앞 화면(책장 빛)을 붙잡고 있다가 새 화면(같은 책장 빛)으로 부드럽게 바꾼다.

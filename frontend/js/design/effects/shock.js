@@ -2,11 +2,11 @@
 // 타임라인의 --burst(0→1)를 그대로 크기와 투명도로 쓴다.
 import * as THREE from 'three';
 import { BOOK_Y } from '../objects/grimoire.js';
-import { runeCircleTexture } from '../objects/grimoire-textures.js';
+import { runeCircleTexture } from '../../shared/grimoire-textures.js';
 import { ISLAND_TOP } from '../objects/island.js';
 import { FLAT_TILT } from '../objects/rings.js';
-import { UV_VERTEX as vertexShader } from '../shared/glsl.js'; // 바닥 고리 판 셰이더는 공용 (UV 전달)
-import { GLOW } from '../shared/materials.js';
+import { UV_VERTEX as vertexShader } from '../../shared/glsl.js'; // 바닥 고리 판 셰이더는 공용 (UV 전달)
+import { GLOW } from '../../shared/materials.js';
 
 // 바닥 빛 고리: 평면 위에 테두리가 부드러운 고리 하나를 그린다
 const fragmentShader = /* glsl */ ` // 빛 고리 셰이더

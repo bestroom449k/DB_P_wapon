@@ -2,7 +2,8 @@
 // 달빛에 하얗게 비치고, 탑마다 불 켜진 창이 몇 개씩 있다. 멀리 있어서 밤 안개에 묻혀 아련하게 보인다.
 import * as THREE from 'three';
 import { island } from './islands.js';
-import { wall, roof, rock, roughen, windowLight } from '../shared/stone.js';
+import { wall, roof, rock, windowLight } from '../shared/stone.js';
+import { roughen } from '../../../shared/roughen.js'; // 바위 표면 다듬기 (타이틀과 같이 씀)
 
 const windowShape = new THREE.PlaneGeometry(0.16, 0.3); // 창 하나 (모든 창이 같이 씀)
 
@@ -22,7 +23,7 @@ const TOWERS = [
 const RING = 6; // 성벽 반지름
 const RING_TOWERS = 9; // 성벽 둘레 탑 수
 
-function tower(radius, height, roofHeight, seed = 0) { // 탑 하나: 원통 몸통, 처마 띠, 원뿔 지붕, 불 켜진 창
+function tower(radius, height, roofHeight, seed) { // 탑 하나: 원통 몸통, 처마 띠, 원뿔 지붕, 불 켜진 창
   const group = new THREE.Group();
   const body = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius * 1.04, height, 14), wall);
   body.position.y = height / 2;

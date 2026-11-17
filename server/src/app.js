@@ -1,5 +1,5 @@
 // 다섯 빛 공방 서버
-//   - frontend 폴더(타이틀 화면)를 그대로 보여 준다 → http://localhost:3000
+//   - frontend 폴더(타이틀 화면 index.html, 게임 화면 game.html)를 그대로 보여 준다 → http://localhost:3000
 //   - /api/auth/... 로 회원가입, 로그인을 처리한다
 //   - 로그인 상태는 세션으로 기억한다 (브라우저에는 세션 번호가 담긴 쿠키만 저장)
 import express from 'express';

@@ -1,11 +1,11 @@
 // 테라스를 둘러싼 대리석 건축: 왼쪽 아치문, 오른쪽 끝 큰 아치 기둥, 오른쪽 뒤 기둥 회랑, 왼쪽 앞 받침돌과 등불.
 // 장면의 양 끝을 액자처럼 감싸서 가운데 카드로 눈이 가게 한다. 밤이라 왼쪽 앞 등불이 둘레를 따뜻하게 비춘다.
 import * as THREE from 'three';
-import { GLOW } from '../../../design/shared/materials.js';
-import { glowTexture } from '../../../design/shared/textures.js';
+import { GLOW } from '../../../shared/materials.js';
+import { glowTexture } from '../../../shared/textures.js';
 import { marble, marbleTrim, leaves, lanternLight } from '../shared/stone.js';
 
-function column(height, radius = 0.32) { // 기둥: 네모 받침, 둥근 몸통, 머리
+function column(height, radius) { // 기둥: 네모 받침, 둥근 몸통, 머리
   const group = new THREE.Group();
   const plinth = new THREE.Mesh(new THREE.BoxGeometry(radius * 2.7, 0.26, radius * 2.7), marbleTrim);
   plinth.position.y = 0.13;
@@ -134,12 +134,5 @@ export function create({ scene }) { // 건축물 배치
   pot.scale.setScalar(0.85);
 
   scene.add(leftArch, rightArch, frame, hall, lamp, pot);
-  for (const building of [leftArch, rightArch, frame, hall, lamp, pot]) { // 돌과 화분은 달빛 그림자를 드리우고 받는다 (등불 빛 무리는 빼고)
-    building.traverse((part) => {
-      if (!part.isMesh) return;
-      part.castShadow = true;
-      part.receiveShadow = true;
-    });
-  }
   return () => {}; // 건축물은 움직이지 않는다
 }

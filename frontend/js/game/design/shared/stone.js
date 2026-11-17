@@ -12,19 +12,3 @@ export const wall = new THREE.MeshLambertMaterial({ color: 0xc6cbe6 }); // 성�
 export const roof = new THREE.MeshLambertMaterial({ color: 0x343e86 }); // 성 지붕 (깊은 파랑)
 export const windowLight = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.7, 1.15, 0.55), fog: false }); // 불 켜진 창 (1보다 밝아서 빛이 번지고, 안개 너머에서도 보인다)
 export const lanternLight = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.9, 1.3, 0.62) }); // 등불 심지
-
-// 꼭짓점을 위치에 따라 정해진 만큼 흔들어 울퉁불퉁한 바위처럼 만든다 (같은 위치는 같은 만큼 → 면이 안 갈라짐)
-export function roughen(geometry, amount, keepAbove = Infinity) { // 바위 표면 울퉁불퉁하게
-  const p = geometry.attributes.position;
-  for (let i = 0; i < p.count; i++) {
-    const [x, y, z] = [p.getX(i), p.getY(i), p.getZ(i)];
-    if (y > keepAbove) continue;
-    const r = (k) => {
-      const v = Math.sin(x * 12.9 + y * 78.2 + z * 37.7 + k) * 43758.5;
-      return v - Math.floor(v) - 0.5;
-    };
-    p.setXYZ(i, x + r(1) * amount, y + r(2) * amount, z + r(3) * amount);
-  }
-  geometry.computeVertexNormals();
-  return geometry;
-}

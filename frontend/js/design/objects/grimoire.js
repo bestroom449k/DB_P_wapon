@@ -1,17 +1,18 @@
 // 마도서: 가죽 표지에 금속 장식, 등급 빛으로 빛나는 표지 룬과 보석. 등급이 오를수록 깨어난다.
 //   1등급 사슬 두 줄에 묶인 낡은 책 → 2등급 사슬 한 줄, 룬이 켜짐 → 3등급 놋쇠 장식, 금박 책장
 //   → 4등급 사슬이 끊어지고 빛 균열, 도는 수정 조각 → 5등급 금빛 장식, 떠다니는 낱장, 빛의 날개
-// 기를 모을 때 떠오르며 떨고, 내려치는 순간 번쩍이며 가라앉고, 5등급에서는 높이 떠 한 바퀴 돈다.
+// 룬 조각이 모여들 때 떠오르며 떨고, 룬이 새겨지는 순간 번쩍이며 살짝 가라앉고, 5등급에서는 높이 떠 한 바퀴 돈다.
 // 다 만든 책은 빛 기둥을 타고 위로 올라가 보관되고(--reforge), 사슬에 묶인 새 책이 위에서 내려온다.
 // 공방 입장(게임 시작): s.open이 오르면 사슬이 끊어지고 표지가 열리며 페이지의 주문이 떠오르고,
 // s.flip이 오르면 책장이 점점 빨라지며 촤르륵 넘어간다 (그다음 카메라가 책 속으로 들어가는 것은 js/function/stage.js).
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { glowTexture } from '../shared/textures.js';
-import { GLOW } from '../shared/materials.js';
-import { mulberry32, runeCircleTexture, pageTextures, pageEdgeTexture, leatherGrain, glyphTextures, veinTexture, wingTexture, WING_ROOT } from './grimoire-textures.js';
+import { glowTexture } from '../../shared/textures.js';
+import { GLOW } from '../../shared/materials.js';
+import { random } from '../../shared/random.js';
+import { runeCircleTexture, pageTextures, pageEdgeTexture, leatherGrain, glyphTextures, veinTexture, wingTexture, WING_ROOT } from '../../shared/grimoire-textures.js';
 
-export const BOOK_Y = 0.25; // 책 가운데 높이 (등급 고리, 충격파, 불꽃도 이 높이를 씀)
+export const BOOK_Y = 0.25; // 책 가운데 높이 (룬 띠, 룬 마법진, 룬 조각도 이 높이를 씀)
 
 const TAU = Math.PI * 2;
 const SCALE = 1.2; // 크기
@@ -189,7 +190,7 @@ export function create({ scene }) { // 마도서 만들기
     const mesh = new THREE.InstancedMesh(linkGeo, iron, count);
     mesh.frustumCulled = false;
     body.add(mesh);
-    const r = mulberry32(seed);
+    const r = random(seed);
     const links = Array.from({ length: count }, (_, i) => {
       const tangent = path.getTangentAt(i / count);
       const out = new THREE.Vector3().crossVectors(UP, tangent).normalize(); // 책 바깥쪽
@@ -337,7 +338,7 @@ export function create({ scene }) { // 마도서 만들기
     const spin = t * 0.58 + s.spin * TAU; // 천천히 + 5등급 한 바퀴
     if (opened > 0 && faceTurn === null) faceTurn = Math.round(spin / TAU) * TAU; // 펼치면 가장 가까운 정면으로
     if (opened === 0) faceTurn = null;
-    book.position.y = BOOK_Y + Math.sin(t * 0.9) * 0.07 + s.charge * 0.22 - s.pulse * 0.1 + s.finale * 0.3 + away + opened * 0.12; // 둥실 + 기 모으기 + 내려치기 + 5등급 + 보관 + 펼치기
+    book.position.y = BOOK_Y + Math.sin(t * 0.9) * 0.07 + s.charge * 0.22 - s.pulse * 0.1 + s.finale * 0.3 + away + opened * 0.12; // 둥실 + 룬 조각 모임 + 룬 새김 + 5등급 + 보관 + 펼치기
     book.rotation.set(
       -0.3 * opened, // 펼치면 뒤로 젖혀 페이지가 보이게
       faceTurn === null ? spin : THREE.MathUtils.lerp(spin, faceTurn, opened),
@@ -371,14 +372,17 @@ export function create({ scene }) { // 마도서 만들기
     lowerChain(Math.max(broken, 1 - now.chainA));
     upperChain(Math.max(broken, 1 - now.chainB));
 
-    // 빛 (기 모을 때 차오르고, 내려치는 순간 번쩍)
+    // 빛 (룬 조각이 모일 때 차오르고, 룬이 새겨지는 순간 번쩍)
     const L = s.light;
     const surge = s.charge * 0.6 + s.pulse * 1.2;
     rune.color.copy(L).multiplyScalar(now.rune * (1 + Math.sin(t * 1.7) * 0.25) + surge);
     backRune.color.copy(L).multiplyScalar(0.4 * now.rune);
+    veins.visible = now.veins > 0.01; // 빛 균열은 4등급부터 (그 전에는 그리지 않음)
     veins.color.copy(L).multiplyScalar(now.veins * (1.2 + Math.sin(t * 3) * 0.5 + surge));
     gem.emissive.copy(L);
     gem.emissiveIntensity = now.glow + Math.sin(t * 2.3) * 0.5 + opened + s.charge * 1.5 + s.pulse * 2.5;
+    ink.visible = shine > 0; // 빛나는 주문과 떠오르는 글자 조각은 책을 펼쳤을 때만 그린다
+    motes.visible = shine > 0;
     ink.color.copy(L).multiplyScalar(shine * (0.8 + Math.sin(t * 2.1) * 0.2 + s.dive * s.dive));
     leafInk.color.copy(L).multiplyScalar(1.1);
     pageLight.color.copy(L);

@@ -1,8 +1,8 @@
 // 바닥 마법진: 큰 룬 고리(바깥)와 오각별 마법진(안쪽)이 서로 반대로 돈다. 그 아래로 라벤더빛이 번진다.
 // 뽑기 연출 중에는 기를 모을수록 빨리 돌고 밝아진다.
 import * as THREE from 'three';
-import { GLOW } from '../../../design/shared/materials.js';
-import { circleTexture, glowTexture } from '../../../design/shared/textures.js';
+import { GLOW } from '../../../shared/materials.js';
+import { circleTexture, glowTexture } from '../../../shared/textures.js';
 import { runeRingTexture } from '../shared/textures.js';
 
 const CENTER = new THREE.Vector3(0, 0, 0.6); // 마법진 중심 (가운데 카드 바로 아래)

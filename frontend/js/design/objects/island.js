@@ -1,26 +1,11 @@
 // 떠 있는 섬: 십각형 돌 제단과 아래로 뾰족한 바위,
 // 그 위에서 서로 반대로 도는 마법진 두 겹과 바닥에 번지는 빛.
 import * as THREE from 'three';
-import { circleTexture, glowTexture } from '../shared/textures.js';
-import { GLOW } from '../shared/materials.js';
+import { circleTexture, glowTexture } from '../../shared/textures.js';
+import { GLOW } from '../../shared/materials.js';
+import { roughen } from '../../shared/roughen.js'; // 바위 표면 다듬기 (게임 화면과 같이 씀)
 
 export const ISLAND_TOP = -2.15; // 제단 윗면 높이
-
-// 꼭짓점을 위치에 따라 정해진 만큼 흔들어 울퉁불퉁한 돌처럼 만든다 (같은 위치는 같은 만큼 → 면이 안 갈라짐)
-export function roughen(geometry, amount, keepAbove = Infinity) { // 돌 표면 울퉁불퉁하게
-  const p = geometry.attributes.position;
-  for (let i = 0; i < p.count; i++) {
-    const [x, y, z] = [p.getX(i), p.getY(i), p.getZ(i)];
-    if (y > keepAbove) continue;
-    const r = (k) => {
-      const v = Math.sin(x * 12.9 + y * 78.2 + z * 37.7 + k) * 43758.5;
-      return v - Math.floor(v) - 0.5;
-    };
-    p.setXYZ(i, x + r(1) * amount, y + r(2) * amount, z + r(3) * amount);
-  }
-  geometry.computeVertexNormals();
-  return geometry;
-}
 
 export function create({ scene }) { // 섬 만들기
   const stone = new THREE.MeshStandardMaterial({ color: 0x2b2a48, roughness: 0.92, flatShading: true }); // 돌 재질
@@ -57,7 +42,7 @@ export function create({ scene }) { // 섬 만들기
   scene.add(ground);
 
   return (s, t) => { // 매 프레임: 섬
-    // 기를 모을 때 어두워지고, 등급이 오를수록, 내려치는 순간 더 밝게
+    // 룬 조각이 모일 때 어두워지고, 등급이 오를수록, 룬이 새겨지는 순간 더 밝게
     const glow = 0.45 - s.charge * 0.25 + s.level * 0.12 + s.pulse * 0.5; // 마법진 밝기
     outer.rotation.z = t * 0.05; // 바깥 마법진 돌리기
     inner.rotation.z = -t * 0.09; // 안쪽 마법진 반대로 돌리기

@@ -10,6 +10,7 @@ const RADIANT = new THREE.Color(1, 0.94, 0.8); // 5등급 빛 기둥이 솟을 �
 export const state = { // 각인 상태
   intro: parseFloat(read('--intro')) || 2.4, // 로딩 화면이 걷히는 시각(초), css/title.css의 --intro
   colors: [1, 2, 3, 4, 5].map((i) => new THREE.Color(read(`--g${i}`))), // 등급 색 5개 (css/tokens.css)
+  pageLight: new THREE.Color().setStyle(read('--page-light'), THREE.LinearSRGBColorSpace), // 책장 빛 (css/tokens.css). 화면 색을 다 맞춘 뒤에 섞으므로 CSS 값 그대로 (색 변환 없이)
   level: 1, // 지금 등급 (1~5)
   charge: 0, // 새기기 직전 룬 조각이 모여드는 정도 (0~1)
   pulse: 0, // 룬이 새겨지는 순간의 번쩍임 (1에서 0으로 줄어듦)

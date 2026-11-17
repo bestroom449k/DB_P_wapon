@@ -1,7 +1,7 @@
 // 먼 산맥 두 겹: 커다란 원통의 안쪽 면에 노이즈로 들쭉날쭉한 능선을 깎는다.
 // 뒤쪽 산일수록 지평선 색에 더 많이 섞여 안개 낀 것처럼 보인다.
 import * as THREE from 'three';
-import { NOISE, UV_VERTEX as vertexShader } from '../shared/glsl.js'; // 산 모양 셰이더는 공용 (UV 전달)
+import { NOISE, UV_VERTEX as vertexShader } from '../../shared/glsl.js'; // 산 모양 셰이더는 공용 (UV 전달)
 
 const fragmentShader = /* glsl */ ` // 산 색 셰이더 (능선 깎기)
   uniform float uSeed;

@@ -1,17 +1,9 @@
 // 마도서가 쓰는 그림들: 그림 파일 없이 캔버스에 직접 그린다.
 // 룬 글자는 항상 같은 순서로 나오는 난수로 그려서, 새로고침해도 모양이 같다.
 import * as THREE from 'three';
+import { random } from './random.js'; // 정해진 무작위 수 (타이틀과 게임 화면이 같이 씀)
 
 const TAU = Math.PI * 2;
-
-export function mulberry32(a) { // 항상 같은 순서로 나오는 난수
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 function makeCanvas(w, h) { // 그림판과 붓
   const c = Object.assign(document.createElement('canvas'), { width: w, height: h });
@@ -44,10 +36,12 @@ function glyph(g, x, y, s, r) { // 룬 글자 하나: 세로 줄기 + 곁가지 
   g.stroke();
 }
 
+let runeCircle = null; // 한 번 그린 그림을 표지 룬(grimoire.js)과 룬 마법진(shock.js)이 같이 씀
 export function runeCircleTexture() { // 표지 마법진 (흰 선, 투명 바탕)
+  if (runeCircle) return runeCircle;
   const S = 1024;
   const [c, g] = makeCanvas(S, S);
-  const r = mulberry32(7);
+  const r = random(7);
   g.translate(S / 2, S / 2);
   g.strokeStyle = '#fff';
   g.lineCap = 'round';
@@ -78,11 +72,12 @@ export function runeCircleTexture() { // 표지 마법진 (흰 선, 투명 바�
     const a = (i * Math.PI) / 3 - Math.PI / 2;
     g.beginPath(); g.arc(Math.cos(a) * 300, Math.sin(a) * 300, 22, 0, TAU); g.stroke();
   }
-  return colorTexture(c);
+  runeCircle = colorTexture(c);
+  return runeCircle;
 }
 
 function drawPageInk(g, W, H, glow) { // 첫 장의 마법진과 주문 (같은 씨앗이라 잉크판과 빛판이 딱 겹친다)
-  const r = mulberry32(21);
+  const r = random(21);
   g.strokeStyle = glow ? '#fff' : 'rgba(58, 34, 22, 0.88)';
   g.lineCap = 'round';
   g.lineJoin = 'round';
@@ -120,7 +115,7 @@ export function pageTextures() { // 첫 장: 바랜 양피지 그림 + 빛나는
   paper.addColorStop(1, '#a98a5c');
   g.fillStyle = paper;
   g.fillRect(0, 0, W, H);
-  const r = mulberry32(5);
+  const r = random(5);
   for (let i = 0; i < 14; i++) { // 얼룩
     const x = r() * W, y = r() * H, rad = 30 + r() * 110;
     const stain = g.createRadialGradient(x, y, 0, x, y, rad);
@@ -141,7 +136,7 @@ export function pageEdgeTexture(sideways) { // 책장 단면의 종이 결 (side
   const [c, g] = makeCanvas(256, 64);
   g.fillStyle = '#e7d8b4';
   g.fillRect(0, 0, 256, 64);
-  const r = mulberry32(3);
+  const r = random(3);
   for (let x = 0; x < 256; x += 3) { g.fillStyle = `rgba(110, 80, 45, ${0.12 + r() * 0.22})`; g.fillRect(x, 0, 1, 64); }
   const t = colorTexture(c);
   if (sideways) { t.center.set(0.5, 0.5); t.rotation = Math.PI / 2; }
@@ -151,7 +146,7 @@ export function pageEdgeTexture(sideways) { // 책장 단면의 종이 결 (side
 export function leatherGrain() { // 가죽 결 (요철 + 거칠기), 이어 붙여도 이음매가 안 보이게
   const S = 512;
   const [c, g] = makeCanvas(S, S);
-  const r = mulberry32(11);
+  const r = random(11);
   g.fillStyle = '#808080';
   g.fillRect(0, 0, S, S);
   for (let i = 0; i < 2400; i++) {
@@ -170,7 +165,7 @@ export function leatherGrain() { // 가죽 결 (요철 + 거칠기), 이어 붙�
 export function runeBandTexture() { // 등급 고리의 룬 띠: 위아래 가는 선 사이로 룬 글자가 한 줄로 흐른다 (가로로 이어 붙여도 이음매가 없다)
   const W = 2048, H = 96;
   const [c, g] = makeCanvas(W, H);
-  const r = mulberry32(57);
+  const r = random(57);
   g.strokeStyle = '#fff';
   g.fillStyle = '#fff';
   g.lineCap = 'round';
@@ -194,9 +189,11 @@ export function runeBandTexture() { // 등급 고리의 룬 띠: 위아래 가�
   return t;
 }
 
+let glyphSet = null; // 한 번 그린 글자 6종을 펼친 책(grimoire.js)과 룬 조각(runes.js)이 같이 씀
 export function glyphTextures() { // 펼친 책에서 떠오르는 글자 조각 6종
-  const r = mulberry32(99);
-  return Array.from({ length: 6 }, () => {
+  if (glyphSet) return glyphSet;
+  const r = random(99);
+  glyphSet = Array.from({ length: 6 }, () => {
     const [c, g] = makeCanvas(128, 128);
     g.strokeStyle = '#fff';
     g.lineWidth = 7;
@@ -207,11 +204,12 @@ export function glyphTextures() { // 펼친 책에서 떠오르는 글자 조각
     glyph(g, 64, 64, 70, r);
     return colorTexture(c);
   });
+  return glyphSet;
 }
 
 export function veinTexture() { // 보석에서 표지 가장자리로 뻗는 빛 균열 (표지 비율 600×800, 보석은 위로 0.12 올라간 자리)
   const [c, g] = makeCanvas(600, 800);
-  const r = mulberry32(41);
+  const r = random(41);
   g.strokeStyle = '#fff';
   g.lineCap = 'round';
   g.lineJoin = 'round';

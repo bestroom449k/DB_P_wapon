@@ -1,8 +1,8 @@
 // 마도서 카드 다섯 장 (뒷면에 사슬로 봉인된 마도서 문장): 위로 볼록한 호를 그리며 떠 있다. 가운데 카드가 가장 크고 앞에 있으며 빛난다.
 // 마우스를 올린 카드는 살짝 떠오르고, 뽑기 연출 중에는 옆 카드가 모이고 가운데 카드가 떠올라 돈다.
 import * as THREE from 'three';
-import { GLOW } from '../../../design/shared/materials.js';
-import { glowTexture } from '../../../design/shared/textures.js';
+import { GLOW } from '../../../shared/materials.js';
+import { glowTexture } from '../../../shared/textures.js';
 import { cardTexture, cardGlowTexture, CARD_ASPECT, GLOW_SCALE } from '../shared/textures.js';
 
 export const CARD_CENTER = new THREE.Vector3(0, 3.1, 0.8); // 가운데 카드 자리 (궤도 고리, 빛 기둥도 여기를 기준으로 선다)
