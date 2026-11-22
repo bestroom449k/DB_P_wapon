@@ -41,8 +41,10 @@ const parts = [sky, clouds, islands, castle, terrace, arches, circle, cards, orb
 const updates = parts.map((part) => part.create(world, state)); // 부품 만들기
 
 const STILL_TIME = 6; // 움직임 줄이기: 장면을 이 시각의 모습으로 멈춘다
+const root = document.documentElement;
 let last = 0; // 지난 프레임 시각
 world.renderer.setAnimationLoop((ms) => {
+  if (root.classList.contains('is-summoning')) return; // 뽑기 영상이 화면을 덮는 동안은 그리지 않는다 (영상이 끊기지 않게, hud.js가 붙이고 뗀다)
   const now = ms / 1000;
   const dt = Math.min(now - last, 0.05); // 프레임 간격
   last = now;

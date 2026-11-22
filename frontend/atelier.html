@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>공방 · 다섯 빛 공방</title>
+    <meta name="description" content="모은 마도서를 도감에서 보고, 장착한 마도서에 룬을 새겨 강화하고, 상점에 팔아 골드를 받는 공방" />
+    <meta name="theme-color" content="#0b0e26" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Ccircle r='48' fill='%230b0e26'/%3E%3Cpath d='M0 -40L23.51 32.36L-38.04 -12.36L38.04 -12.36L-23.51 32.36Z' fill='none' stroke='%23ffcf8a' stroke-width='4' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Diphylleia&family=Gowun+Dodum&display=swap"
+    />
+    <!-- 공통 색과 글꼴(tokens.css), 별도 페이지 공통(page.css, 게시판과 같이 씀), 도감·강화·상점(atelier.css) -->
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/page.css" />
+    <link rel="stylesheet" href="css/atelier.css" />
+    <script type="module" src="js/atelier/main.js"></script>
+  </head>
+  <body>
+    <svg class="icons" aria-hidden="true" focusable="false">
+      <symbol id="i-back" viewBox="0 0 24 24">
+        <path d="M19 12H5.5M11 5.5 4.5 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+    </svg>
+
+    <!-- 위쪽: 게임으로 돌아가기, 제목, 골드 -->
+    <header class="top">
+      <a class="back" href="game.html" aria-label="게임 화면으로">
+        <svg class="icon"><use href="#i-back" /></svg>
+      </a>
+      <h1 class="top__title">공방</h1>
+      <span class="top__rule" aria-hidden="true"></span>
+      <p class="who" id="who"></p>
+    </header>
+
+    <nav class="tabs" aria-label="공방 메뉴">
+      <a class="tab" id="tabCollection" href="#/collection">도감</a>
+      <a class="tab" id="tabEnhance" href="#/enhance">강화</a>
+      <a class="tab" id="tabShop" href="#/shop">상점</a>
+    </nav>
+
+    <main>
+      <!-- 도감 (#/collection): 게임에 나오는 마도서 선반, 아직 못 만난 마도서는 잠긴 칸 -->
+      <section class="view" id="viewCollection" aria-labelledby="collectionTitle" hidden>
+        <div class="sheet">
+          <div class="sheet__head">
+            <h2 class="sheet__title" id="collectionTitle">도감</h2>
+            <p class="sheet__count" id="collectionCount">도감을 불러오는 중이에요</p>
+          </div>
+          <ol class="shelf" id="shelf"></ol>
+          <div class="note" id="collectionNote" hidden>
+            <p id="collectionNoteText"></p>
+            <a class="btn btn--lamp" id="collectionLogin" href="index.html#login" hidden>로그인하러 가기</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- 강화 (#/enhance): 장착한 마도서를 올려 두는 작업대, 아래는 내 마도서 목록 -->
+      <section class="view" id="viewEnhance" aria-labelledby="enhanceTitle" hidden>
+        <h2 class="sr-only" id="enhanceTitle">강화</h2>
+        <div class="sheet bench" id="bench">
+          <div class="bench__body" id="benchBody" hidden>
+            <div class="bench__book" id="benchBook"></div>
+            <div class="bench__info">
+              <p class="grade-line" id="benchGrade"></p>
+              <h3 class="bench__name" id="benchName"></h3>
+              <div id="benchStars"></div>
+              <dl class="stats">
+                <div>
+                  <dt>성공 확률</dt>
+                  <dd id="statChance"></dd>
+                </div>
+                <div>
+                  <dt>비용</dt>
+                  <dd id="statCost"></dd>
+                </div>
+                <div>
+                  <dt>가치</dt>
+                  <dd id="statValue"></dd>
+                </div>
+              </dl>
+              <div class="bench__act">
+                <button class="btn btn--lamp" id="enhanceButton" type="button">룬 새기기</button>
+                <p class="bench__result" id="benchResult" role="status"></p>
+              </div>
+            </div>
+          </div>
+          <div class="note" id="benchNote">
+            <p id="benchNoteText">작업대를 준비하는 중이에요</p>
+            <a class="btn" id="benchNoteAction" hidden></a>
+          </div>
+        </div>
+
+        <div class="sheet" id="inventorySheet" hidden>
+          <div class="sheet__head">
+            <h3 class="sheet__title">내 마도서</h3>
+            <p class="sheet__count" id="inventoryCount"></p>
+          </div>
+          <ol class="inventory" id="inventory"></ol>
+        </div>
+      </section>
+
+      <!-- 상점 (#/shop): 내 마도서를 지금 가치대로 팔아 골드를 받는다 (장착 중인 마도서는 먼저 풀어야 함) -->
+      <section class="view" id="viewShop" aria-labelledby="shopTitle" hidden>
+        <div class="sheet">
+          <div class="sheet__head">
+            <h2 class="sheet__title" id="shopTitle">상점</h2>
+            <p class="sheet__count" id="shopCount">상점을 여는 중이에요</p>
+          </div>
+          <p class="shop__lead" id="shopLead" hidden>상점은 마도서를 지금 가치대로 사 가요. 강화한 마도서일수록 값을 더 쳐 줘요. 판 마도서는 돌아오지 않지만 도감 기록은 남아요.</p>
+          <ol class="inventory inventory--shop" id="shopList"></ol>
+          <div class="note" id="shopNote" hidden>
+            <p id="shopNoteText"></p>
+            <a class="btn" id="shopNoteAction" hidden></a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 팔기 확인 (디자인은 page.css, 게시판의 지우기 확인과 같음) -->
+    <dialog class="confirm" id="confirm" aria-labelledby="confirmTitle">
+      <form method="dialog">
+        <h2 class="confirm__title" id="confirmTitle"></h2>
+        <p class="confirm__text" id="confirmText"></p>
+        <div class="confirm__actions">
+          <button class="btn btn--ghost" value="cancel">그대로 두기</button>
+          <button class="btn btn--lamp" id="confirmOk" value="ok">팔기</button>
+        </div>
+      </form>
+    </dialog>
+
+    <p class="toast" id="toast" role="status"></p>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-// 그림 파일 없이 캔버스에 직접 그리는 텍스처들: 마도서 카드, 카드 빛 테두리, 구름, 바닥 룬 고리, 네 갈래 별빛
+// 그림 파일 없이 캔버스에 직접 그리는 텍스처들: 뽑기 카드, 카드 빛 테두리, 구름, 바닥 룬 고리, 네 갈래 별빛
 // (오각별 마법진과 둥근 빛은 타이틀 화면과 같이 쓰는 js/shared/textures.js)
 import * as THREE from 'three';
 import { random } from '../../../shared/random.js'; // 정해진 무작위 수 (타이틀과 같이 씀)
@@ -43,8 +43,7 @@ function facetedStar(g, cx, cy, points, outer, inner, rotation, light, shade) {
 }
 
 // ---------- 카드 뒷면 ----------
-// 깊은 밤 남색 바탕에 금박 테두리 두 겹과 모서리 장식. 가운데에는 룬 고리 안에 사슬로 봉인된 마도서 문장,
-// 표지에는 다섯 등급을 뜻하는 오각별, 위아래로 작은 별. (뽑으면 이 봉인이 풀리며 마도서가 나온다는 뜻)
+// 깊은 밤 남색 바탕에 금박 테두리 두 겹과 모서리 장식. 가운데에는 룬 고리와 빛살, 위아래로 작은 별.
 export const CARD_ASPECT = 0.64; // 카드 가로 ÷ 세로
 
 const GOLD = '#ecc983'; // 금박
@@ -147,7 +146,7 @@ export function cardTexture() { // 카드 뒷면 그림 (한 번 만들어 다�
     rune(g, 0, -161, 18, rand);
     g.restore();
   }
-  g.strokeStyle = 'rgba(236, 201, 131, 0.22)'; // 문장 뒤 가는 빛살
+  g.strokeStyle = 'rgba(236, 201, 131, 0.22)'; // 룬 고리 안쪽 가는 빛살
   g.lineWidth = 1;
   for (let k = 0; k < 48; k++) {
     const a = (k / 48) * Math.PI * 2;
@@ -156,65 +155,6 @@ export function cardTexture() { // 카드 뒷면 그림 (한 번 만들어 다�
     g.lineTo(...polar(cx, cy, 142, a));
     g.stroke();
   }
-
-  // 마도서: 가죽 표지, 금박 테두리, 모서리 가시, 책등
-  const bw = 150, bh = 196, bx = cx - bw / 2, by = cy - bh / 2;
-  g.save();
-  g.shadowColor = 'rgba(8, 6, 30, 0.7)';
-  g.shadowBlur = 18;
-  roundRect(g, bx, by, bw, bh, 10);
-  const leather = g.createLinearGradient(bx, by, bx + bw, by + bh);
-  leather.addColorStop(0, '#5a2472');
-  leather.addColorStop(1, '#2b1142');
-  g.fillStyle = leather;
-  g.fill();
-  g.restore();
-  g.strokeStyle = GOLD;
-  g.lineWidth = 4;
-  roundRect(g, bx, by, bw, bh, 10);
-  g.stroke();
-  g.lineWidth = 1.5;
-  roundRect(g, bx + 12, by + 12, bw - 24, bh - 24, 5);
-  g.stroke();
-  g.lineWidth = 3; // 책등 쪽 금박 줄
-  g.beginPath(); g.moveTo(bx + 18, by + 4); g.lineTo(bx + 18, by + bh - 4); g.stroke();
-  g.fillStyle = GOLD;
-  for (const [x, y, sx, sy] of [[bx, by, -1, -1], [bx + bw, by, 1, -1], [bx, by + bh, -1, 1], [bx + bw, by + bh, 1, 1]]) { // 모서리 가시
-    g.beginPath();
-    g.moveTo(x - sx * 16, y);
-    g.lineTo(x + sx * 12, y + sy * 12);
-    g.lineTo(x, y - sy * 16);
-    g.closePath();
-    g.fill();
-  }
-
-  // 표지 문장: 빛나는 원 안의 오각별
-  const ey = cy - 18;
-  g.save();
-  g.shadowColor = 'rgba(255, 226, 160, 0.9)';
-  g.shadowBlur = 16;
-  g.strokeStyle = GOLD_HI;
-  g.lineWidth = 3;
-  g.beginPath(); g.arc(cx + 6, ey, 38, 0, Math.PI * 2); g.stroke();
-  facetedStar(g, cx + 6, ey, 5, 32, 11, -Math.PI / 2, GOLD_HI, GOLD);
-  g.restore();
-
-  // 봉인 사슬과 자물쇠: 책 허리를 가로지른다
-  const chainY = cy + 54;
-  g.strokeStyle = '#c9cde6';
-  g.lineWidth = 3;
-  for (let x = bx - 26; x < bx + bw + 26; x += 15) {
-    g.beginPath();
-    if (Math.round((x - bx) / 15) % 2) g.ellipse(x, chainY, 8, 4, 0, 0, Math.PI * 2); // 눕힌 고리
-    else g.ellipse(x, chainY, 3, 5, 0, 0, Math.PI * 2); // 세운 고리
-    g.stroke();
-  }
-  roundRect(g, cx - 13, chainY + 4, 26, 26, 5); // 자물쇠
-  g.fillStyle = GOLD;
-  g.fill();
-  g.fillStyle = '#2b1142';
-  g.beginPath(); g.arc(cx, chainY + 15, 3.5, 0, Math.PI * 2); g.fill();
-  g.fillRect(cx - 1.5, chainY + 16, 3, 8);
 
   card = finish(canvas);
   return card;

@@ -1,0 +1,440 @@
+/* =========================================================
+   다섯 빛 공방 - 별도 페이지 공통 (게시판 board.html, 공방 atelier.html)
+   타이틀·게임과 같은 밤 세계: 깊은 남색 바탕에 옅은 별, 가운데 남색 판, 위쪽은 게임 화면과 같은 뒤로가기 + 제목 + 금별 선.
+   등불 금색 판은 화면마다 주 행동 하나에만 쓴다. 색과 글꼴은 css/tokens.css.
+   3D 장면이 없는 화면이라 페이지가 위아래로 스크롤된다. 화면마다 다른 부분은 board.css, atelier.css.
+   여기 있는 것: 바탕, 위쪽 막대, 판, 버튼, 알림, 확인 창, 화면 사이 이동.
+   ========================================================= */
+
+:root {
+  --gutter: clamp(16px, 2.4vw, 40px);
+  --column: min(880px, calc(100vw - var(--gutter) * 2)); /* 판 폭 */
+  --dots: rgba(169, 175, 219, 0.3); /* 줄 사이 달빛 점선 */
+
+  /* 네 갈래 별, 뒤로 화살표 (mask로 쓴다) */
+  --i-spark: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 1.5c.5 5.6 2.9 8 8.5 10.5-5.6 2.5-8 4.9-8.5 10.5-.5-5.6-2.9-8-8.5-10.5C9.1 9.5 11.5 7.1 12 1.5Z'/></svg>");
+  --i-back: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M19 12H5.5M11 5.5 4.5 12l6.5 6.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+
+  scrollbar-color: rgba(169, 175, 219, 0.35) transparent;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ---------- 바탕: 위쪽이 희미하게 남빛으로 번진 밤하늘과 옅은 별 ---------- */
+
+html {
+  background: var(--night-0);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 90% 50% at 50% -10%, rgba(70, 86, 178, 0.3) 0%, transparent 70%),
+    linear-gradient(180deg, #121642 0%, var(--night-0) 48%);
+  background-attachment: fixed;
+  color: var(--moon);
+  font: 400 1rem / 1.5 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 별: 크기와 밝기가 다른 점 다섯 개를 바둑판처럼 깔고, 아래로 갈수록 옅어진다 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1.3px 1.3px at 34px 46px, rgba(238, 240, 255, 0.75), transparent),
+    radial-gradient(1px 1px at 168px 122px, rgba(238, 240, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 92px 196px, rgba(169, 175, 219, 0.6), transparent),
+    radial-gradient(1.5px 1.5px at 236px 72px, rgba(255, 230, 184, 0.45), transparent),
+    radial-gradient(1px 1px at 274px 232px, rgba(238, 240, 255, 0.4), transparent);
+  background-size: 310px 270px;
+  -webkit-mask: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.35) 55%, transparent 100%);
+  mask: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.35) 55%, transparent 100%);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.icons {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.icon {
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+}
+
+/* ---------- 위쪽: 뒤로가기 + 제목 + 금별 선 (게임 화면과 같은 자리), 오른쪽 칩 ---------- */
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: var(--gutter) var(--gutter) 0;
+}
+
+.back {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--panel);
+  box-shadow: inset 0 0 0 4px rgba(169, 175, 219, 0.06), 0 8px 20px -10px rgba(0, 0, 0, 0.8);
+  font-size: 1.15rem;
+  transition: background-color 0.25s, border-color 0.25s, transform 0.35s var(--ease-out);
+}
+
+.back:hover {
+  background: var(--night-2);
+  border-color: color-mix(in srgb, var(--lamp) 55%, transparent);
+  transform: translateX(-3px);
+}
+
+.back:active {
+  transform: translateX(-3px) scale(0.95);
+}
+
+.top__title {
+  margin: 0 0 0 4px;
+  font: 400 clamp(1.6rem, 2.2vw, 2.1rem) / 1 var(--font-display);
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 12px rgba(4, 5, 18, 0.8);
+}
+
+.top__rule {
+  position: relative;
+  width: clamp(80px, 12vw, 180px);
+  height: 1px;
+  margin-left: 8px;
+  background: linear-gradient(90deg, rgba(169, 175, 219, 0.1), color-mix(in srgb, var(--lamp) 80%, transparent));
+}
+
+.top__rule::after {
+  content: '';
+  position: absolute;
+  right: -11px;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  translate: 0 -50%;
+  background: linear-gradient(180deg, var(--lamp-hi), var(--lamp));
+  -webkit-mask: var(--i-spark) center / contain no-repeat;
+  mask: var(--i-spark) center / contain no-repeat;
+  filter: drop-shadow(0 0 6px rgba(255, 207, 138, 0.8));
+  animation: twinkle 3.6s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  50% { scale: 0.78; opacity: 0.75; }
+}
+
+/* 위 오른쪽 칩 (게시판: 닉네임 또는 로그인 링크, 공방: 골드) */
+.who {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  margin: 0 0 0 auto;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.8);
+  color: var(--mist);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.who:empty {
+  visibility: hidden;
+}
+
+.who__name {
+  color: var(--moon);
+  font-size: 1rem;
+}
+
+.who a {
+  color: var(--lamp);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ---------- 판 ---------- */
+
+main {
+  width: var(--column);
+  margin: clamp(28px, 4.5vh, 48px) auto 80px;
+}
+
+.view {
+  display: grid;
+  gap: 20px;
+}
+
+.sheet {
+  padding: 24px 30px 28px;
+  border: 1px solid color-mix(in srgb, var(--lamp) 35%, transparent);
+  border-radius: 18px;
+  background: var(--night-1);
+  box-shadow:
+    inset 0 0 0 4px rgba(11, 14, 38, 0.6),
+    inset 0 0 0 5px color-mix(in srgb, var(--lamp) 14%, transparent),
+    0 24px 50px -22px rgba(0, 0, 0, 0.85);
+}
+
+.sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px dashed rgba(169, 175, 219, 0.25);
+}
+
+.sheet__count {
+  margin: 0;
+  color: var(--mist);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet__count b {
+  font-weight: 400;
+  color: var(--moon);
+}
+
+/* 정보 줄: 사이에 작은 점 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 14px;
+  margin: 0;
+  color: var(--mist);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.meta > * + *::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin-right: 14px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+  vertical-align: middle;
+}
+
+/* 비었을 때, 불러오는 중, 오류, 로그인 안내 */
+.note {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 44px 12px 30px;
+  color: var(--mist);
+  text-align: center;
+}
+
+.note p {
+  margin: 0;
+}
+
+/* ---------- 버튼 ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: 400 1rem / 1 var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter 0.2s, background-color 0.2s, border-color 0.2s, transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+  transform: none;
+}
+
+/* 등불 금색: 화면의 주 행동 */
+.btn--lamp {
+  border-color: var(--lamp-hi);
+  background: linear-gradient(180deg, var(--lamp-hi) 0%, var(--lamp) 70%, #f0bb72 100%);
+  box-shadow: inset 0 0 0 2px rgba(255, 246, 226, 0.3), 0 10px 22px -12px rgba(0, 0, 0, 0.85); /* 판 위의 금판: 등불빛 번짐은 1회 뽑기에만 남긴다 */
+  color: var(--lamp-ink);
+}
+
+.btn--lamp:hover {
+  filter: brightness(1.08);
+  box-shadow: inset 0 0 0 2px rgba(255, 246, 226, 0.4), 0 14px 26px -12px rgba(0, 0, 0, 0.9);
+}
+
+.btn--lamp .icon {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+/* 남색: 다른 곳으로 가기, 고치기, 지우기, 취소, 장착 */
+.btn--ghost {
+  border-color: rgba(238, 240, 255, 0.4);
+  background: transparent;
+  color: var(--moon);
+}
+
+.btn--ghost:hover {
+  border-color: color-mix(in srgb, var(--lamp) 55%, transparent);
+  background: rgba(169, 175, 219, 0.12);
+}
+
+.btn--small {
+  height: 36px;
+  padding: 0 15px;
+  font-size: 0.9375rem;
+}
+
+/* ---------- 알림 ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 36px;
+  z-index: 40;
+  max-width: calc(100vw - 32px);
+  margin: 0;
+  padding: 0.75rem 1.4rem;
+  border: 1px solid color-mix(in srgb, var(--lamp) 45%, transparent);
+  border-radius: 999px;
+  background: var(--night-2);
+  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.7);
+  color: var(--moon);
+  text-align: center;
+  translate: -50% 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.toast.is-shown {
+  animation: toast 3s var(--ease-out) forwards;
+}
+
+@keyframes toast {
+  0% { opacity: 0; visibility: visible; transform: translateY(10px); }
+  12% { opacity: 1; transform: none; }
+  84% { opacity: 1; visibility: visible; transform: none; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+/* ---------- 확인 창: 되돌릴 수 없는 일 (게시판의 지우기, 공방의 팔기) 앞에서 한 번 묻는다 ---------- */
+
+.confirm {
+  width: min(420px, calc(100vw - 32px));
+  padding: 28px 28px 22px;
+  border: 1px solid rgba(238, 240, 255, 0.24);
+  border-radius: 18px;
+  background: var(--night-1);
+  box-shadow: 0 30px 80px -24px rgba(0, 0, 0, 0.75);
+  color: var(--moon);
+}
+
+.confirm[open] {
+  animation: rise 0.45s var(--ease-out);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+}
+
+.confirm::backdrop {
+  background: rgba(4, 5, 18, 0.55);
+}
+
+.confirm__title {
+  margin: 0 0 8px;
+  font: 400 1.35rem / 1.25 var(--font-display);
+}
+
+.confirm__text {
+  margin: 0 0 24px;
+  color: var(--mist);
+  line-height: 1.6;
+  word-break: keep-all; /* 한국어 낱말 중간에서 줄이 바뀌지 않게 */
+}
+
+.confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ---------- 화면 사이 이동: 판만 부드럽게 바뀐다 (각 페이지 JS의 뷰 전환) ---------- */
+
+main {
+  view-transition-name: page;
+}
+
+::view-transition-group(page) {
+  animation-duration: 0.42s;
+  animation-timing-function: var(--ease-out);
+}
+
+::view-transition-old(page) {
+  animation: 0.16s cubic-bezier(0.55, 0, 1, 0.45) both fade-out;
+}
+
+::view-transition-new(page) {
+  animation: 0.42s var(--ease-out) both rise-in;
+}
+
+@keyframes fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+}
+
+/* ---------- 움직임 줄이기 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .top__rule::after,
+  .confirm[open] {
+    animation: none;
+  }
+
+  .toast.is-shown {
+    animation-name: toast-still;
+  }
+
+  @keyframes toast-still {
+    0%, 90% { opacity: 1; visibility: visible; }
+    100% { opacity: 0; visibility: hidden; }
+  }
+}

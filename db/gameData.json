@@ -1,4 +1,9 @@
 {
+  "draw": {
+    "cost": 1000,
+    "legendaryPct": 50,
+    "itemType": "GRIMOIRE"
+  },
   "grades": [
     {
       "grade": 1,
@@ -73,6 +78,24 @@
       "baseSellPrice": 1000,
       "imageUrl": null,
       "description": "칼날에 불꽃이 깃든 검"
+    },
+    {
+      "id": 4,
+      "name": "견습생의 낡은 마도서",
+      "type": "GRIMOIRE",
+      "grade": 1,
+      "baseSellPrice": 100,
+      "imageUrl": null,
+      "description": "모서리가 닳도록 넘겨 본 연습용 마도서. 첫 룬을 새기기에 알맞다"
+    },
+    {
+      "id": 5,
+      "name": "황금 용의 마도서",
+      "type": "GRIMOIRE",
+      "grade": 5,
+      "baseSellPrice": 20000,
+      "imageUrl": null,
+      "description": "황금빛 룬 사이에 용이 잠들어 있는 마도서. 펼치면 하늘의 문이 열린다"
     }
   ]
 }

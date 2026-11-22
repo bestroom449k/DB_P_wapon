@@ -1,0 +1,168 @@
+/* =========================================================
+   게임 화면 - 뽑기 영상
+   "1회 뽑기"를 누르면 js/game/function/hud.js가 등급에 맞는 영상(일반판 15초, 황금판 20초)을 이 층에 띄운다.
+   3D 장면과 버튼(z-index 20) 위, 책장 빛(.veil 30)과 알림(.toast 40) 아래에 깔린다.
+   ========================================================= */
+
+.summon {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: #000;
+  opacity: 0;
+  transition: opacity 0.3s ease; /* 3D 화면에서 영상으로 0.3초 동안 섞어 넘기기 */
+}
+
+.summon.is-playing {
+  opacity: 1;
+}
+
+.summon__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 건너뛰기: 오른쪽 위 (화면 아래 1/3은 결과 글자 자리라 비워 둔다). 영상이 시작되고 2초 뒤에 나타난다 */
+.summon__skip {
+  position: absolute;
+  top: var(--gutter);
+  right: var(--gutter);
+  padding: 0.5rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--lamp) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--night-2) 70%, transparent);
+  color: var(--moon);
+  font: inherit;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.summon.can-skip .summon__skip {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 움직임 줄이기: 영상 없이 3D 화면을 어둡게 덮고 결과 명판만 띄운다 */
+.summon.is-dim {
+  background: rgba(4, 5, 18, 0.6);
+}
+
+/* ---------- 뽑기 결과 명판 ----------
+   영상 속 카드가 정면으로 멈추는 순간 화면 아래쪽에 뜬다. 타이틀의 등급 명판과 같은 판(위에서 아래로 짙어지는 남색, 금테, 판 두께).
+   등급 마름모와 등급 이름은 그 등급 색(--c, hud.js가 정함). 금색 판은 "확인" 하나뿐이다. */
+
+.result {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(28px, 6vh, 64px);
+  z-index: 26;
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  width: min(560px, calc(100vw - 32px));
+  translate: -50% 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.result.is-shown {
+  opacity: 1;
+}
+
+.result.is-shown .result__plate {
+  animation: plate-in 0.8s var(--ease-out) both;
+}
+
+@keyframes plate-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+}
+
+.result__plate {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 18px 28px 20px;
+  border: 1px solid color-mix(in srgb, var(--lamp) 38%, transparent);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(20, 24, 62, 0.94), rgba(8, 10, 28, 0.94));
+  box-shadow:
+    inset 0 0 0 3px rgba(11, 14, 38, 0.55),
+    inset 0 0 0 4px rgba(169, 175, 219, 0.08),
+    0 16px 34px -14px rgba(0, 0, 0, 0.85);
+  text-align: center;
+}
+
+/* "N등급 이름": 앞에 등급 색 마름모 */
+.result__grade {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--mist);
+  font-size: 0.9375rem;
+}
+
+.result__grade::before {
+  content: '';
+  width: 13px;
+  height: 13px;
+  rotate: 45deg;
+  background: var(--c);
+}
+
+.result__grade b {
+  font-weight: 400;
+  color: var(--c);
+}
+
+.result__name {
+  margin: 2px 0 0;
+  font: 400 clamp(1.75rem, 2.2vw, 2.4rem) / 1.15 var(--font-display);
+  text-shadow: 0 2px 18px color-mix(in srgb, var(--c) 55%, transparent);
+  text-wrap: balance;
+}
+
+.result__desc {
+  max-width: 40ch;
+  margin: 4px 0 0;
+  color: var(--mist);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.result__new {
+  margin: 6px 0 0;
+  color: var(--lamp-hi);
+  font-size: 0.875rem;
+}
+
+.result__ok {
+  height: 44px;
+  padding: 0 34px;
+  border: 1px solid var(--lamp-hi);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--lamp-hi) 0%, var(--lamp) 70%, #f0bb72 100%);
+  box-shadow: inset 0 0 0 2px rgba(255, 246, 226, 0.3), 0 10px 22px -12px rgba(0, 0, 0, 0.85);
+  color: var(--lamp-ink);
+  font: 400 1rem / 1 var(--font-ui);
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.3s var(--ease-out);
+}
+
+.result__ok:hover {
+  filter: brightness(1.08);
+}
+
+.result__ok:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result.is-shown .result__plate {
+    animation: none;
+  }
+}

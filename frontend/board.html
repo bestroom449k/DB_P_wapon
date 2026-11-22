@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>커뮤니티 · 다섯 빛 공방</title>
+    <meta name="description" content="다섯 빛 공방 플레이어들이 글과 댓글을 나누는 게시판" />
+    <meta name="theme-color" content="#0b0e26" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Ccircle r='48' fill='%230b0e26'/%3E%3Cpath d='M0 -40L23.51 32.36L-38.04 -12.36L38.04 -12.36L-23.51 32.36Z' fill='none' stroke='%23ffcf8a' stroke-width='4' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Diphylleia&family=Gowun+Dodum&display=swap"
+    />
+    <!-- 공통 색과 글꼴(tokens.css, 타이틀·게임과 같이 씀), 별도 페이지 공통(page.css, 공방과 같이 씀), 게시판 화면(board.css) -->
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/page.css" />
+    <link rel="stylesheet" href="css/board.css" />
+    <script type="module" src="js/board/main.js"></script>
+  </head>
+  <body>
+    <!-- 아이콘 묶음 (게임 화면과 같은 선 아이콘) -->
+    <svg class="icons" aria-hidden="true" focusable="false">
+      <symbol id="i-back" viewBox="0 0 24 24">
+        <path d="M19 12H5.5M11 5.5 4.5 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="i-quill" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.5 3.5c-6 .6-10.4 4.4-12.6 10.8l-1.4 4.2 4.2-1.4c6.4-2.2 10.2-6.6 9.8-13.6Z" />
+          <path d="M6.5 18.5 3 22M11.5 12.5l-2 2" />
+        </g>
+      </symbol>
+    </svg>
+
+    <!-- 위쪽: 게임으로 돌아가기, 제목, 로그인한 닉네임 -->
+    <header class="top">
+      <a class="back" href="game.html" aria-label="게임 화면으로">
+        <svg class="icon"><use href="#i-back" /></svg>
+      </a>
+      <h1 class="top__title"><a href="#/">커뮤니티</a></h1>
+      <span class="top__rule" aria-hidden="true"></span>
+      <p class="who" id="who"></p>
+    </header>
+
+    <main class="board">
+      <!-- 글 목록 (#/) -->
+      <section class="view" id="viewList" aria-labelledby="listTitle" hidden>
+        <div class="sheet">
+          <div class="sheet__head">
+            <h2 class="sr-only" id="listTitle">글 목록</h2>
+            <p class="sheet__count" id="listCount">글을 불러오는 중이에요</p>
+            <a class="btn btn--lamp" href="#/write">
+              <svg class="icon"><use href="#i-quill" /></svg>
+              글쓰기
+            </a>
+          </div>
+          <ol class="posts" id="postList"></ol>
+          <div class="note" id="listNote" hidden>
+            <p id="listNoteText"></p>
+            <button class="btn btn--ghost" id="listRetry" type="button" hidden>다시 불러오기</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 글 읽기 (#/post/번호) -->
+      <article class="view" id="viewPost" aria-labelledby="postTitle" hidden>
+        <div class="sheet">
+          <a class="crumb" href="#/">목록으로</a>
+          <div class="note" id="postNote" hidden>
+            <p id="postNoteText"></p>
+          </div>
+          <div id="postBodyWrap" hidden>
+            <header class="read__head">
+              <h2 class="read__title" id="postTitle"></h2>
+              <div class="read__line">
+                <p class="meta" id="postMeta"></p>
+                <div class="read__tools" id="postTools" hidden>
+                  <a class="btn btn--ghost btn--small" id="editLink">고치기</a>
+                  <button class="btn btn--ghost btn--small" id="deletePost" type="button">지우기</button>
+                </div>
+              </div>
+            </header>
+            <div class="read__body" id="postContent"></div>
+          </div>
+        </div>
+
+        <section class="sheet comments" id="commentSheet" aria-labelledby="commentTitle" hidden>
+          <h3 class="comments__title" id="commentTitle">댓글 <span class="comments__count" id="commentCount"></span></h3>
+          <ol class="comment-list" id="commentList"></ol>
+          <p class="comments__empty" id="commentEmpty" hidden>아직 댓글이 없어요. 처음으로 남겨 보세요.</p>
+          <form class="comment-form" id="commentForm" novalidate>
+            <label class="sr-only" for="commentInput">댓글</label>
+            <textarea class="input" id="commentInput" rows="3" maxlength="500" placeholder="이 글에 남길 말을 적어 주세요"></textarea>
+            <div class="form-foot">
+              <p class="form-error" id="commentError" role="alert"></p>
+              <span class="counter" id="commentCounter">0 / 500</span>
+              <button class="btn btn--lamp" id="commentSubmit" type="submit">댓글 남기기</button>
+            </div>
+          </form>
+          <p class="login-note" id="commentLogin" hidden>댓글을 남기려면 <a href="index.html#login">로그인</a>해 주세요.</p>
+        </section>
+      </article>
+
+      <!-- 글쓰기 (#/write), 글 고치기 (#/edit/번호) -->
+      <section class="view" id="viewWrite" aria-labelledby="writeTitle" hidden>
+        <form class="sheet write" id="writeForm" novalidate>
+          <h2 class="write__title" id="writeTitle">글쓰기</h2>
+          <div class="field">
+            <label class="field__label" for="titleInput">제목</label>
+            <input class="input" id="titleInput" maxlength="100" autocomplete="off" />
+            <span class="counter" id="titleCounter">0 / 100</span>
+          </div>
+          <div class="field">
+            <label class="field__label" for="contentInput">내용</label>
+            <textarea class="input input--tall" id="contentInput" rows="14" maxlength="5000"></textarea>
+            <span class="counter" id="contentCounter">0 / 5000</span>
+          </div>
+          <div class="form-foot">
+            <p class="form-error" id="writeError" role="alert"></p>
+            <a class="btn btn--ghost" id="writeCancel" href="#/">취소</a>
+            <button class="btn btn--lamp" id="writeSubmit" type="submit">올리기</button>
+          </div>
+        </form>
+        <div class="sheet note" id="writeLogin" hidden>
+          <p>글을 쓰려면 먼저 로그인해 주세요.</p>
+          <a class="btn btn--lamp" href="index.html#login">로그인하러 가기</a>
+        </div>
+      </section>
+    </main>
+
+    <!-- 지우기 확인 -->
+    <dialog class="confirm" id="confirm" aria-labelledby="confirmTitle">
+      <form method="dialog">
+        <h2 class="confirm__title" id="confirmTitle"></h2>
+        <p class="confirm__text" id="confirmText"></p>
+        <div class="confirm__actions">
+          <button class="btn btn--ghost" value="cancel">그대로 두기</button>
+          <button class="btn btn--lamp" id="confirmOk" value="ok">지우기</button>
+        </div>
+      </form>
+    </dialog>
+
+    <p class="toast" id="toast" role="status"></p>
+  </body>
+</html>

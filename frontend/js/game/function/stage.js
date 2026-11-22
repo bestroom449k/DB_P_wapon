@@ -1,6 +1,6 @@
 // 무대: 렌더러, 장면, 카메라, 조명, 마우스.
 // 타이틀 화면과 같은 밤: 달빛(오른쪽 위 뒤)과 하늘빛, 그리고 테라스의 등불이 비춘다.
-// 카메라는 들어올 때 위에서 내려오며 다가오고, 마우스를 따라 아주 조금 움직인다 (시차).
+// 카메라는 들어올 때 위에서 내려오며 다가오고, 그 뒤로는 아주 느리게 좌우로 흔들린다 (마우스는 따라가지 않음, 2026-11-23 사용자 결정).
 import * as THREE from 'three';
 
 const LOOK = new THREE.Vector3(0, 2.75, 0); // 카메라가 바라보는 곳
@@ -41,7 +41,7 @@ export function create(canvas) { // 무대 만들기
   resize();
 
   // 마우스: 장면 위에 있을 때만 카드에 반응한다 (버튼 위에서는 반응하지 않음)
-  const target = world.pointer; // 마우스가 가리키는 곳 (-1 ~ 1). 카메라 시차와 카드(cards.js)가 같이 읽는다
+  const target = world.pointer; // 마우스가 가리키는 곳 (-1 ~ 1). 카드(cards.js)가 어느 카드 위인지 찾을 때 읽는다
   addEventListener('pointermove', (event) => {
     target.set((event.clientX / innerWidth) * 2 - 1, -(event.clientY / innerHeight) * 2 + 1);
     world.pointerOver = event.target === canvas;
@@ -51,18 +51,16 @@ export function create(canvas) { // 무대 만들기
     world.pointerOver = false;
   });
 
-  const lean = new THREE.Vector2(); // 마우스를 부드럽게 따라가는 값
   function update(s, t) { // 카메라 움직임
     const intro = s.still ? 0 : (1 - THREE.MathUtils.clamp((t - 0.15) / 3, 0, 1)) ** 3; // 들어올 때 3초 동안 위에서 내려오며 다가온다 (책장 빛이 걷히는 동안)
-    lean.lerp(target, s.still ? 0 : 0.04);
     const sway = s.still ? 0 : Math.sin(t * 0.13) * 0.22; // 아주 느린 좌우 흔들림
     const shake = s.flash * 0.04; // 번쩍일 때 살짝 떨림
     camera.position.set(
-      home.x + sway + lean.x * 0.7 + (Math.random() - 0.5) * shake,
-      home.y + lean.y * 0.3 + intro * 2.6 + (Math.random() - 0.5) * shake,
+      home.x + sway + (Math.random() - 0.5) * shake,
+      home.y + intro * 2.6 + (Math.random() - 0.5) * shake,
       home.z + intro * 5 - s.charge * 0.9, // 기를 모을 때 조금 다가간다
     );
-    camera.lookAt(LOOK.x + lean.x * 0.25, LOOK.y + intro * 1.6, LOOK.z);
+    camera.lookAt(LOOK.x, LOOK.y + intro * 1.6, LOOK.z);
   }
 
   return world;

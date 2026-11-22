@@ -16,12 +16,13 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Diphylleia&family=Gowun+Dodum&display=swap"
     />
-    <!-- 게임 화면의 글자와 버튼: 공통 색과 글꼴(tokens.css, 타이틀과 같이 씀), 기본·알림(base.css), 위쪽(hud.css), 아래쪽(actions.css), 뽑기 연출 타임라인(timeline.css) -->
+    <!-- 게임 화면의 글자와 버튼: 공통 색과 글꼴(tokens.css, 타이틀과 같이 씀), 기본·알림(base.css), 위쪽(hud.css), 아래쪽(actions.css), 뽑기 연출 타임라인(timeline.css), 뽑기 영상(summon.css) -->
     <link rel="stylesheet" href="css/tokens.css" />
     <link rel="stylesheet" href="css/game/base.css" />
     <link rel="stylesheet" href="css/game/hud.css" />
     <link rel="stylesheet" href="css/game/actions.css" />
     <link rel="stylesheet" href="css/game/timeline.css" />
+    <link rel="stylesheet" href="css/game/summon.css" />
     <script type="importmap">
       {
         "imports": {
@@ -86,10 +87,11 @@
           <path d="M5 11.8V20h14v-8.2M10 20v-4.5h4V20" />
         </g>
       </symbol>
-      <symbol id="i-trade" viewBox="0 0 24 24">
+      <!-- 커뮤니티: 겹친 말풍선 두 개 -->
+      <symbol id="i-talk" viewBox="0 0 24 24">
         <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 8.5h14.5M15 4.5l4 4-4 4" />
-          <path d="M20 15.5H5.5M9 11.5l-4 4 4 4" />
+          <path d="M4 4.5h10.5A1.5 1.5 0 0 1 16 6v6.5a1.5 1.5 0 0 1-1.5 1.5H9l-3.5 3v-3H4a1.5 1.5 0 0 1-1.5-1.5V6A1.5 1.5 0 0 1 4 4.5Z" />
+          <path d="M19 8.5h.5A1.5 1.5 0 0 1 21 10v6a1.5 1.5 0 0 1-1.5 1.5H19V20l-3-2.5h-4" />
         </g>
       </symbol>
       <symbol id="i-close" viewBox="0 0 24 24">
@@ -100,6 +102,24 @@
     <!-- 3D 장면: 밤하늘, 떠 있는 섬과 불 켜진 성, 검은 대리석 테라스, 마법진, 카드 다섯 장, 빛 기둥 -->
     <canvas id="stage" aria-hidden="true"></canvas>
     <div class="veil" aria-hidden="true"></div>
+
+    <!-- 뽑기 영상: 뽑는 동안 화면을 덮는다 (5등급은 황금판 20초, 나머지는 일반판 15초) -->
+    <section class="summon" id="summon" hidden>
+      <video class="summon__video" id="summonNormal" src="video/gacha-normal.mp4" preload="auto" playsinline hidden></video>
+      <video class="summon__video" id="summonLegendary" src="video/gacha-legendary.mp4" preload="auto" playsinline hidden></video>
+      <button class="summon__skip" id="summonSkip" type="button">건너뛰기</button>
+    </section>
+
+    <!-- 뽑기 결과 명판: 영상 속 카드가 멈추는 순간 아래에 뜬다. "확인"을 누르면 영상과 함께 걷힌다 -->
+    <section class="result" id="result" aria-labelledby="resultName" aria-live="polite" hidden>
+      <div class="result__plate">
+        <p class="result__grade" id="resultGrade"></p>
+        <h2 class="result__name" id="resultName"></h2>
+        <p class="result__desc" id="resultDesc"></p>
+        <p class="result__new" id="resultNew" hidden>처음 얻은 마도서예요. 도감에 기록했어요.</p>
+      </div>
+      <button class="result__ok" id="resultOk" type="button">확인</button>
+    </section>
 
     <!-- 위쪽: 뒤로가기와 제목, 골드, 확률 -->
     <header class="top">
@@ -140,21 +160,21 @@
 
     <!-- 아래 왼쪽: 다른 기능으로 가는 메뉴 -->
     <nav class="dock" aria-label="공방 메뉴">
-      <a class="dock__item" href="#" data-soon="강화는 아직 준비 중이에요">
+      <a class="dock__item" href="atelier.html#/enhance">
         <svg class="icon"><use href="#i-quill" /></svg>
         <span>강화</span>
       </a>
-      <a class="dock__item" href="#" data-soon="도감은 아직 준비 중이에요">
+      <a class="dock__item" href="atelier.html#/collection">
         <svg class="icon"><use href="#i-book" /></svg>
         <span>도감</span>
       </a>
-      <a class="dock__item" href="#" data-soon="상점은 아직 준비 중이에요">
+      <a class="dock__item" href="atelier.html#/shop">
         <svg class="icon"><use href="#i-shop" /></svg>
         <span>상점</span>
       </a>
-      <a class="dock__item" href="#" data-soon="거래소는 아직 준비 중이에요">
-        <svg class="icon"><use href="#i-trade" /></svg>
-        <span>거래소</span>
+      <a class="dock__item" href="board.html">
+        <svg class="icon"><use href="#i-talk" /></svg>
+        <span>커뮤니티</span>
       </a>
     </nav>
 
