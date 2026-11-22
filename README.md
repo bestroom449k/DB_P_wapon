@@ -128,6 +128,7 @@ erDiagram
 ```
 db/schema.sql          DB 테이블 정의
 server/                Node.js 서버 (Express, MySQL 연결, 회원·게시판·뽑기·도감·인벤토리(장착, 강화, 상점 판매) API)
+server/uploads/        게시글에 붙인 이미지 (서버가 자동으로 만들고, git에 올리지 않음. DB에는 경로만 저장)
 frontend/              화면 (타이틀, 게임, 게시판, 공방은 같은 밤 세계)
   index.html           타이틀 화면 (로그인한 뒤 "게임 시작" → 마도서 속으로 들어가 game.html)
   game.html            게임 첫 화면 (뽑기, 아래 메뉴에서 강화·도감·상점·커뮤니티로)

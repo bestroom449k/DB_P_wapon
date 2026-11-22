@@ -1,6 +1,7 @@
 .claude/
 node_modules/
 server/.env
+server/uploads/
 LIBRARIES.md
 PRODUCT.md
 .impeccable/
