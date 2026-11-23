@@ -342,7 +342,7 @@ export function create({ scene }) { // 마도서 만들기
     book.rotation.set(
       -0.3 * opened, // 펼치면 뒤로 젖혀 페이지가 보이게
       faceTurn === null ? spin : THREE.MathUtils.lerp(spin, faceTurn, opened),
-      Math.sin(t * 0.5) * 0.03 * (1 - opened) + Math.sin(t * 47) * 0.012 * s.charge, // 기우뚱 + 기 모을 때 떨림
+      Math.sin(t * 0.5) * 0.03 * (1 - opened) + Math.sin(t * 47) * 0.012 * s.charge, // 기우뚱 + 룬 조각이 모일 때 떨림
     );
     body.position.x = opened * 0.72; // 펼친 두 면이 가운데 오도록
     hinge.rotation.y = -opened * 0.92 * Math.PI; // 앞표지 열기

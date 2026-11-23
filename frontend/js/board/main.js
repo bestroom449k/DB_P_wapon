@@ -6,10 +6,9 @@
 // 서버 API는 server/src/routes/posts.js, 로그인 정보는 /api/auth/me.
 // 사람이 쓴 글은 언제나 textContent로 넣는다 (HTML로 해석되지 않게).
 import { api } from '../shared/api.js';
-import { el, count, isToday, timeTag, showToast, askConfirm } from '../shared/page.js';
+import { $, el, count, isToday, timeTag, showToast, askConfirm } from '../shared/page.js';
 import { prepareImage } from './image.js';
 
-const $ = (id) => document.getElementById(id);
 const views = { list: $('viewList'), post: $('viewPost'), write: $('viewWrite') };
 const LIMITS = { title: 100, content: 5000, comment: 500 }; // 서버와 같은 글자 수 상한
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');

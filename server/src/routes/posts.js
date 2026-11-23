@@ -11,13 +11,13 @@
 // 글에 붙인 이미지 파일은 주소만 알면 열리므로, 글을 지우거나 이미지를 바꾸면 파일은 실제로 지운다.
 import { Router } from 'express';
 import { pool } from '../db.js';
+import { requireLogin, toId } from '../common.js';
 import { isImage, receiveImage, removeImage, saveImage } from '../uploads.js';
 
 const router = Router();
+const needLogin = requireLogin();
 
 const LIMITS = { title: 100, content: 5000, comment: 500 }; // 글자 수 상한 (제목·댓글은 DB 칸 크기, 본문은 TEXT 안에서 넉넉하게)
-
-const toId = (value) => (/^[1-9]\d{0,17}$/.test(value) ? value : null); // 주소의 번호 (숫자가 아니면 null)
 
 function readText(value, max, label) { // 앞뒤 빈칸을 지운 글. 비었거나 너무 길면 오류 문구
   const text = String(value ?? '').replace(/\r\n/g, '\n').trim(); // 파일과 함께 보낸 글은 브라우저가 줄바꿈을 \r\n으로 바꾸므로 되돌린다
@@ -36,11 +36,6 @@ function readPostForm(req) { // 글쓰기·고치기 입력 (제목, 내용, 이
 async function currentImage(postId) { // 글에 지금 붙어 있는 이미지 경로 (없으면 null)
   const [[row]] = await pool.query('SELECT post_image_url FROM posts WHERE post_id = ?', [postId]);
   return row?.post_image_url ?? null;
-}
-
-function requireLogin(req, res, next) { // 로그인해야 하는 요청
-  if (!req.session.userId) return res.status(401).json({ message: '로그인이 필요해요' });
-  next();
 }
 
 const POST_WRITER = 'SELECT writer_user_id FROM posts WHERE post_id = ? AND deleted_at IS NULL'; // 글쓴이 찾기
@@ -127,7 +122,7 @@ router.get('/:postId', async (req, res) => { // 글 하나 + 댓글
   });
 });
 
-router.post('/', requireLogin, receiveImage, async (req, res) => { // 글쓰기
+router.post('/', needLogin,receiveImage, async (req, res) => { // 글쓰기
   const { title, content, error } = readPostForm(req);
   if (error) return res.status(400).json({ message: error });
 
@@ -144,7 +139,7 @@ router.post('/', requireLogin, receiveImage, async (req, res) => { // 글쓰기
   }
 });
 
-router.patch('/:postId', requireLogin, receiveImage, async (req, res) => { // 내 글 고치기
+router.patch('/:postId', needLogin,receiveImage, async (req, res) => { // 내 글 고치기
   const postId = toId(req.params.postId);
   if (!postId) return res.status(404).json({ message: '글을 찾을 수 없어요' });
   const { title, content, error } = readPostForm(req);
@@ -169,7 +164,7 @@ router.patch('/:postId', requireLogin, receiveImage, async (req, res) => { // �
   res.json({ postId: Number(postId) });
 });
 
-router.delete('/:postId', requireLogin, async (req, res) => { // 내 글 지우기
+router.delete('/:postId', needLogin,async (req, res) => { // 내 글 지우기
   const postId = toId(req.params.postId);
   if (!postId) return res.status(404).json({ message: '글을 찾을 수 없어요' });
   const denied = await checkWriter('글', POST_WRITER, [postId], req.session.userId);
@@ -181,7 +176,7 @@ router.delete('/:postId', requireLogin, async (req, res) => { // 내 글 지우�
   res.json({ ok: true });
 });
 
-router.post('/:postId/comments', requireLogin, async (req, res) => { // 댓글 쓰기
+router.post('/:postId/comments', needLogin,async (req, res) => { // 댓글 쓰기
   const postId = toId(req.params.postId);
   if (!postId) return res.status(404).json({ message: '글을 찾을 수 없어요' });
   const content = readText(req.body?.content, LIMITS.comment, '댓글');
@@ -201,7 +196,7 @@ router.post('/:postId/comments', requireLogin, async (req, res) => { // 댓글 �
   res.status(201).json({ comment: toComment(row, req.session.userId) });
 });
 
-router.delete('/:postId/comments/:commentId', requireLogin, async (req, res) => { // 내 댓글 지우기
+router.delete('/:postId/comments/:commentId', needLogin,async (req, res) => { // 내 댓글 지우기
   const postId = toId(req.params.postId);
   const commentId = toId(req.params.commentId);
   if (!postId || !commentId) return res.status(404).json({ message: '댓글을 찾을 수 없어요' });

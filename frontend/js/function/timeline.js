@@ -29,5 +29,5 @@ export function readTimeline() { // 타임라인 읽기
   state.level = parseInt(read('--level'), 10) || 1; // 등급
   for (const key of NUMBERS) state[key] = parseFloat(read(`--${key}`)) || 0; // 나머지 숫자 값들
   state.light.set(read('--grade')); // 빛 색
-  if (state.finale > 0) state.light.lerp(RADIANT, state.finale * 0.3); // 빛 기둥이 솟으면 황금빛이 조금 더 밝아진다 (무지갯빛이 아니라 황금빛 그대로)
+  if (state.finale > 0) state.light.lerp(RADIANT, state.finale * 0.3); // 빛 기둥이 솟으면 황금빛이 조금 더 밝아진다
 }

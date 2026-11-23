@@ -5,9 +5,8 @@
 // 서버 API는 server/src/routes/collection.js, server/src/routes/inventory.js. 로그인해야 내용이 보인다.
 // 강화에 실패하면 골드만 쓰고 단계는 그대로다 (서버가 정함).
 import { api } from '../shared/api.js';
-import { el, count, timeTag, showToast, askConfirm } from '../shared/page.js';
+import { $, el, count, timeTag, showToast, askConfirm } from '../shared/page.js';
 
-const $ = (id) => document.getElementById(id);
 const views = { collection: $('viewCollection'), enhance: $('viewEnhance'), shop: $('viewShop') };
 const tabs = { collection: $('tabCollection'), enhance: $('tabEnhance'), shop: $('tabShop') };
 const TITLES = { collection: '도감', enhance: '강화', shop: '상점' };

@@ -1,5 +1,5 @@
 // 뽑기 카드 다섯 장 (뒷면에 룬 고리 문장): 위로 볼록한 호를 그리며 떠 있다. 가운데 카드가 가장 크고 앞에 있으며 빛난다.
-// 마우스를 올린 카드는 살짝 떠오르고, 뽑기 연출 중에는 옆 카드가 모이고 가운데 카드가 떠올라 돈다.
+// 마우스를 올린 카드는 살짝 떠오른다.
 import * as THREE from 'three';
 import { GLOW } from '../../../shared/materials.js';
 import { glowTexture } from '../../../shared/textures.js';
@@ -45,7 +45,6 @@ export function create(world) { // 카드 만들기 (world.spread, world.pointer
 
   const raycaster = new THREE.Raycaster();
   const faces = cards.map((card) => card.face);
-  let spin = 0; // 가운데 카드가 돈 각도
   const brightness = new THREE.Color();
 
   return (s, t, dt) => { // 매 프레임: 카드
@@ -55,10 +54,6 @@ export function create(world) { // 카드 만들기 (world.spread, world.pointer
       hovered = raycaster.intersectObjects(faces)[0]?.object ?? null;
     }
 
-    const c = s.charge;
-    spin += dt * c * c * 11; // 기를 모을수록 빨리 돈다
-    if (c < 0.02) spin += (Math.round(spin / Math.PI) * Math.PI - spin) * Math.min(dt * 6, 1); // 다 돌면 앞면으로 멈춘다
-
     for (const card of cards) {
       const { i, holder, face, glow } = card;
       const p = slot(i, world.spread);
@@ -66,22 +61,18 @@ export function create(world) { // 카드 만들기 (world.spread, world.pointer
       card.hover += ((face === hovered ? 1 : 0) - card.hover) * Math.min(dt * 8, 1);
       const bob = Math.sin(t * 0.9 + i * 1.4) * 0.07; // 둥실둥실
 
-      holder.position.set(
-        p.x * (1 - c * 0.3), // 기를 모으면 가운데로 모인다
-        p.y + bob + card.hover * 0.2 + (center ? c * 0.55 : c * 0.12),
-        p.z + (center ? c * 0.4 : 0),
-      );
-      holder.rotation.set(0, p.turn + (center ? spin : 0), p.tilt * (1 - c * 0.5) + Math.sin(t * 0.6 + i) * 0.015);
-      holder.scale.setScalar(p.scale * (1 + card.hover * 0.05 + (center ? c * 0.08 : 0)));
+      holder.position.set(p.x, p.y + bob + card.hover * 0.2, p.z);
+      holder.rotation.set(0, p.turn, p.tilt + Math.sin(t * 0.6 + i) * 0.015);
+      holder.scale.setScalar(p.scale * (1 + card.hover * 0.05));
 
-      const light = center ? 1.05 + c * 0.4 + s.flash * 1.2 : 0.9 + card.hover * 0.12 + c * 0.12; // 가운데 카드는 1보다 조금 밝아 흰 별이 번진다
+      const light = center ? 1.05 : 0.9 + card.hover * 0.12; // 가운데 카드는 1보다 조금 밝아 흰 별이 번진다
       face.material.color.copy(brightness.setRGB(light, light, light * 1.03));
-      const shine = center ? 1 + c * 1 + s.flash * 1.6 : 0.26 + card.hover * 0.45 + c * 0.3;
+      const shine = center ? 1 : 0.26 + card.hover * 0.45;
       glow.material.color.copy(GLOW_COLOR).multiplyScalar(shine);
     }
 
     halo.position.copy(cards[2].holder.position);
     halo.position.z -= 0.4;
-    halo.material.opacity = 0.28 + c * 0.35 + s.flash * 0.5 + Math.sin(t * 1.3) * 0.04;
+    halo.material.opacity = 0.28 + Math.sin(t * 1.3) * 0.04;
   };
 }

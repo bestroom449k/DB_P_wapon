@@ -10,6 +10,7 @@
 import { Router } from 'express';
 import { randomInt } from 'node:crypto';
 import { pool } from '../db.js';
+import { requireLogin } from '../common.js';
 import { gameData, gameItems as items, gradeName } from '../gameData.js';
 
 const router = Router();
@@ -33,10 +34,8 @@ function pickItem(grade) { // 그 등급의 아이템 하나 (없으면 뽑기 �
   return choices[randomInt(choices.length)];
 }
 
-router.post('/draw', async (req, res) => { // 1회 뽑기
+router.post('/draw', requireLogin('로그인하면 뽑을 수 있어요'), async (req, res) => { // 1회 뽑기
   const userId = req.session.userId;
-  if (!userId) return res.status(401).json({ message: '로그인하면 뽑을 수 있어요' });
-
   const item = pickItem(rollGrade());
   const conn = await pool.getConnection();
   try {

@@ -1,4 +1,4 @@
-// 마지막 화면 처리: 밝은 곳이 번져 보이는 빛 번짐(블룸), 그리고 비네트, 필름 그레인, 강화 순간의 섬광.
+// 마지막 화면 처리: 밝은 곳이 번져 보이는 빛 번짐(블룸), 그리고 비네트, 필름 그레인, 룬이 새겨지는 순간의 섬광.
 // 다른 부품이 모두 움직인 뒤 맨 마지막에 화면에 그린다.
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';

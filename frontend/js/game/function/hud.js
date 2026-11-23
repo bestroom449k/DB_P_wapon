@@ -5,30 +5,23 @@
 //     카드가 멈추면 결과 명판을 띄운다. 움직임 줄이기를 켰으면 영상 없이 명판만 띄운다
 //   - 기능 메뉴(game.html의 링크): 강화·도감·상점은 atelier.html의 각 탭, 커뮤니티는 board.html로 간다 (거래소는 만들 때 다시 넣는다)
 //   확률 창은 HTML popover라서 JS 없이 열리고 닫힌다.
+import { api } from '../../shared/api.js';
+import { showToast } from '../../shared/page.js';
 
 const root = document.documentElement;
 const goldValue = document.getElementById('goldValue'); // 골드 숫자
 const goldUnit = document.getElementById('goldUnit'); // "골드" 글자 (숫자가 있을 때만 보임)
 const drawButton = document.getElementById('drawButton'); // 1회 뽑기
 const drawText = document.getElementById('drawText'); // 버튼 글자
-const toast = document.getElementById('toast'); // 알림
-
-function showToast(message) { // 알림 띄우기 (연달아 눌러도 처음부터 다시)
-  toast.textContent = message;
-  toast.classList.remove('is-shown');
-  void toast.offsetWidth; // 애니메이션을 처음부터 다시 시작하게
-  toast.classList.add('is-shown');
-}
 
 function showGold(gold) { // 위 오른쪽 골드 숫자
   goldValue.textContent = Number(gold).toLocaleString('ko-KR');
   goldUnit.hidden = false;
 }
 
-fetch('/api/auth/me') // 내 골드 (로그인 전이거나 서버가 꺼져 있으면 "로그인 전" 그대로)
-  .then((res) => (res.ok ? res.json() : null))
-  .then((data) => {
-    if (data?.user) showGold(data.user.gold);
+api('/auth/me') // 내 골드 (로그인 전이거나 서버가 꺼져 있으면 "로그인 전" 그대로)
+  .then(({ user }) => {
+    if (user) showGold(user.gold);
   })
   .catch(() => {});
 
@@ -132,11 +125,9 @@ drawButton.addEventListener('click', async () => { // 1회 뽑기: 서버가 결
   drawText.textContent = '뽑는 중';
   let data = null;
   try {
-    const res = await fetch('/api/gacha/draw', { method: 'POST' });
-    data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error(data?.message ?? '서버에 연결할 수 없어요. 서버가 켜져 있는지 확인해 주세요');
+    data = await api('/gacha/draw', { method: 'POST' });
   } catch (err) {
-    showToast(err instanceof TypeError ? '서버에 연결할 수 없어요. 서버가 켜져 있는지 확인해 주세요' : err.message);
+    showToast(err.message);
     finishDraw();
     return;
   }

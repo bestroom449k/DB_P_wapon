@@ -54,12 +54,7 @@ export function create(canvas) { // 무대 만들기
   function update(s, t) { // 카메라 움직임
     const intro = s.still ? 0 : (1 - THREE.MathUtils.clamp((t - 0.15) / 3, 0, 1)) ** 3; // 들어올 때 3초 동안 위에서 내려오며 다가온다 (책장 빛이 걷히는 동안)
     const sway = s.still ? 0 : Math.sin(t * 0.13) * 0.22; // 아주 느린 좌우 흔들림
-    const shake = s.flash * 0.04; // 번쩍일 때 살짝 떨림
-    camera.position.set(
-      home.x + sway + (Math.random() - 0.5) * shake,
-      home.y + intro * 2.6 + (Math.random() - 0.5) * shake,
-      home.z + intro * 5 - s.charge * 0.9, // 기를 모을 때 조금 다가간다
-    );
+    camera.position.set(home.x + sway, home.y + intro * 2.6, home.z + intro * 5);
     camera.lookAt(LOOK.x, LOOK.y + intro * 1.6, LOOK.z);
   }
 

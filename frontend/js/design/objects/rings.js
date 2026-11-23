@@ -31,7 +31,7 @@ export function create({ scene }, { colors }) { // 룬 띠 만들기
   const euler = new THREE.Euler(); // 각도 계산 도구
 
   return (s, t, dt) => { // 매 프레임: 룬 띠
-    golden = THREE.MathUtils.damp(golden, s.level === 5 ? 1 : 0, 2.5, dt); // 5등급이 되면 무지개가 아니라 모두 황금빛
+    golden = THREE.MathUtils.damp(golden, s.level === 5 ? 1 : 0, 2.5, dt); // 5등급이 되면 모든 띠가 황금빛
     rings.forEach((r, i) => {
       r.align = THREE.MathUtils.damp(r.align, s.level > i ? 1 : 0, 3, dt); // 누운 정도가 목표값으로 부드럽게 다가간다
       const dir = i % 2 ? 1 : -1; // 띠마다 도는 방향을 번갈아

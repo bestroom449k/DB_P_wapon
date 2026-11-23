@@ -1,5 +1,4 @@
 // 바닥 마법진: 큰 룬 고리(바깥)와 오각별 마법진(안쪽)이 서로 반대로 돈다. 그 아래로 라벤더빛이 번진다.
-// 뽑기 연출 중에는 기를 모을수록 빨리 돌고 밝아진다.
 import * as THREE from 'three';
 import { GLOW } from '../../../shared/materials.js';
 import { circleTexture, glowTexture } from '../../../shared/textures.js';
@@ -24,10 +23,10 @@ export function create({ scene }) { // 마법진 만들기
 
   let spin = 0; // 돈 정도
   return (s, t, dt) => { // 매 프레임: 마법진
-    spin += dt * (1 + s.charge * 7); // 기를 모을수록 빨리
+    spin += dt;
     outer.rotation.z = spin * 0.03;
     inner.rotation.z = -spin * 0.07;
-    const glow = 1 + s.charge * 0.6 + s.flash * 1.2 + Math.sin(t * 1.4) * 0.06; // 숨 쉬듯 밝기
+    const glow = 1 + Math.sin(t * 1.4) * 0.06; // 숨 쉬듯 밝기
     outer.material.color.copy(LIGHT).multiplyScalar(0.75 * glow);
     inner.material.color.copy(LIGHT).multiplyScalar(0.92 * glow);
     pool.material.color.copy(LIGHT).multiplyScalar(0.14 * glow);

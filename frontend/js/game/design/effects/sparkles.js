@@ -1,5 +1,5 @@
 // 반짝이: 카드 둘레에서 깜빡이는 네 갈래 별 90개, 마법진에서 천천히 떠오르는 빛가루 220개 (셰이더 안에서 움직임, CPU 계산 없음).
-// 그리고 고리와 기둥 둘레에 큰 별빛 여섯 개. 뽑기 연출 중에는 빛가루가 빨리 솟는다.
+// 그리고 고리와 기둥 둘레에 큰 별빛 여섯 개.
 import * as THREE from 'three';
 import { GLOW } from '../../../shared/materials.js';
 import { random } from '../../../shared/random.js'; // 정해진 무작위 수 (타이틀과 같이 씀)
@@ -16,7 +16,6 @@ const vertexShader = /* glsl */ ` // 위치 셰이더 (별은 깜빡이고, 빛�
   attribute float aStar;
   uniform float uTime;
   uniform float uPixelRatio;
-  uniform float uCharge;
   varying float vAlpha;
   varying float vStar;
   void main() {
@@ -25,7 +24,7 @@ const vertexShader = /* glsl */ ` // 위치 셰이더 (별은 깜빡이고, 빛�
     if (aStar > 0.5) {
       alpha = pow(0.5 + 0.5 * sin(uTime * (0.7 + aSeed * 2.2) + aSeed * 60.0), 3.0); // 깜빡임
     } else {
-      float travel = mod(p.y + uTime * (0.22 + aSeed * 0.3) * (1.0 + uCharge * 4.0), ${RISE.toFixed(1)});
+      float travel = mod(p.y + uTime * (0.22 + aSeed * 0.3), ${RISE.toFixed(1)});
       p.y = travel;
       p.x += sin(uTime * 0.5 + aSeed * 20.0) * 0.3;
       float life = travel / ${RISE.toFixed(1)};
@@ -84,7 +83,6 @@ export function create({ scene, renderer }) { // 반짝이 만들기
   const uniforms = {
     uTime: { value: 0 },
     uPixelRatio: { value: renderer.getPixelRatio() },
-    uCharge: { value: 0 },
     uColor: { value: new THREE.Color(0xf1edff) },
   };
   const points = new THREE.Points(geometry, new THREE.ShaderMaterial({ ...GLOW, uniforms, vertexShader, fragmentShader }));
@@ -103,10 +101,9 @@ export function create({ scene, renderer }) { // 반짝이 만들기
 
   return (s, t) => { // 매 프레임: 반짝이
     uniforms.uTime.value = t;
-    uniforms.uCharge.value = s.charge;
     for (const sprite of big) {
       const twinkle = 0.5 + 0.5 * Math.sin(t * 1.1 + sprite.userData.phase);
-      sprite.scale.setScalar(0.35 + twinkle * 0.5 + s.charge * 0.5);
+      sprite.scale.setScalar(0.35 + twinkle * 0.5);
       sprite.material.rotation = Math.sin(t * 0.3 + sprite.userData.phase) * 0.2;
     }
   };

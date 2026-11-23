@@ -1,6 +1,5 @@
 // 궤도 고리: 가운데 카드를 비스듬히 감싸는 가는 빛 고리 두 개. 혜성처럼 밝은 머리가 꼬리를 끌며 돌고, 머리에는 별빛이 반짝인다.
 // 고리마다 타이틀 화면과 같은 룬 글자 띠가 흐르고, 큰 고리에는 다섯 등급 색 보석이 함께 돈다 (두 화면이 같은 세계로 보이게).
-// 뽑기 연출 중에는 기를 모을수록 빨라지고 밝아진다.
 import * as THREE from 'three';
 import { GLOW } from '../../../shared/materials.js';
 import { UV_VERTEX } from '../../../shared/glsl.js';
@@ -12,13 +11,12 @@ import { CARD_CENTER } from './cards.js';
 const fragmentShader = /* glsl */ ` // 고리 색 셰이더 (희미한 고리 + 꼬리를 끄는 밝은 머리 두 개)
   uniform vec3 uColor;
   uniform float uPhase;
-  uniform float uGain;
   varying vec2 vUv;
   void main() {
     float a = fract(vUv.x - uPhase); // 머리가 a = 1 쪽, 꼬리가 그 뒤로
     float b = fract(vUv.x - uPhase + 0.5);
     float light = 0.2 + pow(a, 4.0) * 0.55 + pow(a, 26.0) * 2.6 + pow(b, 30.0) * 1.4;
-    gl_FragColor = vec4(uColor * light * uGain, 1.0);
+    gl_FragColor = vec4(uColor * light, 1.0);
   }
 `;
 
@@ -27,12 +25,12 @@ const RINGS = [
   [3.25, 1.18, 0.42, 0.06], // 크게 비스듬히
   [2.6, 1.42, -0.1, -0.085], // 납작하게 가로로
 ];
-const BAND_COLOR = new THREE.Color(0x8e98d6); // 룬 띠 색 (달빛 파랑, 은은하게)
+const BAND_COLOR = new THREE.Color(0x8e98d6).multiplyScalar(0.55); // 룬 띠 색 (달빛 파랑, 은은하게)
 
-export function create({ scene }, { colors }) { // 궤도 고리 만들기 (colors: 다섯 등급 색, js/game/function/timeline.js)
+export function create({ scene }, { colors }) { // 궤도 고리 만들기 (colors: 다섯 등급 색, js/game/function/state.js)
   const band = runeBandTexture(); // 룬 띠 그림 (타이틀의 등급 룬 띠와 같은 그림)
   const rings = RINGS.map(([radius, lie, lean, speed], k) => {
-    const uniforms = { uColor: { value: new THREE.Color(0xe6e0ff) }, uPhase: { value: k * 0.37 }, uGain: { value: 1 } };
+    const uniforms = { uColor: { value: new THREE.Color(0xe6e0ff) }, uPhase: { value: k * 0.37 } };
     const ring = new THREE.Mesh(
       new THREE.TorusGeometry(radius, 0.014, 6, 320),
       new THREE.ShaderMaterial({ ...GLOW, uniforms, vertexShader: UV_VERTEX, fragmentShader }),
@@ -60,7 +58,7 @@ export function create({ scene }, { colors }) { // 궤도 고리 만들기 (colo
       scene.add(glint);
       return { glint, offset };
     });
-    return { ring, uniforms, radius, speed, heads, map, runes };
+    return { ring, uniforms, radius, speed, heads, map };
   });
 
   const gems = colors.map((color) => { // 큰 고리를 따라 도는 다섯 등급 색 보석 (등급 색 빛무리 + 반짝이는 심)
@@ -78,11 +76,9 @@ export function create({ scene }, { colors }) { // 궤도 고리 만들기 (colo
 
   const spot = new THREE.Vector3();
   return (s, t, dt) => { // 매 프레임: 고리 돌리기
-    for (const { ring, uniforms, radius, speed, heads, map, runes } of rings) {
-      uniforms.uPhase.value += dt * speed * (1 + s.charge * 9);
-      uniforms.uGain.value = 1 + s.charge * 1.3 + s.flash * 1.5;
-      map.offset.x -= dt * speed * 0.6 * (1 + s.charge * 6); // 룬 글자가 고리를 따라 흐른다
-      runes.material.color.copy(BAND_COLOR).multiplyScalar(0.55 + s.charge * 0.8 + s.flash);
+    for (const { ring, uniforms, radius, speed, heads, map } of rings) {
+      uniforms.uPhase.value += dt * speed;
+      map.offset.x -= dt * speed * 0.6; // 룬 글자가 고리를 따라 흐른다
       ring.updateMatrixWorld();
       for (const { glint, offset } of heads) {
         const angle = (uniforms.uPhase.value + offset) * Math.PI * 2; // 머리가 있는 각도
@@ -96,7 +92,7 @@ export function create({ scene }, { colors }) { // 궤도 고리 만들기 (colo
       const angle = -big.uniforms.uPhase.value * Math.PI * 2 * 0.6 + (i / gems.length) * Math.PI * 2; // 머리와 반대로 천천히
       gem.position.copy(big.ring.localToWorld(spot.set(Math.cos(angle) * big.radius, Math.sin(angle) * big.radius, 0)));
       gem.userData.core.material.rotation = t * 0.5 + i;
-      gem.scale.setScalar(1 + Math.sin(t * 1.6 + i * 1.3) * 0.12 + s.charge * 0.4); // 숨 쉬듯 커졌다 작아짐
+      gem.scale.setScalar(1 + Math.sin(t * 1.6 + i * 1.3) * 0.12); // 숨 쉬듯 커졌다 작아짐
     });
   };
 }

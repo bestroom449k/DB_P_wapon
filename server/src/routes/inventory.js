@@ -12,16 +12,13 @@
 import { Router } from 'express';
 import { randomInt } from 'node:crypto';
 import { pool } from '../db.js';
+import { requireLogin, toId } from '../common.js';
 import { itemById, gradeName, valueAt, nextEnhance, MAX_LEVEL } from '../gameData.js';
 
 const router = Router();
 
-router.use((req, res, next) => { // 모든 요청이 로그인 필요
-  if (!req.session.userId) return res.status(401).json({ message: '로그인하면 볼 수 있어요' });
-  next();
-});
+router.use(requireLogin('로그인하면 볼 수 있어요')); // 모든 요청이 로그인 필요
 
-const toId = (value) => (/^[1-9]\d{0,17}$/.test(value) ? value : null); // 주소의 번호 (숫자가 아니면 null)
 const sameId = (a, b) => a != null && b != null && String(a) === String(b);
 
 function toItem(row, equippedId) { // DB 행 → 화면용 마도서 (value = 지금 가치 = 상점 판매 가격)

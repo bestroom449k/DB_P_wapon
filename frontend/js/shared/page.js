@@ -1,5 +1,7 @@
-// 별도 페이지(게시판 board.html, 공방 atelier.html)가 같이 쓰는 작은 도구: 요소 만들기, 숫자, 시각, 알림, 확인 창
+// 게시판 board.html, 공방 atelier.html이 같이 쓰는 작은 도구: 요소 찾기·만들기, 숫자, 시각, 알림, 확인 창 (알림은 게임 game.html도 같이 쓴다)
 // 사람이 쓴 글과 서버가 보낸 이름은 언제나 textContent로 넣는다 (HTML로 해석되지 않게).
+
+export const $ = (id) => document.getElementById(id); // id로 요소 찾기
 
 export function el(tag, className, text) { // 요소 만들기 (글은 textContent로)
   const node = document.createElement(tag);

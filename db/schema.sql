@@ -5,8 +5,8 @@
 --   DB에는 유저 데이터만 저장
 --   무기 목록(이름·등급·가격·이미지)·등급 확률·강화 규칙 → Node 서버의 gameData.json
 --   채팅 → 소켓으로만 주고받고 저장 안 함
---   인벤토리 = user_weapons     (지금 가진 검 하나하나)
---   도감     = user_collection  (한 번이라도 얻은 검 기록)
+--   인벤토리 = user_weapons     (지금 가진 무기 하나하나)
+--   도감     = user_collection  (한 번이라도 얻은 무기 기록)
 --   장착     = users.equipped_user_weapon_id
 --
 -- [자주 나오는 문법]
@@ -56,7 +56,7 @@ CREATE TABLE users (
     nickname VARCHAR(30) NOT NULL UNIQUE, -- 게임에 표시되는 이름, 중복 불가
     gold_balance BIGINT UNSIGNED NOT NULL DEFAULT 10000, -- 보유 골드, 가입 시 10000
     --   UNSIGNED라 0 밑으로 빼려 하면 에러 → 잔액 부족 안전장치
-    equipped_user_weapon_id BIGINT NULL, -- 지금 장착 중인 검의 인벤토리 번호 (NULL = 장착 안 함)
+    equipped_user_weapon_id BIGINT NULL, -- 지금 장착 중인 무기의 인벤토리 번호 (NULL = 장착 안 함)
     --   FK는 맨 아래 ALTER TABLE에서 추가
     joined_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 가입 시각, INSERT 때 자동으로 그 순간 시각
     updated_at DATETIME NULL -- 닉네임·비밀번호를 바꾼 시각 (안 바꿨으면 NULL)
@@ -66,38 +66,38 @@ CREATE TABLE users (
 );
 
 -- =====================================================
--- 2. 인벤토리 (지금 가진 검 하나하나)
+-- 2. 인벤토리 (지금 가진 무기 하나하나)
 --    서버에서 트랜잭션으로 확인할 규칙:
---      강화는 장착 중인 검만 가능
---      거래 중(ACTIVE)인 검은 장착·강화·상점 판매 불가
---      장착 중인 검은 거래 등록·상점 판매 불가 (먼저 장착 해제)
+--      강화는 장착 중인 무기만 가능
+--      거래 중(ACTIVE)인 무기는 장착·강화·상점 판매 불가
+--      장착 중인 무기는 거래 등록·상점 판매 불가 (먼저 장착 해제)
 -- =====================================================
 CREATE TABLE user_weapons (
-    user_weapon_id BIGINT AUTO_INCREMENT PRIMARY KEY, -- 인벤토리 번호 (검 한 자루마다 하나)
+    user_weapon_id BIGINT AUTO_INCREMENT PRIMARY KEY, -- 인벤토리 번호 (무기 하나마다 하나)
     owner_user_id INT NOT NULL, -- 지금 주인의 회원 번호 (거래하면 바뀜)
-    template_id INT NOT NULL, -- 어떤 검인지 = gameData.json의 무기 id
+    template_id INT NOT NULL, -- 어떤 무기인지 = gameData.json의 무기 id
     --   이름·이미지·등급은 JSON에서 이 id로 찾음
     enhance_level TINYINT UNSIGNED NOT NULL DEFAULT 0, -- 현재 강화 단계, 뽑았을 때 0
     weapon_status ENUM('OWNED', 'SOLD_TO_SHOP') -- OWNED = 가지고 있음
     NOT NULL DEFAULT 'OWNED', -- SOLD_TO_SHOP = 상점에 팔아서 없어짐 (기록용으로 행은 남김)
     obtained_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 뽑은 시각, INSERT 때 자동
     FOREIGN KEY (owner_user_id) REFERENCES users (user_id), -- 실제 있는 회원만 주인이 될 수 있음
-    UNIQUE KEY uq_owner_weapon (owner_user_id, user_weapon_id), -- users의 장착 FK가 (주인, 검) 쌍을 참조하려면 필요
-    INDEX idx_owner_status (owner_user_id, weapon_status) -- "내 인벤토리에서 가진 검만" 조회를 빠르게
+    UNIQUE KEY uq_owner_weapon (owner_user_id, user_weapon_id), -- users의 장착 FK가 (주인, 무기) 쌍을 참조하려면 필요
+    INDEX idx_owner_status (owner_user_id, weapon_status) -- "내 인벤토리에서 가진 무기만" 조회를 빠르게
 );
 
 -- =====================================================
--- 3. 도감 (한 번이라도 얻은 검 기록)
+-- 3. 도감 (한 번이라도 얻은 무기 기록)
 --    거래로 주인이 바뀌거나 상점에 팔아도 기록이 남아야 해서 인벤토리와 별도
 -- =====================================================
 CREATE TABLE user_collection (
     user_id INT NOT NULL, -- 회원 번호
-    template_id INT NOT NULL, -- 어떤 검인지 = gameData.json의 무기 id
-    first_obtained_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 이 검을 처음 얻은 시각
+    template_id INT NOT NULL, -- 어떤 무기인지 = gameData.json의 무기 id
+    first_obtained_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 이 무기를 처음 얻은 시각
     --   서버는 처음 얻을 때만 INSERT (이미 있으면 그대로 둠)
-    max_enhance_level TINYINT UNSIGNED NOT NULL DEFAULT 0, -- 이 검으로 달성한 최고 강화 단계
+    max_enhance_level TINYINT UNSIGNED NOT NULL DEFAULT 0, -- 이 무기으로 달성한 최고 강화 단계
     --   강화 성공 시 서버에서 더 높을 때만 갱신
-    PRIMARY KEY (user_id, template_id), -- 회원 한 명당 같은 검은 도감에 한 줄만
+    PRIMARY KEY (user_id, template_id), -- 회원 한 명당 같은 무기는 도감에 한 줄만
     FOREIGN KEY (user_id) REFERENCES users (user_id) -- 실제 있는 회원만
 );
 
@@ -148,7 +148,7 @@ CREATE TABLE comments (
 -- =====================================================
 CREATE TABLE trades (
     post_id BIGINT PRIMARY KEY, -- 거래글 번호 = posts.post_id (AUTO_INCREMENT 아님)
-    user_weapon_id BIGINT NOT NULL, -- 파는 검의 인벤토리 번호
+    user_weapon_id BIGINT NOT NULL, -- 파는 무기의 인벤토리 번호
     listed_enhance_level TINYINT UNSIGNED NOT NULL, -- 등록할 때의 강화 단계
     --   팔린 뒤 구매자가 강화해도 거래 당시 기록이 남도록
     sale_price BIGINT UNSIGNED NOT NULL, -- 판매 가격 (골드)
@@ -162,9 +162,9 @@ CREATE TABLE trades (
             trade_status = 'ACTIVE',
             user_weapon_id,
             NULL
-        ) -- 판매 중이면 검 번호, 아니면 NULL
+        ) -- 판매 중이면 무기 번호, 아니면 NULL
     ) STORED,
-    UNIQUE KEY uq_active_weapon (active_weapon_id), -- 같은 검이 동시에 두 번 판매 중이 되지 않게
+    UNIQUE KEY uq_active_weapon (active_weapon_id), -- 같은 무기가 동시에 두 번 판매 중이 되지 않게
     --   (NULL은 여러 개여도 UNIQUE에 안 걸림)
     CONSTRAINT chk_sale_price CHECK (sale_price > 0), -- 0골드 판매 금지
     CONSTRAINT chk_sold_info CHECK ( -- 팔렸으면 구매자·판매 시각이 반드시 있고,
@@ -180,7 +180,7 @@ CREATE TABLE trades (
         )
     ), -- 안 팔렸으면 둘 다 비어 있어야 함
     FOREIGN KEY (post_id) REFERENCES posts (post_id), -- 실제 있는 글만
-    FOREIGN KEY (user_weapon_id) REFERENCES user_weapons (user_weapon_id), -- 실제 있는 검만
+    FOREIGN KEY (user_weapon_id) REFERENCES user_weapons (user_weapon_id), -- 실제 있는 무기만
     FOREIGN KEY (buyer_user_id) REFERENCES users (user_id), -- 실제 있는 회원만 구매자
     INDEX idx_status (trade_status) -- "판매 중인 거래만" 조회를 빠르게
 );
@@ -188,9 +188,9 @@ CREATE TABLE trades (
 -- =====================================================
 -- 장착 FK
 --   users와 user_weapons가 서로를 참조해서 테이블을 다 만든 뒤 추가
---   (회원 번호, 장착 검)이 인벤토리의 (주인, 검)과 일치해야 함
---     → 남의 검은 장착 불가
---     → 장착 중인 검은 주인을 바꿀 수 없음 (거래 완료 전에 장착 해제가 강제됨)
+--   (회원 번호, 장착 무기)이 인벤토리의 (주인, 무기)과 일치해야 함
+--     → 남의 무기는 장착 불가
+--     → 장착 중인 무기는 주인을 바꿀 수 없음 (거래 완료 전에 장착 해제가 강제됨)
 --   equipped_user_weapon_id가 NULL이면 검사하지 않음 (장착 안 한 상태)
 -- =====================================================
 ALTER TABLE users
