@@ -16,9 +16,10 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Diphylleia&family=Gowun+Dodum&display=swap"
     />
-    <!-- 공통 색과 글꼴(tokens.css, 타이틀·게임과 같이 씀), 별도 페이지 공통(page.css, 공방과 같이 씀), 게시판 화면(board.css) -->
+    <!-- 공통 색과 글꼴(tokens.css, 타이틀·게임과 같이 씀), 별도 페이지 공통(page.css, 공방과 같이 씀), 글 읽기·쓰기·댓글(post.css, 거래소와 같이 씀), 글 목록(board.css) -->
     <link rel="stylesheet" href="css/tokens.css" />
     <link rel="stylesheet" href="css/page.css" />
+    <link rel="stylesheet" href="css/post.css" />
     <link rel="stylesheet" href="css/board.css" />
     <script type="module" src="js/board/main.js"></script>
   </head>
@@ -131,7 +132,7 @@
             <textarea class="input input--tall" id="contentInput" rows="14" maxlength="5000"></textarea>
             <span class="counter" id="contentCounter">0 / 5000</span>
           </div>
-          <!-- 이미지 첨부: 실제 파일 입력은 숨기고 label(점선 칸)을 누르게 한다. 고르면 js/board/image.js가 다듬고 미리 보기로 바뀐다 -->
+          <!-- 이미지 첨부: 실제 파일 입력은 숨기고 label(점선 칸)을 누르게 한다. 고르면 js/shared/image-picker.js가 다듬고 미리 보기로 바뀐다 -->
           <div class="field image-field" id="imageField">
             <span class="field__label">이미지 (선택)</span>
             <input class="sr-only image-input" id="imageInput" type="file" accept="image/jpeg,image/png,image/webp" />

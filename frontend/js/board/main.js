@@ -5,30 +5,29 @@
 //   #/edit/번호   내 글 고치기
 // 서버 API는 server/src/routes/posts.js, 로그인 정보는 /api/auth/me.
 // 사람이 쓴 글은 언제나 textContent로 넣는다 (HTML로 해석되지 않게).
+// 이 게시판은 자유글만 보여 준다. 거래글 주소(#/post/번호, #/edit/번호)로 들어오면 거래소 화면(atelier.html#/market/item/번호)으로 보낸다.
 //
 // 작동 원리
 //   1. 페이지가 열리면 start()가 로그인 정보를 받고, route()가 주소를 읽어 화면을 고른다
 //   2. 링크를 누르면 주소의 # 뒤만 바뀌고(새로고침 없음) hashchange → navigate() → route()가 화면을 다시 그린다
 //   3. 각 화면은 api()로 서버에서 JSON을 받아 빈 틀(board.html)을 채운다
 //   4. 응답이 늦게 오면 renderToken으로 버린다 (다른 글을 빠르게 눌러도 내용이 섞이지 않게)
-//   5. 글을 올릴 때는 제목, 내용, 이미지를 FormData 한 덩어리로 보낸다 (이미지 다듬기는 image.js)
-// 관련 파일: board.html(화면 틀), css/board.css·page.css(디자인), js/shared/api.js·page.js(도구), server/src/routes/posts.js(서버)
+//   5. 글을 올릴 때는 제목, 내용, 이미지를 FormData 한 덩어리로 보낸다
+// 이미지 첨부는 js/shared/image-picker.js, 댓글은 js/shared/comments.js (거래소 거래글과 같이 씀)
+// 관련 파일: board.html(화면 틀), css/board.css·post.css·page.css(디자인), js/shared/api.js·page.js(도구), server/src/routes/posts.js(서버)
 import { api } from '../shared/api.js';
-import { $, el, count, isToday, timeTag, showToast, askConfirm } from '../shared/page.js';
-import { prepareImage } from './image.js';
+import { $, el, count, isToday, timeTag, showToast, askConfirm, updateCounter } from '../shared/page.js';
+import { createImagePicker } from '../shared/image-picker.js';
+import { createComments } from '../shared/comments.js';
 
 const views = { list: $('viewList'), post: $('viewPost'), write: $('viewWrite') }; // 세 화면 (board.html의 section)
-const LIMITS = { title: 100, content: 5000, comment: 500 }; // 서버와 같은 글자 수 상한
+const LIMITS = { title: 100, content: 5000 }; // 서버와 같은 글자 수 상한 (댓글 500자는 comments.js)
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)'); // 움직임 줄이기 설정
 
 let me = null; // 로그인한 회원 (로그인 전이면 null)
 let current = null; // 지금 읽고 있는 글
 let editingId = null; // 고치고 있는 글 번호 (새 글이면 null)
 let renderToken = 0; // 늦게 도착한 응답이 다른 화면을 덮어쓰지 않게 매번 올린다
-let pickedImage = null; // 새로 고른 이미지 (올리기 전)
-let imageRemoved = false; // 고치는 글의 이미지를 "빼기"로 뺐는지
-let previewUrl = null; // 미리 보기용 임시 주소
-let imageToken = 0; // 이미지를 다듬는 사이에 다시 고르거나 화면을 옮기면 앞의 결과를 버린다
 
 // ---------- 작은 도구 (요소 만들기, 시각, 알림, 확인 창은 js/shared/page.js) ----------
 
@@ -36,12 +35,6 @@ function show(name, title) { // 세 화면 중 하나만 보이게
   for (const [key, view] of Object.entries(views)) view.hidden = key !== name; // 고른 화면만 남기고 숨긴다
   document.title = `${title} · 다섯 빛 공방`; // 브라우저 탭 제목
   scrollTo({ top: 0 }); // 화면이 바뀌면 맨 위로
-}
-
-function updateCounter(input, counter, max) { // 글자 수 (상한의 90%를 넘으면 금색)
-  const length = [...input.value].length; // 이모지도 한 글자로 센다
-  counter.textContent = `${count(length)} / ${count(max)}`;
-  counter.classList.toggle('is-near', length > max * 0.9);
 }
 
 const confirmDelete = (title, text) => askConfirm({ title, text, ok: '지우기' }); // 지우기 확인 창 → "지우기"를 누르면 true
@@ -112,33 +105,14 @@ $('listRetry').addEventListener('click', renderList); // 오류가 났을 때 �
 
 // ---------- 글 읽기와 댓글 ----------
 
-function syncCommentCount() { // 댓글 수와 "아직 댓글이 없어요"
-  const n = $('commentList').children.length;
-  $('commentCount').textContent = n ? count(n) : '';
-  $('commentEmpty').hidden = n > 0;
-}
+const commentBox = createComments({ // 댓글 목록과 쓰기 (js/shared/comments.js)
+  getPostId: () => current?.postId,
+  isLoggedIn: () => Boolean(me),
+  onLoggedOut: loggedOut,
+});
 
-function commentItem(comment) { // 댓글 한 개
-  const item = el('li', 'comment');
-  const head = el('div', 'comment__head');
-  head.append(el('span', 'comment__name', comment.nickname));
-  const time = timeTag(comment.writtenAt, true);
-  time.className = 'comment__time';
-  head.append(time);
-  if (comment.mine) { // 내가 쓴 댓글에만 지우기 버튼 (실제 권한은 서버가 다시 검사)
-    const remove = el('button', 'comment__delete', '지우기');
-    remove.type = 'button';
-    remove.addEventListener('click', () => deleteComment(comment, item));
-    head.append(remove);
-  }
-  item.append(head, el('p', 'comment__text', comment.content)); // 댓글 내용은 textContent로 들어가 HTML로 해석되지 않는다
-  return item;
-}
-
-function syncCommentForm() { // 로그인했으면 댓글 쓰는 칸, 아니면 로그인 안내
-  $('commentForm').hidden = !me;
-  $('commentLogin').hidden = Boolean(me);
-}
+const isTrade = (post) => post.type === 'TRADE'; // 거래소 거래글인지 (서버 posts.post_type)
+const openInMarket = (post) => location.replace(`atelier.html#/market/item/${post.postId}`); // 거래글은 게시판이 아니라 거래소 화면에서 연다 (주소를 직접 쳐서 들어온 경우)
 
 async function renderPost(postId) { // 글 읽기 화면 그리기
   show('post', '글 읽기');
@@ -151,6 +125,7 @@ async function renderPost(postId) { // 글 읽기 화면 그리기
   try {
     const { post, comments } = await api(`/posts/${postId}`); // 글과 댓글 받기 (이때 서버가 조회수를 1 올린다)
     if (token !== renderToken) return; // 그사이 다른 화면으로 갔으면 이 응답은 버린다
+    if (isTrade(post)) return openInMarket(post); // 거래글이면 거래소의 거래 화면으로
     current = post;
     document.title = `${post.title} · 다섯 빛 공방`;
     $('postTitle').textContent = post.title;
@@ -172,12 +147,7 @@ async function renderPost(postId) { // 글 읽기 화면 그리기
     $('postTools').hidden = !post.mine; // 고치기, 지우기는 내 글에만 (실제 권한은 서버가 다시 검사)
     $('editLink').href = `#/edit/${post.postId}`;
 
-    $('commentList').replaceChildren(...comments.map(commentItem));
-    syncCommentCount();
-    syncCommentForm();
-    $('commentInput').value = '';
-    $('commentError').textContent = '';
-    updateCounter($('commentInput'), $('commentCounter'), LIMITS.comment);
+    commentBox.render(comments); // 댓글 채우기, 쓰는 칸 비우기
 
     $('postNote').hidden = true;
     $('postBodyWrap').hidden = false;
@@ -204,52 +174,6 @@ $('deletePost').addEventListener('click', async () => { // 내 글 지우기
   }
 });
 
-async function deleteComment(comment, item) { // 내 댓글 지우기
-  const ok = await confirmDelete('댓글을 지울까요?', '지운 댓글은 다시 볼 수 없어요.');
-  if (!ok || !current) return;
-  try {
-    await api(`/posts/${current.postId}/comments/${comment.commentId}`, { method: 'DELETE' }); // 서버에서 댓글 지우기 (소프트 삭제)
-    item.remove(); // 화면에서 그 댓글 줄 빼기
-    syncCommentCount();
-    showToast('댓글을 지웠어요');
-  } catch (err) {
-    if (err.status === 401) loggedOut(); // 로그인이 풀렸으면 화면도 로그인 전으로
-    showToast(err.message);
-  }
-}
-
-$('commentInput').addEventListener('input', () => updateCounter($('commentInput'), $('commentCounter'), LIMITS.comment));
-
-$('commentForm').addEventListener('submit', async (event) => { // 댓글 남기기
-  event.preventDefault(); // 브라우저 기본 동작(새로고침, 파일 열기)을 막는다
-  const input = $('commentInput');
-  const error = $('commentError');
-  const content = input.value.trim();
-  if (!content) {
-    error.textContent = '댓글을 입력해 주세요';
-    input.focus();
-    return;
-  }
-  const button = $('commentSubmit');
-  button.disabled = true; // 두 번 누르기 방지
-  error.textContent = '';
-  try {
-    const { comment } = await api(`/posts/${current.postId}/comments`, { method: 'POST', body: { content } }); // 저장하고, 저장된 댓글을 돌려받는다
-    $('commentList').append(commentItem(comment)); // 새로고침 없이 맨 아래에 추가
-    syncCommentCount();
-    input.value = '';
-    updateCounter(input, $('commentCounter'), LIMITS.comment);
-  } catch (err) {
-    if (err.status === 401) {
-      loggedOut();
-      syncCommentForm();
-    }
-    error.textContent = err.message;
-  } finally {
-    button.disabled = false;
-  }
-});
-
 // ---------- 글쓰기, 고치기 ----------
 
 const titleInput = $('titleInput');
@@ -268,73 +192,10 @@ function setSubmitBusy(text) { // 올리기 버튼: text가 있으면 그 글자
   $('writeSubmit').textContent = text ?? submitText();
 }
 
-function setPreview(src) { // 이미지가 있으면 미리 보기, 없으면 고르는 칸
-  if (previewUrl) URL.revokeObjectURL(previewUrl); // 이전 미리 보기가 쓰던 메모리 돌려주기
-  previewUrl = src?.startsWith('blob:') ? src : null; // 브라우저 임시 주소(blob:)만 기억해 뒀다가 나중에 해제
-  if (src) $('imagePreview').src = src;
-  else $('imagePreview').removeAttribute('src');
-  $('imagePicked').hidden = !src; // 미리 보기 칸
-  $('imagePicker').hidden = Boolean(src); // 고르는 칸
-}
-
-function resetImage(saved = null) { // 첨부 칸 처음 상태로 (saved: 고치는 글에 이미 있는 이미지)
-  imageToken++; // 다듬는 중인 이미지가 있으면 그 결과를 버린다
-  pickedImage = null;
-  imageRemoved = false;
-  $('imageInput').value = '';
-  setPreview(saved);
-  setSubmitBusy(null);
-}
-
-async function pickImage(file) { // 고른 이미지를 다듬어 미리 보기에 올린다 (실패하면 이전 이미지는 그대로)
-  const token = ++imageToken; // 이번 선택의 번호
-  $('writeError').textContent = '';
-  setSubmitBusy('이미지 준비 중'); // 다듬는 동안은 올리기 버튼을 잠근다
-  try {
-    const blob = await prepareImage(file); // image.js: 크기를 줄이고 WebP로 다시 저장
-    if (token !== imageToken) return; // 그사이 다른 이미지를 골랐으면 버린다
-    pickedImage = blob; // 올리기를 누를 때 보낼 이미지
-    setPreview(URL.createObjectURL(blob)); // 서버에 보내기 전에 브라우저 안에서 미리 보기
-  } catch (err) {
-    if (token === imageToken) $('writeError').textContent = err.message;
-  } finally {
-    if (token === imageToken) setSubmitBusy(null);
-    $('imageInput').value = ''; // 같은 파일을 다시 골라도 동작하게
-  }
-}
-
-$('imageInput').addEventListener('change', () => {
-  const file = $('imageInput').files[0]; // 파일 선택 창에서 고른 파일
-  if (file) pickImage(file);
-});
-
-$('imageRemove').addEventListener('click', () => {
-  resetImage();
-  imageRemoved = true; // 올릴 때 서버에 removeImage=1을 보낸다
-  $('imageInput').focus();
-});
-
-// 글쓰기 판 어디에든 파일을 끌어다 놓으면 첨부한다 (글자를 끌어 옮기는 것은 그대로)
-const dragsFile = (event) => event.dataTransfer?.types.includes('Files');
-
-$('writeForm').addEventListener('dragover', (event) => {
-  if (!dragsFile(event)) return; // 파일이 아니면(글자 끌기) 그대로 둔다
-  event.preventDefault(); // 브라우저 기본 동작(새로고침, 파일 열기)을 막는다
-  $('imagePicker').classList.add('is-over'); // 놓을 수 있다고 칸을 밝힌다
-});
-
-$('writeForm').addEventListener('dragleave', (event) => {
-  if (!event.currentTarget.contains(event.relatedTarget)) $('imagePicker').classList.remove('is-over'); // 글쓰기 판 밖으로 나갔을 때만 끈다
-});
-
-$('writeForm').addEventListener('drop', (event) => {
-  if (!dragsFile(event)) return; // 파일이 아니면(글자 끌기) 그대로 둔다
-  event.preventDefault(); // 브라우저 기본 동작(새로고침, 파일 열기)을 막는다
-  $('imagePicker').classList.remove('is-over');
-  if ($('imageField').inert) return; // 글을 올리는 중
-  const { files } = event.dataTransfer;
-  if (files.length > 1) $('writeError').textContent = '이미지는 한 장만 올릴 수 있어요';
-  else if (files[0]) pickImage(files[0]);
+const picker = createImagePicker({ // 이미지 첨부 칸 (js/shared/image-picker.js)
+  form: $('writeForm'),
+  showError: (message) => { $('writeError').textContent = message; },
+  setBusy: (busy) => setSubmitBusy(busy ? '이미지 준비 중' : null), // 다듬는 동안은 올리기 버튼을 잠근다
 });
 
 async function renderWrite(postId = null) { // 글쓰기, 고치기 화면 (postId가 있으면 고치기)
@@ -352,13 +213,14 @@ async function renderWrite(postId = null) { // 글쓰기, 고치기 화면 (post
   titleInput.value = '';
   contentInput.value = '';
   syncWriteCounters();
-  resetImage();
+  picker.reset();
 
   if (postId) { // 고칠 글을 불러와 채운다 (조회수는 올리지 않음)
     form.inert = true; // 글을 불러오는 동안 입력을 막는다
     try {
       const { post } = await api(`/posts/${postId}?noview=1`); // 고치려고 불러올 때는 조회수를 올리지 않는다
       if (token !== renderToken) return; // 그사이 다른 화면으로 갔으면 이 응답은 버린다
+      if (isTrade(post)) return openInMarket(post); // 거래글은 게시판에서 고칠 수 없다 (서버도 거절)
       if (!post.mine) { // 남의 글 고치기 주소로 들어온 경우
         showToast('내가 쓴 글만 고칠 수 있어요');
         location.replace(`#/post/${postId}`);
@@ -367,7 +229,7 @@ async function renderWrite(postId = null) { // 글쓰기, 고치기 화면 (post
       titleInput.value = post.title;
       contentInput.value = post.content;
       syncWriteCounters();
-      resetImage(post.imageUrl); // 기존 이미지를 미리 보기에 올린다
+      picker.reset(post.imageUrl); // 기존 이미지를 미리 보기에 올린다
     } catch (err) {
       if (token !== renderToken) return; // 그사이 다른 화면으로 갔으면 이 응답은 버린다
       $('writeError').textContent = err.message;
@@ -394,14 +256,13 @@ $('writeForm').addEventListener('submit', async (event) => { // 올리기
     return;
   }
   setSubmitBusy('올리는 중');
-  $('imageField').inert = true; // 올리는 동안 이미지를 바꾸지 못하게
+  picker.lock(true); // 올리는 동안 이미지를 바꾸지 못하게
   error.textContent = '';
   try {
     const body = new FormData(); // 글과 이미지를 한 번에 보낸다
     body.append('title', title);
     body.append('content', content);
-    if (pickedImage) body.append('image', pickedImage, 'image'); // 새 이미지가 있을 때만 파일을 넣는다
-    else if (imageRemoved) body.append('removeImage', '1'); // "빼기"를 눌렀으면 서버에 알린다 (아무것도 안 보내면 기존 이미지 유지)
+    picker.appendTo(body); // 새 이미지, 또는 "빼기" 표시
     const { postId } = editingId
       ? await api(`/posts/${editingId}`, { method: 'PATCH', body }) // 고치기
       : await api('/posts', { method: 'POST', body }); // 새 글
@@ -411,7 +272,7 @@ $('writeForm').addEventListener('submit', async (event) => { // 올리기
     if (err.status === 401) loggedOut(); // 로그인이 풀렸으면 화면도 로그인 전으로
     error.textContent = err.message;
   } finally {
-    $('imageField').inert = false;
+    picker.lock(false);
     setSubmitBusy(null);
   }
 });

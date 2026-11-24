@@ -81,10 +81,11 @@ HTML, CSS, JS, Three.js   →     Express API       →     MySQL (회원, 글, 
 | 파일 | 역할 |
 | --- | --- |
 | [frontend/board.html](frontend/board.html) | 세 화면의 빈 틀 |
-| [frontend/js/board/main.js](frontend/js/board/main.js) | 화면 전환, 글과 댓글 표시, 전송 |
+| [frontend/js/board/main.js](frontend/js/board/main.js) | 화면 전환, 글 표시, 글쓰기와 고치기 |
+| [frontend/js/shared/comments.js](frontend/js/shared/comments.js) | 댓글 목록, 쓰기, 지우기 (거래소 거래글과 같이 씀) |
 | [frontend/js/shared/api.js](frontend/js/shared/api.js) | 서버 요청 공용 함수 |
-| [frontend/js/shared/page.js](frontend/js/shared/page.js) | 요소 만들기, 시각 표시, 알림, 확인 창 |
-| [frontend/css/board.css](frontend/css/board.css), [frontend/css/page.css](frontend/css/page.css) | 게시판 디자인, 별도 페이지 공통 디자인 |
+| [frontend/js/shared/page.js](frontend/js/shared/page.js) | 요소 만들기, 시각 표시, 글자 수, 알림, 확인 창 |
+| [frontend/css/board.css](frontend/css/board.css), [frontend/css/post.css](frontend/css/post.css), [frontend/css/page.css](frontend/css/page.css) | 글 목록, 글 읽기·쓰기·댓글(거래소와 같이 씀), 별도 페이지 공통 디자인 |
 | [server/src/routes/posts.js](server/src/routes/posts.js) | 글과 댓글 API, 권한 검사, SQL |
 | [server/src/common.js](server/src/common.js) | 로그인 확인, 번호 검사 |
 
@@ -271,9 +272,9 @@ multer는 파일을 **받는 도구**이고, Cloudflare R2는 파일을 **보관
 
 | 파일 | 역할 |
 | --- | --- |
-| [frontend/board.html](frontend/board.html) | 이미지 첨부 칸, 글의 이미지 자리 |
-| [frontend/js/board/main.js](frontend/js/board/main.js) | 파일 선택, 끌어다 놓기, 미리 보기, 전송 |
-| [frontend/js/board/image.js](frontend/js/board/image.js) | 올리기 전 크기 줄이기, WebP 변환 |
+| [frontend/board.html](frontend/board.html) | 이미지 첨부 칸, 글의 이미지 자리 (게시판 글쓰기와 글 읽기) |
+| [frontend/js/shared/image-picker.js](frontend/js/shared/image-picker.js) | 파일 선택, 끌어다 놓기, 미리 보기, FormData에 넣기 |
+| [frontend/js/shared/image.js](frontend/js/shared/image.js) | 올리기 전 크기 줄이기, WebP 변환 |
 | [frontend/js/shared/api.js](frontend/js/shared/api.js) | FormData 전송 |
 | [server/src/uploads.js](server/src/uploads.js) | 받기, 검사, 저장, 삭제, 이미지 제공 |
 | [server/src/routes/posts.js](server/src/routes/posts.js) | 경로를 DB에 저장, 교체와 삭제 처리 |
@@ -283,21 +284,38 @@ multer는 파일을 **받는 도구**이고, Cloudflare R2는 파일을 **보관
 
 ## 5. 거래소
 
-플레이어끼리 마도서를 골드로 사고파는 기능입니다. 공방 화면(`atelier.html`)의 네 번째 탭(`#/market`)에 있고, 게임 화면 아래 메뉴의 "거래소"로 들어갑니다. 지금은 간단 버전이라 가격만 정해 올리고, 설명·이미지·댓글은 없습니다.
+플레이어끼리 마도서를 골드로 사고파는 기능입니다. 공방 화면(`atelier.html`)의 네 번째 탭에 있고, 게임 화면 아래 메뉴의 "거래소"로 들어갑니다.
+
+**거래글 = 게시판 글 + 거래 정보입니다.** 제목, 설명, 조회수, 댓글은 게시판과 같은 `posts`, `comments` 테이블에 저장하고, 마도서·가격·상태만 `trades`에 따로 둡니다. 그래서 댓글은 게시판과 같은 코드(`js/shared/comments.js`)를 그대로 씁니다. 거래글에는 이미지를 붙이지 않습니다 (이미지 첨부는 게시판 글에만 있음).
+
+### 화면과 주소
+
+| 주소 | 화면 | 로그인 |
+| --- | --- | --- |
+| `atelier.html#/market` | 판매 중인 목록 (눌러서 거래 화면으로), 아래에 내 마도서 올리기 | 목록은 필요 없음 |
+| `#/market/item/번호` | 거래 하나: 마도서, 가격, 설명, 사기·내리기, 판매 기록, 댓글 | 보기는 필요 없음 |
+| `#/market/sell/번호` | 판매 글쓰기: 제목, 가격, 설명 | 필요 |
 
 ### 작동 흐름
 
 ```
-[올리기]  내 마도서 줄에 가격 입력 → POST /api/market
-          → 서버: 내 마도서인지, 장착 중이 아닌지, 이미 올린 것이 아닌지 확인
-          → posts 한 줄(판매자, 제목 "이름 +단계") + trades 한 줄(마도서, 가격, ACTIVE) 저장
+[올리기]  내 마도서의 "올리기" → 판매 글쓰기 (제목과 가격은 미리 채워짐)
+          → 제목, 가격, 설명을 JSON으로 POST /api/market
+          → 서버: 입력 검사 → 내 마도서인지, 장착 중이 아닌지, 이미 올린 것이 아닌지 확인
+          → posts 한 줄(판매자, 제목, 설명) + trades 한 줄(마도서, 가격, ACTIVE) 저장
+          → 올린 거래 화면으로
 
-[사기]    목록에서 "사기" → 확인 창 → POST /api/market/:postId/buy
+[보기]    목록의 줄을 누름 → GET /api/market/:postId (거래 정보) + GET /api/posts/:postId (글과 댓글, 조회수 +1)
+
+[사기]    거래 화면의 "사기" → 확인 창 → POST /api/market/:postId/buy
           → 서버: 구매자와 판매자 행 잠금 → 거래 행 잠금 → 마도서 행 잠금
           → 구매자 골드 빼기, 판매자 골드 더하기, 마도서 주인 바꾸기
           → trades를 SOLD로 (구매자, 팔린 시각), 구매자 도감에 기록
+          → 거래 화면에 "○○님이 샀어요"
 
-[내리기]  내 판매 줄의 "내리기" → POST /api/market/:postId/cancel → trades를 CANCELLED로
+[내리기]  내 거래 화면의 "내리기" → POST /api/market/:postId/cancel → trades를 CANCELLED로 (글과 댓글은 기록으로 남음)
+
+[댓글]    게시판과 같은 POST /api/posts/:postId/comments
 ```
 
 ### 서버 API
@@ -305,9 +323,21 @@ multer는 파일을 **받는 도구**이고, Cloudflare R2는 파일을 **보관
 | 요청 | 하는 일 | 로그인 |
 | --- | --- | --- |
 | `GET /api/market` | 판매 중인 마도서 목록 (최신 순) | 필요 없음 |
-| `POST /api/market` | 내 마도서 올리기 `{ userWeaponId, price }` | 필요 |
+| `GET /api/market/:postId` | 거래 하나: 마도서, 가격, 상태, 판매자, 구매자 | 필요 없음 |
+| `POST /api/market` | 내 마도서 올리기: `userWeaponId`, `price`, `title`, `content`(설명, 없어도 됨) | 필요 |
 | `POST /api/market/:postId/buy` | 사기 | 필요 |
 | `POST /api/market/:postId/cancel` | 내가 올린 마도서 내리기 | 필요 |
+| `GET /api/posts/:postId`, `POST /api/posts/:postId/comments` | 거래글의 제목·설명과 댓글 (게시판과 같은 API) | 쓰기만 필요 |
+
+거래 하나를 읽는 쿼리는 **테이블 5개를 잇는 조인**입니다. 판매자와 구매자가 둘 다 `users`에 있어서 같은 테이블을 두 번 붙이고, 구매자는 팔렸을 때만 있으므로 `LEFT JOIN`을 씁니다.
+
+```sql
+FROM trades t
+JOIN posts p        ON p.post_id = t.post_id            -- 거래글
+JOIN users s        ON s.user_id = p.writer_user_id     -- 판매자
+JOIN user_weapons w ON w.user_weapon_id = t.user_weapon_id -- 파는 마도서
+LEFT JOIN users b   ON b.user_id = t.buyer_user_id      -- 구매자 (팔렸을 때만)
+```
 
 ### 규칙과 안전 장치
 
@@ -319,19 +349,23 @@ multer는 파일을 **받는 도구**이고, Cloudflare R2는 파일을 **보관
 | 판매 중인 마도서는 장착·강화·상점 판매 불가 | 인벤토리 API가 ACTIVE 거래를 확인. 공방 화면에는 "거래소 판매 중"으로 표시 |
 | 장착 중인 마도서는 올릴 수 없음 | 올릴 때 장착 여부를 확인 (먼저 "장착 풀기") |
 | 내 것은 살 수 없음, 골드가 모자라면 살 수 없음 | 서버가 확인하고 안내 문구로 거절 |
-| 거래글이 게시판에 섞이지 않음 | 게시판 목록은 trades가 있는 글을 빼고, 판매 중인 거래글은 게시판에서 지울 수 없음 |
+| 거래글이 게시판에 섞이지 않음 | 글마다 종류(`posts.post_type`: GENERAL 자유글 / TRADE 거래글)를 적음. 게시판 목록은 GENERAL만 보여 주고, 게시판 API는 거래글을 고치거나 지우지 못함. 게시판 주소로 거래글을 열면 거래소 화면으로 보냄 |
+| 거래 내역은 거래글에만 붙음 | `trades`의 FK가 (글 번호, 'TRADE')를 가리킴. 자유글에는 거래 내역을 붙일 수 없고, 거래 내역이 있는 글은 자유글로 바꿀 수 없음 |
+| 거래 정보가 빠진 거래글이 생기지 않음 | posts 한 줄과 trades 한 줄을 트랜잭션 하나로 같이 넣음 (두 테이블에 걸친 규칙이라 MySQL 제약으로는 못 걸어서 서버가 지킴) |
 | 가격 | 1부터 1억 골드까지 정수 |
+| 제목, 설명 | 제목 100자, 설명 5,000자(없어도 됨). 이미지는 받지 않음 |
 
 ### 관련 파일
 
 | 파일 | 역할 |
 | --- | --- |
-| [frontend/atelier.html](frontend/atelier.html) | 거래소 탭의 틀 (판매 중 목록, 내 마도서 올리기) |
-| [frontend/js/atelier/main.js](frontend/js/atelier/main.js) | 목록 그리기, 올리기, 사기, 내리기 |
-| [frontend/css/atelier.css](frontend/css/atelier.css) | 거래소 줄과 가격 칸 디자인 |
+| [frontend/atelier.html](frontend/atelier.html) | 거래소 세 화면의 틀 (목록, 거래 하나, 판매 글쓰기) |
+| [frontend/js/atelier/main.js](frontend/js/atelier/main.js) | 화면 전환, 목록, 거래 화면, 판매 글쓰기, 사기, 내리기 |
+| [frontend/js/shared/comments.js](frontend/js/shared/comments.js) | 댓글 (게시판과 같이 씀) |
+| [frontend/css/atelier.css](frontend/css/atelier.css), [frontend/css/post.css](frontend/css/post.css) | 거래소 줄과 마도서 칸, 글 읽기·쓰기·댓글 디자인 |
 | [server/src/routes/market.js](server/src/routes/market.js) | 거래소 API, 잠금 순서, 트랜잭션 |
 | [server/src/routes/inventory.js](server/src/routes/inventory.js) | 판매 중 표시(`listed`), 판매 중이면 장착·강화·판매 거절 |
-| [server/src/common.js](server/src/common.js) | 트랜잭션 도구 (인벤토리와 같이 씀) |
+| [server/src/common.js](server/src/common.js) | 트랜잭션 도구, 글자 수 검사 (인벤토리, 게시판과 같이 씀) |
 
 ---
 
@@ -346,7 +380,7 @@ multer는 파일을 **받는 도구**이고, Cloudflare R2는 파일을 **보관
 | 뽑기 영상 | `frontend/video/`의 파일 | `hud.js`의 `SETTLE` (카드가 멈추는 시각) |
 | 책 넘김 전체 길이 | `css/timeline.css`의 `--enter` | 시간표는 %로 적혀 있어서 함께 늘어남 |
 | 넘어가는 책장 수 | `grimoire.js`의 `LEAVES` | |
-| 글자 수 제한 | `routes/posts.js`와 `js/board/main.js`의 `LIMITS` | 두 곳을 같이 고침. 제목과 댓글은 DB 칸 크기(100, 500)까지 |
+| 글자 수 제한 | 서버는 `server/src/common.js`의 `LIMITS`, 화면은 `js/board/main.js`와 `js/atelier/main.js`의 `LIMITS`, 댓글은 `js/shared/comments.js`의 `MAX` | 서버와 화면을 같이 고침. 제목과 댓글은 DB 칸 크기(100, 500)까지 |
 | 이미지 상한 | `uploads.js`의 `MAX_BYTES`와 `image.js`의 `MAX_UPLOAD` | 두 곳을 같이 고침. 오류 문구의 "5MB"도 함께 |
 | 저장 이미지 크기, 화질 | `image.js`의 `MAX_SIDE`, `QUALITY` | |
 | 거래소 가격 상한 | `routes/market.js`와 `js/atelier/main.js`의 `MAX_PRICE` | 두 곳을 같이 고침 |

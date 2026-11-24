@@ -16,9 +16,11 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Diphylleia&family=Gowun+Dodum&display=swap"
     />
-    <!-- 공통 색과 글꼴(tokens.css), 별도 페이지 공통(page.css, 게시판과 같이 씀), 도감·강화·상점·거래소(atelier.css) -->
+    <!-- 공통 색과 글꼴(tokens.css), 별도 페이지 공통(page.css, 게시판과 같이 씀), 거래글 읽기·쓰기·댓글(post.css, 게시판과 같이 씀), 도감·강화·상점·거래소(atelier.css) -->
+    <!-- 거래소 거래글에는 이미지를 붙이지 않는다 (이미지 첨부는 게시판 글에만) -->
     <link rel="stylesheet" href="css/tokens.css" />
     <link rel="stylesheet" href="css/page.css" />
+    <link rel="stylesheet" href="css/post.css" />
     <link rel="stylesheet" href="css/atelier.css" />
     <script type="module" src="js/atelier/main.js"></script>
   </head>
@@ -123,30 +125,122 @@
         </div>
       </section>
 
-      <!-- 거래소 (#/market): 위는 다른 플레이어가 올린 마도서(사기, 내 것은 내리기), 아래는 내 마도서에 가격을 정해 올리기 -->
+      <!-- 거래소: 세 화면을 주소로 바꾼다 (js/atelier/main.js)
+             #/market              목록: 판매 중인 마도서, 아래는 내 마도서 올리기
+             #/market/item/번호    거래 하나: 마도서, 가격, 설명, 사기·내리기, 댓글
+             #/market/sell/번호    판매 글쓰기: 제목, 가격, 설명 (거래글에는 이미지를 붙이지 않는다) -->
       <section class="view" id="viewMarket" aria-labelledby="marketTitle" hidden>
-        <div class="sheet">
-          <div class="sheet__head">
-            <h2 class="sheet__title" id="marketTitle">거래소</h2>
-            <p class="sheet__count" id="marketCount">거래소를 여는 중이에요</p>
+        <!-- 목록 (#/market) -->
+        <div class="view" id="marketHome">
+          <div class="sheet">
+            <div class="sheet__head">
+              <h2 class="sheet__title" id="marketTitle">거래소</h2>
+              <p class="sheet__count" id="marketCount">거래소를 여는 중이에요</p>
+            </div>
+            <p class="shop__lead" id="marketLead" hidden>다른 플레이어가 올린 마도서예요. 눌러서 설명을 보고 살 수 있어요. 산 마도서는 강화 단계 그대로 내 것이 되고 도감에도 기록돼요.</p>
+            <ol class="inventory inventory--market" id="marketList"></ol>
+            <div class="note" id="marketNote" hidden>
+              <p id="marketNoteText"></p>
+              <a class="btn" id="marketNoteAction" hidden></a>
+            </div>
           </div>
-          <p class="shop__lead" id="marketLead" hidden>다른 플레이어가 올린 마도서를 골드로 사요. 산 마도서는 강화 단계 그대로 내 것이 되고 도감에도 기록돼요.</p>
-          <ol class="inventory inventory--market" id="marketList"></ol>
-          <div class="note" id="marketNote" hidden>
-            <p id="marketNoteText"></p>
-            <a class="btn" id="marketNoteAction" hidden></a>
+
+          <div class="sheet" id="sellSheet" hidden>
+            <div class="sheet__head">
+              <h3 class="sheet__title">내 마도서 올리기</h3>
+              <p class="sheet__count" id="sellCount"></p>
+            </div>
+            <p class="shop__lead">제목, 가격, 설명을 정해 올리면 누군가 살 때까지 거래소에 걸려요. 올려 둔 동안은 장착, 강화, 상점 판매를 할 수 없고, 언제든 내릴 수 있어요.</p>
+            <ol class="inventory inventory--market" id="sellList"></ol>
+            <p class="sell__empty" id="sellEmpty" hidden>올릴 수 있는 마도서가 없어요.</p>
           </div>
         </div>
 
-        <div class="sheet" id="sellSheet" hidden>
-          <div class="sheet__head">
-            <h3 class="sheet__title">내 마도서 올리기</h3>
-            <p class="sheet__count" id="sellCount"></p>
+        <!-- 거래 하나 (#/market/item/번호) -->
+        <article class="view" id="marketItem" aria-labelledby="itemTitle" hidden>
+          <div class="sheet">
+            <a class="crumb" href="#/market">거래소로</a>
+            <div class="note" id="itemNote" hidden>
+              <p id="itemNoteText"></p>
+            </div>
+            <div id="itemBody" hidden>
+              <header class="read__head">
+                <h2 class="read__title" id="itemTitle"></h2>
+                <p class="meta" id="itemMeta"></p>
+              </header>
+              <!-- 파는 마도서: 표지, 등급과 강화 단계, 가격과 사기·내리기 (팔렸거나 내렸으면 그 기록) -->
+              <div class="deal">
+                <div class="deal__book" id="itemBook"></div>
+                <div class="deal__info">
+                  <p class="grade-line" id="itemGrade"></p>
+                  <h3 class="deal__name" id="itemName"></h3>
+                  <div id="itemStars"></div>
+                </div>
+                <div class="deal__side">
+                  <p class="deal__price"><b id="itemPrice"></b> 골드</p>
+                  <p class="deal__status" id="itemStatus" hidden></p>
+                  <button class="btn btn--lamp" id="itemBuy" type="button" hidden>사기</button>
+                  <button class="btn btn--ghost" id="itemCancel" type="button" hidden>내리기</button>
+                  <a class="btn btn--lamp" id="itemLogin" href="index.html#login" hidden>로그인하고 사기</a>
+                </div>
+              </div>
+              <div class="read__body" id="itemContent"></div>
+            </div>
           </div>
-          <p class="shop__lead">가격을 정해 올리면 누군가 살 때까지 거래소에 걸려요. 올려 둔 동안은 장착, 강화, 상점 판매를 할 수 없고, 위 목록에서 언제든 내릴 수 있어요.</p>
-          <ol class="inventory inventory--market" id="sellList"></ol>
-          <p class="sell__empty" id="sellEmpty" hidden>올릴 수 있는 마도서가 없어요.</p>
-        </div>
+
+          <!-- 댓글 (js/shared/comments.js, 게시판 글과 같은 방식) -->
+          <section class="sheet comments" id="commentSheet" aria-labelledby="commentTitle" hidden>
+            <h3 class="comments__title" id="commentTitle">댓글 <span class="comments__count" id="commentCount"></span></h3>
+            <ol class="comment-list" id="commentList"></ol>
+            <p class="comments__empty" id="commentEmpty" hidden>아직 댓글이 없어요. 궁금한 점을 남겨 보세요.</p>
+            <form class="comment-form" id="commentForm" novalidate>
+              <label class="sr-only" for="commentInput">댓글</label>
+              <textarea class="input" id="commentInput" rows="3" maxlength="500" placeholder="이 거래에 남길 말을 적어 주세요"></textarea>
+              <div class="form-foot">
+                <p class="form-error" id="commentError" role="alert"></p>
+                <span class="counter" id="commentCounter">0 / 500</span>
+                <button class="btn btn--ghost" id="commentSubmit" type="submit">댓글 남기기</button>
+              </div>
+            </form>
+            <p class="login-note" id="commentLogin" hidden>댓글을 남기려면 <a href="index.html#login">로그인</a>해 주세요.</p>
+          </section>
+        </article>
+
+        <!-- 판매 글쓰기 (#/market/sell/번호) -->
+        <section class="view" id="marketSell" aria-labelledby="sellTitle" hidden>
+          <form class="sheet write" id="sellForm" novalidate>
+            <a class="crumb" href="#/market">거래소로</a>
+            <h2 class="write__title" id="sellTitle">마도서 올리기</h2>
+            <div class="deal deal--small" id="sellBook"></div>
+            <div class="field">
+              <label class="field__label" for="sellTitleInput">제목</label>
+              <input class="input" id="sellTitleInput" maxlength="100" autocomplete="off" />
+              <span class="counter" id="sellTitleCounter">0 / 100</span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="sellPriceInput">가격</label>
+              <div class="price-field">
+                <input class="price-input" id="sellPriceInput" type="number" min="1" max="100000000" step="1" inputmode="numeric" />
+                골드
+                <span class="price-field__hint" id="sellPriceHint"></span>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field__label" for="sellContentInput">설명 (선택)</label>
+              <textarea class="input" id="sellContentInput" rows="6" maxlength="5000" placeholder="강화한 과정, 파는 이유, 거래 조건 같은 것을 적어 주세요"></textarea>
+              <span class="counter" id="sellContentCounter">0 / 5000</span>
+            </div>
+            <div class="form-foot">
+              <p class="form-error" id="sellError" role="alert"></p>
+              <a class="btn btn--ghost" href="#/market">취소</a>
+              <button class="btn btn--lamp" id="sellSubmit" type="submit">거래소에 올리기</button>
+            </div>
+          </form>
+          <div class="sheet note" id="sellNote" hidden>
+            <p id="sellNoteText"></p>
+            <a class="btn" id="sellNoteAction" hidden></a>
+          </div>
+        </section>
       </section>
     </main>
 

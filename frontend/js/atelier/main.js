@@ -1,17 +1,22 @@
-// 공방 화면: 주소 뒤 # 부분으로 세 화면을 오간다 (위쪽 탭)
-//   #/collection  도감: 게임에 나오는 마도서 선반 (못 만난 마도서는 잠긴 칸)
-//   #/enhance     강화: 장착한 마도서를 작업대에 올려 룬을 새긴다, 아래는 내 마도서 목록과 장착
-//   #/shop        상점: 내 마도서를 지금 가치대로 판다 (한 번 묻고 팔기, 장착 중이면 먼저 풀기)
-//   #/market      거래소: 다른 플레이어가 올린 마도서를 사고, 내 마도서에 가격을 정해 올리거나 내린다
-// 서버 API는 server/src/routes/collection.js, inventory.js, market.js. 거래소 목록과 도감은 로그인 전에도 보인다.
+// 공방 화면: 주소 뒤 # 부분으로 네 탭을 오간다
+//   #/collection           도감: 게임에 나오는 마도서 선반 (못 만난 마도서는 잠긴 칸)
+//   #/enhance              강화: 장착한 마도서를 작업대에 올려 룬을 새긴다, 아래는 내 마도서 목록과 장착
+//   #/shop                 상점: 내 마도서를 지금 가치대로 판다 (한 번 묻고 팔기, 장착 중이면 먼저 풀기)
+//   #/market               거래소 목록: 판매 중인 마도서, 아래는 내 마도서 올리기
+//   #/market/item/번호     거래 하나: 마도서, 가격, 설명, 사기·내리기, 댓글
+//   #/market/sell/번호     판매 글쓰기: 제목, 가격, 설명 (거래글에는 이미지를 붙이지 않는다)
+// 서버 API는 server/src/routes/collection.js, inventory.js, market.js (거래글 내용과 댓글은 posts.js). 거래소와 도감은 로그인 전에도 보인다.
+// 댓글은 게시판과 같은 js/shared/comments.js를 쓴다.
 // 강화에 실패하면 골드만 쓰고 단계는 그대로다 (서버가 정함).
 import { api } from '../shared/api.js';
-import { $, el, count, timeTag, showToast, askConfirm } from '../shared/page.js';
+import { $, el, count, timeTag, showToast, askConfirm, updateCounter } from '../shared/page.js';
+import { createComments } from '../shared/comments.js';
 
 const views = { collection: $('viewCollection'), enhance: $('viewEnhance'), shop: $('viewShop'), market: $('viewMarket') };
 const tabs = { collection: $('tabCollection'), enhance: $('tabEnhance'), shop: $('tabShop'), market: $('tabMarket') };
 const TITLES = { collection: '도감', enhance: '강화', shop: '상점', market: '거래소' };
 const MAX_PRICE = 100_000_000; // 거래소 가격 상한 (서버 server/src/routes/market.js와 같음)
+const LIMITS = { title: 100, content: 5000 }; // 거래글 제목, 설명 글자 수 상한 (서버 server/src/common.js와 같음)
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const ENGRAVE_MS = 1100; // 룬을 새기는 연출 길이 (atelier.css의 ring-spin과 같다)
 const LEAVE_MS = 350; // 판 마도서 줄이 사라지는 길이 (atelier.css의 row-leave와 같다)
@@ -405,33 +410,54 @@ async function unequipItem(button) { // 장착 풀기 (장착 중인 마도서�
 }
 
 // ---------- 거래소 ----------
+// 세 화면: 목록(#/market), 거래 하나(#/market/item/번호), 판매 글쓰기(#/market/sell/번호).
+// 거래글의 제목, 설명, 조회수, 댓글은 게시판 글과 같은 posts, comments 테이블이라
+// 거래 정보(마도서, 가격, 상태)는 /api/market에서, 글 내용과 댓글은 /api/posts/:postId 에서 받는다.
 
-function listingRow(listing) { // 판매 중인 마도서 한 줄: 판매자와 올린 날, 가격, 사기 (내 것이면 내리기)
+const marketPages = { home: $('marketHome'), item: $('marketItem'), sell: $('marketSell') }; // 거래소 안의 세 화면
+let currentListing = null; // 지금 보고 있는 거래 (#/market/item/번호)
+let sellingItem = null; // 판매 글쓰기 중인 마도서 (#/market/sell/번호)
+
+function showMarket(page, title) { // 거래소 탭을 켜고, 그 안의 세 화면 중 하나만 보이게
+  show('market');
+  for (const [key, node] of Object.entries(marketPages)) node.hidden = key !== page;
+  document.title = `${title} · 다섯 빛 공방`;
+  scrollTo({ top: 0 }); // 화면이 바뀌면 맨 위로
+}
+
+function loggedOut() { // 서버가 로그인이 풀렸다고 하면 화면도 로그인 전으로
+  loggedIn = false;
+  renderWho(0);
+}
+
+function listingRow(listing) { // 판매 중인 마도서 한 줄 (누르면 거래 화면): 제목, 등급과 단계, 마도서 이름·판매자·올린 날, 가격
+  const link = el('a', 'inv-row inv-row--link');
+  link.href = `#/market/item/${listing.postId}`;
+  const line = el('div', 'inv-row__line');
+  line.append(gradeLine(listing.item.grade, listing.item.gradeName), starRow(listing.item.level, market.maxLevel, true));
+  const meta = el('p', 'meta');
+  meta.append(el('span', '', listing.item.name), el('span', '', listing.seller), timeTag(listing.listedAt));
+  const info = el('div', 'inv-row__info');
+  info.append(el('h4', 'inv-row__name', listing.title), line, meta); // 제목은 판매자가 쓴 글이라 textContent로 넣는다
   const price = el('span', 'inv-row__price');
   price.append(el('b', '', count(listing.price)), ' 골드');
-  let actions = [];
-  if (listing.mine) actions = [el('span', 'inv-row__badge', '내 판매'), smallButton('내리기', (button) => cancelListing(listing, button))];
-  else if (loggedIn) actions = [smallButton('사기', (button) => buyListing(listing, button))];
-  const row = bookRow({ ...listing.item, equipped: false }, price, ...actions);
-  const meta = el('p', 'meta');
-  meta.append(el('span', '', listing.seller), timeTag(listing.listedAt));
-  row.querySelector('.inv-row__info').append(meta);
+  const act = el('div', 'inv-row__act');
+  if (listing.mine) act.append(el('span', 'inv-row__badge', '내 판매'));
+  link.append(bookCover(listing.item.grade), info, price, act);
+  const row = el('li');
+  row.append(link);
   return row;
 }
 
-function sellRow(item) { // 내 마도서 올리기 한 줄: 가격 칸(처음엔 상점 가치)과 올리기 (장착 중이면 먼저 풀기)
-  if (item.equipped) {
-    return bookRow(item, el('span', 'inv-row__value', `가치 ${count(item.value)}`), el('span', 'inv-row__badge', '장착 중'), smallButton('장착 풀기', unequipItem));
-  }
-  const input = el('input', 'price-input');
-  Object.assign(input, { type: 'number', min: 1, max: MAX_PRICE, step: 1, value: item.value, inputMode: 'numeric' });
-  input.setAttribute('aria-label', `${item.name} 판매 가격 (골드)`);
-  const field = el('label', 'price-field');
-  field.append(input, ' 골드');
-  return bookRow(item, field, smallButton('올리기', (button) => listItem(item, input, button)));
+function sellRow(item) { // 내 마도서 올리기 한 줄: 상점 가치와 올리기 (장착 중이면 먼저 풀기)
+  const value = el('span', 'inv-row__value', `가치 ${count(item.value)}`);
+  if (item.equipped) return bookRow(item, value, el('span', 'inv-row__badge', '장착 중'), smallButton('장착 풀기', unequipItem));
+  const go = el('a', 'btn btn--ghost btn--small', '올리기');
+  go.href = `#/market/sell/${item.userWeaponId}`; // 판매 글쓰기 화면으로
+  return bookRow(item, value, go);
 }
 
-function drawMarket() {
+function drawMarket() { // 목록 화면: 판매 중인 마도서, 아래는 내 마도서 올리기
   const { listings } = market;
   $('marketNote').hidden = true;
   $('marketLead').hidden = !listings.length;
@@ -448,17 +474,8 @@ function drawMarket() {
   $('sellEmpty').hidden = sellable.length > 0;
 }
 
-async function loadMarket() { // 거래소 목록과 (로그인했으면) 내 마도서를 함께 받는다
-  const [listings, mine] = await Promise.all([api('/market'), loggedIn ? api('/inventory') : null]);
-  market = listings;
-  if (mine) {
-    inventory = mine;
-    renderWho(mine.gold);
-  }
-}
-
-async function renderMarket() {
-  show('market');
+async function renderMarket() { // 목록 화면 그리기
+  showMarket('home', '거래소');
   const token = ++renderToken;
   $('marketCount').textContent = '거래소를 여는 중이에요';
   $('marketLead').hidden = true;
@@ -466,8 +483,13 @@ async function renderMarket() {
   $('marketNote').hidden = true;
   $('sellSheet').hidden = true;
   try {
-    await loadMarket();
+    const [listings, mine] = await Promise.all([api('/market'), loggedIn ? api('/inventory') : null]); // 판매 목록과 (로그인했으면) 내 마도서
     if (token !== renderToken) return;
+    market = listings;
+    if (mine) {
+      inventory = mine;
+      renderWho(mine.gold);
+    }
     drawMarket();
   } catch (err) {
     if (token !== renderToken) return;
@@ -476,72 +498,217 @@ async function renderMarket() {
   }
 }
 
-async function reloadMarket() { // 사고팔고 난 뒤 (다른 사람이 먼저 샀을 수도 있어서) 목록을 다시 받아 온다
+// 거래 하나 (#/market/item/번호)
+
+const commentBox = createComments({ // 거래글 댓글 (js/shared/comments.js, 게시판 글과 같은 방식)
+  getPostId: () => currentListing?.postId,
+  isLoggedIn: () => loggedIn,
+  onLoggedOut: loggedOut,
+});
+
+function drawDeal(listing, maxLevel) { // 파는 마도서와 가격, 상태에 맞는 버튼 (판매 중: 사기 또는 내리기, 팔림·내림: 그 기록)
+  currentListing = listing;
+  $('itemBook').replaceChildren(bookCover(listing.item.grade));
+  gradeLine(listing.item.grade, listing.item.gradeName, $('itemGrade'));
+  $('itemName').textContent = listing.item.name;
+  $('itemStars').replaceChildren(starRow(listing.item.level, maxLevel));
+  $('itemPrice').textContent = count(listing.price);
+  const active = listing.status === 'ACTIVE';
+  $('itemBuy').hidden = !(active && loggedIn && !listing.mine); // 다른 사람의 판매 중인 마도서
+  $('itemCancel').hidden = !(active && listing.mine); // 내가 올린 판매 중인 마도서
+  $('itemLogin').hidden = !(active && !loggedIn);
+  $('itemBuy').disabled = false;
+  $('itemCancel').disabled = false;
+  const status = $('itemStatus');
+  status.hidden = active;
+  if (listing.status === 'SOLD') status.replaceChildren(`${listing.buyer ?? '누군가'}님이 샀어요 · `, timeTag(listing.soldAt, true));
+  else if (listing.status === 'CANCELLED') status.textContent = '판매자가 내린 마도서예요';
+}
+
+function drawPost(post) { // 거래글의 제목, 판매자·올린 날·조회수, 설명 (사람이 쓴 글은 textContent로)
+  document.title = `${post.title} · 다섯 빛 공방`;
+  $('itemTitle').textContent = post.title;
+  $('itemMeta').replaceChildren(el('span', '', post.nickname), timeTag(post.writtenAt, true), el('span', '', `조회 ${count(post.views)}`));
+  $('itemContent').textContent = post.content;
+  $('itemContent').hidden = !post.content; // 설명 없이 올린 거래
+}
+
+async function renderListing(postId) { // 거래 화면 그리기
+  showMarket('item', '거래');
+  const token = ++renderToken;
+  currentListing = null;
+  $('itemNote').hidden = false;
+  $('itemNoteText').textContent = '거래를 불러오는 중이에요';
+  $('itemBody').hidden = true;
+  $('commentSheet').hidden = true;
   try {
-    await loadMarket();
-    if (!views.market.hidden) drawMarket();
+    const [deal, { post, comments }] = await Promise.all([api(`/market/${postId}`), api(`/posts/${postId}`)]); // 거래 정보, 글과 댓글 (글을 열면 서버가 조회수를 1 올린다)
+    if (token !== renderToken) return;
+    drawDeal(deal.listing, deal.maxLevel);
+    drawPost(post);
+    commentBox.render(comments);
+    $('itemNote').hidden = true;
+    $('itemBody').hidden = false;
+    $('commentSheet').hidden = false;
   } catch (err) {
-    showToast(err.message);
+    if (token !== renderToken) return;
+    $('itemNoteText').textContent = err.message;
   }
 }
 
-async function buyListing(listing, button) { // 사기: 한 번 묻고, 서버가 골드와 주인을 한 번에 바꾼다
-  if (inventory.gold < listing.price) {
-    showToast(`골드가 부족해요 (${count(listing.price)}골드 필요)`);
-    return;
-  }
+async function refreshDeal() { // 사거나 내린 뒤 거래 상태만 다시 받는다 (조회수는 올리지 않음)
+  const listing = currentListing;
+  if (!listing) return;
+  try {
+    const deal = await api(`/market/${listing.postId}`);
+    if (currentListing?.postId === listing.postId) drawDeal(deal.listing, deal.maxLevel);
+  } catch {}
+}
+
+$('itemBuy').addEventListener('click', async () => { // 사기: 한 번 묻고, 서버가 골드와 주인을 한 번에 바꾼다
+  const listing = currentListing;
+  if (!listing) return;
   const ok = await askConfirm({
     title: `${withObject(listing.item.name)} 살까요?`,
     text: `${listing.seller}님에게 ${count(listing.price)}골드를 내요. 산 마도서는 +${listing.item.level} 단계 그대로 내 것이 돼요.`,
     ok: '사기',
   });
   if (!ok) return;
-  button.disabled = true;
+  $('itemBuy').disabled = true;
   try {
     const data = await api(`/market/${listing.postId}/buy`, { method: 'POST' });
+    renderWho(data.gold); // 줄어든 골드
     showToast(`${withObject(listing.item.name)} 샀어요${data.isNew ? '. 도감에도 기록했어요' : ''}`);
   } catch (err) {
-    showToast(err.message); // 이미 팔렸거나 골드가 부족한 경우
+    if (err.status === 401) loggedOut();
+    showToast(err.message); // 골드가 부족하거나 그사이 다른 사람이 산 경우
   }
-  await reloadMarket();
-}
+  await refreshDeal(); // 팔림 상태로 다시 그린다
+});
 
-async function cancelListing(listing, button) { // 내리기: 다시 내 마도서로 돌아온다 (장착, 강화, 팔기 가능)
-  button.disabled = true;
+$('itemCancel').addEventListener('click', async () => { // 내리기: 다시 내 마도서로 돌아온다 (장착, 강화, 팔기 가능)
+  const listing = currentListing;
+  if (!listing) return;
+  const ok = await askConfirm({
+    title: `${withObject(listing.item.name)} 내릴까요?`,
+    text: '거래소 목록에서 빠지고, 다시 장착이나 강화, 상점 판매를 할 수 있어요. 언제든 다시 올릴 수 있어요.',
+    ok: '내리기',
+  });
+  if (!ok) return;
+  $('itemCancel').disabled = true;
   try {
     await api(`/market/${listing.postId}/cancel`, { method: 'POST' });
     showToast(`${withObject(listing.item.name)} 거래소에서 내렸어요`);
+    location.hash = '#/market'; // 목록으로
   } catch (err) {
+    if (err.status === 401) loggedOut();
     showToast(err.message);
+    await refreshDeal();
   }
-  await reloadMarket();
+});
+
+// 판매 글쓰기 (#/market/sell/번호)
+
+const sellTitle = $('sellTitleInput');
+const sellPrice = $('sellPriceInput');
+const sellContent = $('sellContentInput');
+const syncSellCounters = () => {
+  updateCounter(sellTitle, $('sellTitleCounter'), LIMITS.title);
+  updateCounter(sellContent, $('sellContentCounter'), LIMITS.content);
+};
+sellTitle.addEventListener('input', syncSellCounters);
+sellContent.addEventListener('input', syncSellCounters);
+
+function setSellBusy(text) { // 올리기 버튼: text가 있으면 그 글자로 잠그고, 없으면 원래대로
+  $('sellSubmit').disabled = Boolean(text);
+  $('sellSubmit').textContent = text ?? '거래소에 올리기';
 }
 
-async function listItem(item, input, button) { // 올리기: 정한 가격으로 거래소에 건다
-  const price = Number(input.value);
-  if (!Number.isInteger(price) || price < 1 || price > MAX_PRICE) {
-    showToast(`가격은 1부터 ${count(MAX_PRICE)}골드까지 정할 수 있어요`);
-    input.focus();
+function sellNote(text) { // 폼 대신 안내 (로그인 전, 올릴 수 없는 마도서, 오류)
+  $('sellForm').hidden = true;
+  viewNote('sell', text, loggedIn ? { label: '거래소로', href: '#/market' } : { label: '로그인하러 가기', href: 'index.html#login', lamp: true });
+}
+
+async function renderSell(userWeaponId) { // 판매 글쓰기 화면 그리기
+  showMarket('sell', '마도서 올리기');
+  const token = ++renderToken;
+  sellingItem = null;
+  $('sellNote').hidden = true;
+  $('sellForm').hidden = true;
+  if (!loggedIn) return sellNote('로그인하면 마도서를 올릴 수 있어요.');
+  try {
+    const data = await api('/inventory'); // 올릴 마도서의 지금 상태 (장착, 판매 중)
+    if (token !== renderToken) return;
+    inventory = data;
+    renderWho(data.gold);
+  } catch (err) {
+    if (token !== renderToken) return;
+    return sellNote(err.message);
+  }
+  const item = inventory.items.find((it) => String(it.userWeaponId) === String(userWeaponId));
+  if (!item) return sellNote('내가 가진 마도서가 아니에요.');
+  if (item.listed) return sellNote('이미 거래소에 올린 마도서예요.');
+  if (item.equipped) return sellNote('장착 중인 마도서는 올릴 수 없어요. 거래소 목록 아래에서 먼저 장착을 풀어 주세요.');
+
+  sellingItem = item;
+  const book = el('div', 'deal__book');
+  book.append(bookCover(item.grade));
+  const info = el('div', 'deal__info');
+  info.append(gradeLine(item.grade, item.gradeName), el('h3', 'deal__name', item.name), starRow(item.level, inventory.maxLevel, true));
+  $('sellBook').replaceChildren(book, info); // 파는 마도서 요약
+  sellTitle.value = `${item.name} +${item.level}`; // 처음 제목은 마도서 이름과 강화 단계
+  sellPrice.value = String(item.value); // 처음 가격은 상점 가치
+  $('sellPriceHint').textContent = `상점에 팔면 ${count(item.value)}골드`;
+  sellContent.value = '';
+  $('sellError').textContent = '';
+  syncSellCounters();
+  setSellBusy(null);
+  $('sellForm').hidden = false;
+  sellTitle.focus();
+}
+
+$('sellForm').addEventListener('submit', async (event) => { // 거래소에 올리기: 제목, 가격, 설명을 보낸다
+  event.preventDefault(); // 브라우저가 페이지를 새로 고치지 않게
+  if (!sellingItem) return;
+  const error = $('sellError');
+  const title = sellTitle.value.trim();
+  const price = Number(sellPrice.value);
+  if (!title) {
+    error.textContent = '제목을 입력해 주세요';
+    sellTitle.focus();
     return;
   }
-  button.disabled = true;
-  try {
-    await api('/market', { method: 'POST', body: { userWeaponId: item.userWeaponId, price } });
-    showToast(`${withObject(item.name)} ${count(price)}골드에 올렸어요`);
-  } catch (err) {
-    showToast(err.message);
+  if (!Number.isInteger(price) || price < 1 || price > MAX_PRICE) {
+    error.textContent = `가격은 1부터 ${count(MAX_PRICE)}골드까지 정할 수 있어요`;
+    sellPrice.focus();
+    return;
   }
-  await reloadMarket();
-}
+  setSellBusy('올리는 중');
+  error.textContent = '';
+  try {
+    const body = { userWeaponId: sellingItem.userWeaponId, price, title, content: sellContent.value.trim() }; // 설명은 비어 있어도 된다
+    const { postId } = await api('/market', { method: 'POST', body });
+    showToast(`${withObject(sellingItem.name)} ${count(price)}골드에 올렸어요`);
+    location.hash = `#/market/item/${postId}`; // 올린 거래 화면으로
+  } catch (err) {
+    if (err.status === 401) loggedOut();
+    error.textContent = err.message; // 그사이 장착했거나 다른 창에서 이미 올린 경우 등
+  } finally {
+    setSellBusy(null);
+  }
+});
 
 // ---------- 화면 바꾸기 ----------
 
 const RENDER = { collection: renderCollection, enhance: renderEnhance, shop: renderShop, market: renderMarket };
 
 function route() { // 주소 뒤 # 부분을 읽어 화면을 고른다 (모르는 주소는 도감으로)
-  const page = location.hash.replace(/^#\/?/, '');
+  const [page, sub, id] = location.hash.replace(/^#\/?/, '').split('/'); // '#/market/item/3' → ['market', 'item', '3']
+  const num = /^[1-9]\d{0,17}$/.test(id ?? '') ? id : null; // 번호가 숫자일 때만 쓴다
+  if (page === 'market' && sub === 'item' && num) return renderListing(num); // 거래 하나
+  if (page === 'market' && sub === 'sell' && num) return renderSell(num); // 판매 글쓰기
   const name = Object.hasOwn(RENDER, page) ? page : 'collection';
-  if (page !== name) history.replaceState(null, '', `#/${name}`);
+  if (location.hash !== `#/${name}`) history.replaceState(null, '', `#/${name}`); // 모르는 주소는 고친다
   return RENDER[name]();
 }
 

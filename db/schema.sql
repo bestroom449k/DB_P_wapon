@@ -103,11 +103,17 @@ CREATE TABLE user_collection (
 
 -- =====================================================
 -- 4. 게시글 (자유글·거래글 공통)
+--    post_type으로 글 종류를 구분: GENERAL = 자유글(커뮤니티), TRADE = 거래글(거래소)
 --    거래글이면 trades 테이블에 같은 post_id 행이 하나 더 있음
 -- =====================================================
 CREATE TABLE posts (
     post_id BIGINT AUTO_INCREMENT PRIMARY KEY, -- 글 번호
     writer_user_id INT NOT NULL, -- 작성자 회원 번호 (거래글이면 판매자)
+    post_type ENUM('GENERAL', 'TRADE') -- 글 종류: GENERAL = 자유글, TRADE = 거래글
+    NOT NULL DEFAULT 'GENERAL', -- 종류를 안 주면 자유글
+    --   거래글인지를 "trades에 행이 있는지"로 짐작하지 않고 글에 직접 적어 둠
+    --   → trades 행이 빠진 거래글이 게시판에 자유글처럼 섞이지 않음
+    --   → 자유글에 거래 내역을 붙일 수 없음 (trades의 FK가 (글 번호, 'TRADE')를 요구)
     post_title VARCHAR(100) NOT NULL, -- 제목, 최대 100글자
     post_content TEXT NOT NULL, -- 본문
     post_image_url VARCHAR(255), -- 첨부 이미지 경로 (없으면 NULL)
@@ -121,6 +127,10 @@ CREATE TABLE posts (
     --   실제로 지우지 않고 시각만 기록 (소프트 삭제)
     --   목록 조회 시 WHERE deleted_at IS NULL
     FOREIGN KEY (writer_user_id) REFERENCES users (user_id), -- 실제 있는 회원만 작성자
+    UNIQUE KEY uq_post_type (post_id, post_type), -- trades의 FK가 (글 번호, 종류) 쌍을 참조하려면 필요
+    --   post_id만으로도 이미 중복이 없지만, FK가 가리키는 칸 묶음에는 UNIQUE 인덱스가 있어야 함
+    --   (user_weapons의 uq_owner_weapon과 같은 방법)
+    INDEX idx_type_written (post_type, written_at), -- "자유글만 최신순" 게시판 목록을 빠르게
     INDEX idx_written (written_at) -- 최신글 순 정렬을 빠르게
 );
 
@@ -140,14 +150,20 @@ CREATE TABLE comments (
 );
 
 -- =====================================================
--- 6. 거래 내역 (거래글 = posts 한 줄 + 이 테이블 한 줄)
+-- 6. 거래 내역 (거래글 = posts 한 줄(post_type = 'TRADE') + 이 테이블 한 줄)
 --    판매자는 posts.writer_user_id
 --    서버에서 트랜잭션(SELECT ... FOR UPDATE)으로 확인할 규칙:
 --      등록 시 글쓴이 = 무기 주인, 무기가 OWNED, 장착 중이 아님
 --      구매 시 구매자 ≠ 판매자, 구매자 골드 충분
+--      거래글(posts)과 이 행은 트랜잭션 하나로 같이 넣음
+--        "TRADE 글에는 이 행이 반드시 있어야 함"은 두 테이블에 걸친 규칙이라 MySQL 제약으로는 못 걸어서
+--        서버가 둘을 함께 넣고, 하나라도 실패하면 둘 다 취소함
 -- =====================================================
 CREATE TABLE trades (
     post_id BIGINT PRIMARY KEY, -- 거래글 번호 = posts.post_id (AUTO_INCREMENT 아님)
+    post_type ENUM('GENERAL', 'TRADE') -- 연결된 글의 종류, 항상 'TRADE'
+    NOT NULL DEFAULT 'TRADE', -- INSERT 때 따로 주지 않아도 됨
+    --   posts.post_type과 같은 ENUM이어야 아래 FK (post_id, post_type)를 걸 수 있음
     user_weapon_id BIGINT NOT NULL, -- 파는 무기의 인벤토리 번호
     listed_enhance_level TINYINT UNSIGNED NOT NULL, -- 등록할 때의 강화 단계
     --   팔린 뒤 구매자가 강화해도 거래 당시 기록이 남도록
@@ -166,6 +182,7 @@ CREATE TABLE trades (
     ) STORED,
     UNIQUE KEY uq_active_weapon (active_weapon_id), -- 같은 무기가 동시에 두 번 판매 중이 되지 않게
     --   (NULL은 여러 개여도 UNIQUE에 안 걸림)
+    CONSTRAINT chk_trade_post CHECK (post_type = 'TRADE'), -- 거래 내역은 거래글에만
     CONSTRAINT chk_sale_price CHECK (sale_price > 0), -- 0골드 판매 금지
     CONSTRAINT chk_sold_info CHECK ( -- 팔렸으면 구매자·판매 시각이 반드시 있고,
         (
@@ -179,7 +196,9 @@ CREATE TABLE trades (
             AND sold_at IS NULL
         )
     ), -- 안 팔렸으면 둘 다 비어 있어야 함
-    FOREIGN KEY (post_id) REFERENCES posts (post_id), -- 실제 있는 글만
+    CONSTRAINT fk_trades_post FOREIGN KEY (post_id, post_type) REFERENCES posts (post_id, post_type), -- 실제 있는 "거래글"만
+    --   자유글(GENERAL)에는 거래 내역을 붙일 수 없고,
+    --   거래 내역이 붙은 글은 post_type을 GENERAL로 바꿀 수 없음
     FOREIGN KEY (user_weapon_id) REFERENCES user_weapons (user_weapon_id), -- 실제 있는 무기만
     FOREIGN KEY (buyer_user_id) REFERENCES users (user_id), -- 실제 있는 회원만 구매자
     INDEX idx_status (trade_status) -- "판매 중인 거래만" 조회를 빠르게

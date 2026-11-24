@@ -1,12 +1,14 @@
 // 커뮤니티 게시판 API (글과 댓글)
-//   GET    /api/posts                               글 목록 (최신 글부터, 지운 글과 거래글은 빼고)
-//   GET    /api/posts/:postId                       글 하나 + 댓글 (볼 때마다 조회수 +1, ?noview=1이면 그대로)
-//   POST   /api/posts                               글쓰기 (title, content, 이미지 한 장 image)
-//   PATCH  /api/posts/:postId                       내 글 고치기 (image를 보내면 이미지 교체, removeImage=1이면 이미지 빼기)
-//   DELETE /api/posts/:postId                       내 글 지우기
+//   GET    /api/posts                               글 목록 (자유글만, 최신 글부터, 지운 글은 빼고)
+//   GET    /api/posts/:postId                       글 하나 + 댓글 (볼 때마다 조회수 +1, ?noview=1이면 그대로). 거래글도 읽힌다 (거래소가 설명과 댓글을 여기서 읽음)
+//   POST   /api/posts                               글쓰기 (title, content, 이미지 한 장 image). 언제나 자유글
+//   PATCH  /api/posts/:postId                       내 자유글 고치기 (image를 보내면 이미지 교체, removeImage=1이면 이미지 빼기)
+//   DELETE /api/posts/:postId                       내 자유글 지우기
 //   POST   /api/posts/:postId/comments              댓글 쓰기
 //   DELETE /api/posts/:postId/comments/:commentId   내 댓글 지우기
 // 읽기는 누구나, 쓰기·고치기·지우기는 로그인해야 한다.
+// 글 종류는 posts.post_type: GENERAL = 자유글(이 게시판), TRADE = 거래글(거래소, server/src/routes/market.js).
+// 거래글은 게시판 목록에 나오지 않고, 게시판에서 고치거나 지울 수 없다 (거래소에서 내린다).
 // 지울 때는 행을 없애지 않고 deleted_at에 시각만 적는다 (db/schema.sql의 소프트 삭제).
 // 글에 붙인 이미지 파일은 주소만 알면 열리므로, 글을 지우거나 이미지를 바꾸면 파일은 실제로 지운다.
 //
@@ -16,20 +18,11 @@
 //   SQL의 값은 ?로 따로 넘겨 SQL 인젝션(입력값으로 SQL을 조작하는 공격)을 막는다.
 import { Router } from 'express';
 import { pool } from '../db.js';
-import { requireLogin, toId } from '../common.js';
+import { LIMITS, readText, requireLogin, toId } from '../common.js';
 import { isImage, receiveImage, removeImage, saveImage } from '../uploads.js';
 
 const router = Router(); // 이 파일의 주소 묶음 (app.js가 /api/posts에 연결)
 const needLogin = requireLogin(); // 로그인 확인 (common.js)
-
-const LIMITS = { title: 100, content: 5000, comment: 500 }; // 글자 수 상한 (제목·댓글은 DB 칸 크기, 본문은 TEXT 안에서 넉넉하게)
-
-function readText(value, max, label) { // 앞뒤 빈칸을 지운 글. 비었거나 너무 길면 오류 문구
-  const text = String(value ?? '').replace(/\r\n/g, '\n').trim(); // 파일과 함께 보낸 글은 브라우저가 줄바꿈을 \r\n으로 바꾸므로 되돌린다
-  if (!text) return { error: `${label}을 입력해 주세요` };
-  if ([...text].length > max) return { error: `${label}은 ${max}자까지 쓸 수 있어요` };
-  return { text };
-}
 
 function readPostForm(req) { // 글쓰기·고치기 입력 (제목, 내용, 이미지 형식 검사)
   const title = readText(req.body?.title, LIMITS.title, '제목');
@@ -43,7 +36,7 @@ async function currentImage(postId) { // 글에 지금 붙어 있는 이미지 �
   return row?.post_image_url ?? null;
 }
 
-const POST_WRITER = 'SELECT writer_user_id FROM posts WHERE post_id = ? AND deleted_at IS NULL'; // 글쓴이 찾기
+const POST_WRITER = "SELECT writer_user_id FROM posts WHERE post_id = ? AND post_type = 'GENERAL' AND deleted_at IS NULL"; // 글쓴이 찾기 (자유글만: 거래글은 "찾을 수 없어요"로 거절된다)
 const COMMENT_WRITER = 'SELECT writer_user_id FROM comments WHERE comment_id = ? AND post_id = ? AND deleted_at IS NULL'; // 댓글 쓴이 찾기
 
 async function checkWriter(what, sql, params, userId) { // 글(댓글)이 있고 내가 썼으면 null, 아니면 [상태 코드, 문구]
@@ -68,8 +61,7 @@ router.get('/', async (req, res) => { // 글 목록
     `SELECT p.post_id, p.post_title, p.post_image_url, p.view_count, p.written_at, p.edited_at, u.nickname
      FROM posts p
      JOIN users u ON u.user_id = p.writer_user_id
-     WHERE p.deleted_at IS NULL
-       AND NOT EXISTS (SELECT 1 FROM trades t WHERE t.post_id = p.post_id) -- 거래글은 거래소에서 보여 준다
+     WHERE p.post_type = 'GENERAL' AND p.deleted_at IS NULL -- 자유글만 (거래글은 거래소에서 보여 준다)
      ORDER BY p.written_at DESC, p.post_id DESC`,
   );
   res.json({
@@ -93,7 +85,7 @@ router.get('/:postId', async (req, res) => { // 글 하나 + 댓글
   }
 
   const [[post]] = await pool.query( // 지운 글은 찾지 않는다
-    `SELECT p.post_id, p.writer_user_id, p.post_title, p.post_content, p.post_image_url, p.view_count, p.written_at, p.edited_at, u.nickname
+    `SELECT p.post_id, p.writer_user_id, p.post_type, p.post_title, p.post_content, p.post_image_url, p.view_count, p.written_at, p.edited_at, u.nickname
      FROM posts p
      JOIN users u ON u.user_id = p.writer_user_id
      WHERE p.post_id = ? AND p.deleted_at IS NULL`,
@@ -114,6 +106,7 @@ router.get('/:postId', async (req, res) => { // 글 하나 + 댓글
   res.json({
     post: {
       postId: post.post_id,
+      type: post.post_type, // GENERAL = 자유글, TRADE = 거래글 (게시판 화면은 거래글이면 거래소 화면으로 보낸다)
       title: post.post_title,
       content: post.post_content,
       imageUrl: post.post_image_url,
@@ -150,7 +143,7 @@ router.patch('/:postId', needLogin, receiveImage, async (req, res) => { // 내 �
   const { title, content, error } = readPostForm(req);
   if (error) return res.status(400).json({ message: error }); // 입력이 잘못되면 파일도 글도 저장하지 않는다
 
-  const denied = await checkWriter('글', POST_WRITER, [postId], req.session.userId); // 내 글인지 서버에서 확인
+  const denied = await checkWriter('글', POST_WRITER, [postId], req.session.userId); // 내 자유글인지 서버에서 확인 (거래글에 이미지를 붙이거나 내용을 바꾸는 우회 길도 여기서 막힌다)
   if (denied) return res.status(denied[0]).json({ message: denied[1] });
 
   const oldImage = await currentImage(postId); // 지금 붙어 있는 이미지
@@ -172,10 +165,8 @@ router.patch('/:postId', needLogin, receiveImage, async (req, res) => { // 내 �
 router.delete('/:postId', needLogin, async (req, res) => { // 내 글 지우기
   const postId = toId(req.params.postId);
   if (!postId) return res.status(404).json({ message: '글을 찾을 수 없어요' });
-  const denied = await checkWriter('글', POST_WRITER, [postId], req.session.userId); // 내 글인지 서버에서 확인
+  const denied = await checkWriter('글', POST_WRITER, [postId], req.session.userId); // 내 자유글인지 서버에서 확인 (거래글을 지우면 거래소 기록이 사라지므로 막는다)
   if (denied) return res.status(denied[0]).json({ message: denied[1] });
-  const [trading] = await pool.query("SELECT 1 FROM trades WHERE post_id = ? AND trade_status = 'ACTIVE'", [postId]); // 판매 중인 거래글인지
-  if (trading.length) return res.status(400).json({ message: '거래소에 올린 마도서는 거래소에서 내려 주세요' }); // 글만 지우면 마도서가 판매 중으로 묶여 버린다
 
   const image = await currentImage(postId); // 지울 이미지 파일 경로를 먼저 읽어 둔다
   await pool.query('UPDATE posts SET deleted_at = NOW(), post_image_url = NULL WHERE post_id = ?', [postId]); // 행은 남기고 삭제 시각만 적는다 (소프트 삭제)

@@ -4,7 +4,7 @@
 // 작동 원리
 //   파일 → 형식·크기 검사 → createImageBitmap으로 그림 열기 → 보이지 않는 캔버스에 작게 다시 그리기 → toBlob으로 새 WebP 파일 만들기
 //   캔버스에는 픽셀만 옮겨지므로 원본 파일의 부가 정보(EXIF: 촬영 위치, 기기 등)는 새 파일에 따라오지 않는다.
-// 부르는 곳: js/board/main.js의 pickImage
+// 부르는 곳: js/shared/image-picker.js (게시판 글쓰기)
 const TYPES = ['image/jpeg', 'image/png', 'image/webp']; // 고를 수 있는 형식 (서버 server/src/uploads.js와 같음)
 const MAX_PICK = 20 * 1024 * 1024; // 고를 수 있는 원본 크기 (20MB)
 const MAX_UPLOAD = 5 * 1024 * 1024; // 다듬은 뒤 서버로 보내는 크기 (5MB)

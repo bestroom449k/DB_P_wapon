@@ -12,6 +12,12 @@ export function el(tag, className, text) { // 요소 만들기 (글은 textConte
 
 export const count = (n) => Number(n).toLocaleString('ko-KR');
 
+export function updateCounter(input, counter, max) { // 입력 칸 아래 글자 수 (상한의 90%를 넘으면 금색, css/post.css의 .counter)
+  const length = [...input.value].length; // 이모지도 한 글자로 센다
+  counter.textContent = `${count(length)} / ${count(max)}`;
+  counter.classList.toggle('is-near', length > max * 0.9);
+}
+
 const pad = (n) => String(n).padStart(2, '0');
 export const isToday = (value) => new Date(value).toDateString() === new Date().toDateString();
 

@@ -34,7 +34,7 @@ export const isImage = (buffer) => imageType(buffer) !== null; // JPG, PNG, WebP
 
 const upload = multer({ // 메모리로 받아서 검사를 통과한 것만 디스크에 쓴다
   storage: multer.memoryStorage(), // 디스크가 아니라 메모리에 먼저 받는다 (거절한 파일이 폴더에 남지 않게)
-  limits: { fileSize: MAX_BYTES, files: 1, fields: 3, parts: 4, fieldSize: 64 * 1024 }, // 이미지 1장 + 제목, 내용, 이미지 빼기 표시
+  limits: { fileSize: MAX_BYTES, files: 1, fields: 3, parts: 4, fieldSize: 64 * 1024 }, // 이미지 1장 + 제목, 내용, 이미지 빼기 표시 (게시판 글만, 거래글은 이미지를 받지 않음)
 }).single('image'); // FormData의 'image' 칸에서 파일 한 개만 받는다
 
 export function receiveImage(req, res, next) { // 요청에서 이미지 한 장 꺼내기 → req.file (JSON 요청은 그냥 지나감)

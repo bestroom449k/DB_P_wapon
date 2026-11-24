@@ -460,13 +460,98 @@ main {
 
 /* ---------- 거래소: 판매 중인 목록과 내 마도서 올리기 (줄 모양은 상점 목록과 같음) ---------- */
 
-/* 오른쪽 칸 폭을 가장 넓은 "내 판매 + 내리기"에 맞춰 가격이 세로로 정렬되게 */
+/* 오른쪽 칸 폭을 가장 넓은 "장착 중 + 장착 풀기"에 맞춰 가격이 세로로 정렬되게 */
 .inventory--market .inv-row__act {
   min-width: 176px;
 }
 
 .inv-row__info .meta {
   margin-top: 2px;
+}
+
+/* 판매 중인 마도서 줄은 통째로 거래 화면으로 가는 링크 (게시판 글 줄과 같은 반응) */
+.inv-row--link {
+  transition: background-color 0.25s;
+}
+
+.inv-row--link:hover {
+  background: rgba(255, 207, 138, 0.06);
+}
+
+.inv-row--link .inv-row__name {
+  overflow-wrap: anywhere;
+  transition: color 0.25s;
+}
+
+.inv-row--link:hover .inv-row__name {
+  color: var(--lamp-hi);
+}
+
+/* 거래 화면과 판매 글쓰기의 마도서 칸: 표지 | 등급·이름·단계 | 가격과 사기·내리기 */
+.deal {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  margin-top: 22px;
+  padding: 18px 22px;
+  border: 1px solid rgba(169, 175, 219, 0.22);
+  border-radius: 14px;
+  background: rgba(11, 14, 38, 0.45);
+}
+
+.deal__info {
+  display: grid;
+  gap: 8px;
+}
+
+.deal__name {
+  margin: 0;
+  font: 400 clamp(1.35rem, 1.8vw, 1.6rem) / 1.2 var(--font-display);
+}
+
+.deal__side {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.deal__side .btn {
+  min-width: 140px;
+}
+
+.deal__price {
+  margin: 0;
+  color: var(--mist);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.deal__price b {
+  margin-right: 3px;
+  color: var(--moon);
+  font-size: 1.75rem;
+  font-weight: 400;
+}
+
+.deal__status {
+  margin: 0;
+  color: var(--lamp-hi);
+  font-size: 0.9375rem;
+  text-align: right;
+}
+
+/* 판매 글쓰기 위의 작은 마도서 요약 */
+.deal--small {
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 0;
+  padding: 14px 18px;
+}
+
+.deal--small .deal__name {
+  font-size: 1.25rem;
 }
 
 .price-field {
@@ -478,9 +563,14 @@ main {
   white-space: nowrap;
 }
 
+.price-field__hint {
+  margin-left: 10px;
+  font-size: 0.875rem;
+}
+
 .price-input {
-  width: 120px;
-  height: 36px;
+  width: 160px;
+  height: 44px;
   padding: 0 12px;
   border: 1px solid rgba(169, 175, 219, 0.3);
   border-radius: 10px;
