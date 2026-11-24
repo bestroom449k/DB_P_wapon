@@ -1,6 +1,6 @@
 // 게임 화면(뽑기)의 3D 장면을 시작하는 파일
 //
-// 폴더 안내 (타이틀 화면 js/function, js/design과 같은 나눔. 두 화면이 같이 쓰는 디자인 코드는 js/shared)
+// 폴더 안내 (js/game = 게임 화면 game.html. 타이틀 화면 js/title과 같은 나눔. 두 화면이 같이 쓰는 디자인 코드는 js/shared)
 //   game/main.js                시작, 매 프레임 반복 (이 파일)
 //   game/function/              기능: 장면이 돌아가게 하는 코드
 //     stage.js                  렌더러, 카메라, 달빛 조명, 마우스, 화면 크기

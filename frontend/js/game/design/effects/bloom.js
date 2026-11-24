@@ -1,5 +1,5 @@
 // 마지막 화면 처리: 1보다 밝은 곳(빛 기둥, 고리, 가운데 카드)만 번져 보이는 빛 번짐, 가장자리를 살짝 누르는 비네트.
-// 다른 부품이 모두 움직인 뒤 맨 마지막에 화면에 그린다. (타이틀 화면 js/design/effects/bloom.js와 같은 구성)
+// 다른 부품이 모두 움직인 뒤 맨 마지막에 화면에 그린다. (타이틀 화면 js/title/design/effects/bloom.js와 같은 구성)
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';

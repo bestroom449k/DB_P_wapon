@@ -6,7 +6,7 @@
 //   POST /api/inventory/:userWeaponId/sell    상점에 팔기: 지금 가치만큼 골드를 받고, 행은 SOLD_TO_SHOP으로 남긴다 (도감 기록도 남음)
 // 강화 규칙은 db/gameData.json의 enhanceRules (server/src/gameData.js의 nextEnhance):
 //   비용 = 기본 가치 × costRatio, 성공 확률 = successPct, 가치 = 기본 가치 × valueMultiplier
-//   실패하면 골드만 쓰고 단계는 그대로다 (2026-11-23 사용자 결정, 힐링 게임이라 잃는 것을 작게)
+//   실패하면 골드만 쓰고 단계는 그대로다 (힐링 게임이라 잃는 것을 작게)
 // 판매 중(trades ACTIVE)인 마도서는 장착·강화·상점 판매를 할 수 없다 (db/schema.sql의 규칙, 거래소는 routes/market.js).
 // 골드나 장착을 바꾸는 요청은 트랜잭션 안에서 회원 행 → 마도서 행 순서로 잠근다 (동시에 눌러도 꼬이지 않게, 서로 기다리다 멈추지 않게).
 import { Router } from 'express';

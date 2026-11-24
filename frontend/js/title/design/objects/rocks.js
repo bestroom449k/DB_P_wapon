@@ -2,7 +2,7 @@
 // 왼쪽(제목과 메뉴가 있는 쪽)으로는 덜 나가게 눌러 글자 위를 지나가지 않게 한다.
 import * as THREE from "three";
 import { ISLAND_TOP } from "./island.js";
-import { roughen } from "../../shared/roughen.js"; // 바위 표면 다듬기
+import { roughen } from "../../../shared/roughen.js"; // 바위 표면 다듬기
 
 const COUNT = 11; // 돌 조각 개수
 

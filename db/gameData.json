@@ -1,8 +1,7 @@
 {
   "draw": {
     "cost": 1000,
-    "legendaryPct": 50,
-    "itemType": "GRIMOIRE"
+    "legendaryPct": 50
   },
   "grades": [
     {
@@ -53,36 +52,8 @@
   ],
   "weapons": [
     {
-      "id": 1,
-      "name": "나무검",
-      "type": "SWORD",
-      "grade": 1,
-      "baseSellPrice": 100,
-      "imageUrl": null,
-      "description": "연습용으로 깎은 가벼운 나무검"
-    },
-    {
-      "id": 2,
-      "name": "강철검",
-      "type": "SWORD",
-      "grade": 2,
-      "baseSellPrice": 300,
-      "imageUrl": null,
-      "description": "대장간에서 두드려 만든 튼튼한 검"
-    },
-    {
-      "id": 3,
-      "name": "불꽃검",
-      "type": "SWORD",
-      "grade": 3,
-      "baseSellPrice": 1000,
-      "imageUrl": null,
-      "description": "칼날에 불꽃이 깃든 검"
-    },
-    {
       "id": 4,
       "name": "견습생의 낡은 마도서",
-      "type": "GRIMOIRE",
       "grade": 1,
       "baseSellPrice": 100,
       "imageUrl": null,
@@ -91,7 +62,6 @@
     {
       "id": 5,
       "name": "황금 용의 마도서",
-      "type": "GRIMOIRE",
       "grade": 5,
       "baseSellPrice": 20000,
       "imageUrl": null,

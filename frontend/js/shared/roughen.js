@@ -1,4 +1,4 @@
-// 바위 표면 다듬기: 타이틀의 섬과 작은 바위(js/design/objects/island.js, rocks.js), 게임 화면의 섬과 성 바위가 같이 쓴다.
+// 바위 표면 다듬기: 타이틀의 섬과 작은 바위(js/title/design/objects/island.js, rocks.js), 게임 화면의 섬과 성 바위가 같이 쓴다.
 
 // 꼭짓점을 위치에 따라 정해진 만큼 흔들어 울퉁불퉁한 돌처럼 만든다 (같은 위치는 같은 만큼 → 면이 안 갈라짐)
 export function roughen(geometry, amount, keepAbove = Infinity) { // 돌 표면 울퉁불퉁하게

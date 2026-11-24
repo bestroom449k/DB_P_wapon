@@ -1,7 +1,8 @@
 // 회원가입, 로그인 기능
 //   폼에 적은 값을 서버(server/src/routes/auth.js)로 보내고 결과에 따라 화면을 바꾼다.
-//   로그인하면 "게임 시작"은 공방 입장(#enter: 책이 펼쳐지며 게임 화면으로, js/function/enter.js)으로 이어지고, "회원가입"은 "로그아웃"으로 바뀌며, 왼쪽 위에 닉네임과 골드가 보인다.
+//   로그인하면 "게임 시작"은 공방 입장(#enter: 책이 펼쳐지며 게임 화면으로, js/title/function/enter.js)으로 이어지고, "회원가입"은 "로그아웃"으로 바뀌며, 왼쪽 위에 닉네임과 골드가 보인다.
 //   창을 열고 닫는 것은 CSS(:target), 키보드 동작은 menu.js가 맡고, 이 파일은 서버와 주고받는 일만 한다.
+import { api } from '../../shared/api.js';
 
 const root = document.documentElement;
 const player = document.getElementById('player'); // 왼쪽 위 회원 표시
@@ -14,18 +15,6 @@ const RULES = { // 입력 규칙 (서버와 같은 규칙)
   nickname: [/^[가-힣a-zA-Z0-9]{2,12}$/, '닉네임은 한글, 영문, 숫자로 2~12자예요'],
   password: [/^.{8,64}$/, '비밀번호는 8~64자예요'],
 };
-
-async function request(path, body) { // 서버에 요청 보내기 (body가 있으면 POST, 없으면 GET)
-  let res;
-  try {
-    res = await fetch(`/api/auth/${path}`, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
-  } catch {
-    throw new Error('서버에 연결하지 못했어요. server 폴더에서 npm start로 서버를 켰는지 확인해 주세요');
-  }
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message ?? '요청을 처리하지 못했어요. 서버 주소(http://localhost:3000)로 열었는지 확인해 주세요');
-  return data;
-}
 
 function showUser(user) { // 로그인 상태를 화면에 반영 (user가 null이면 로그아웃 상태)
   root.dataset.auth = user ? 'in' : 'out';
@@ -73,7 +62,7 @@ for (const form of document.querySelectorAll('form[data-auth]')) { // 로그인 
       const body = kind === 'signup'
         ? { loginId: values.loginId, nickname: values.nickname, password: values.password }
         : { loginId: values.loginId, password: values.password };
-      const { user } = await request(kind, body); // 서버로 보내기
+      const { user } = await api(`/auth/${kind}`, { method: 'POST', body }); // 서버로 보내기 (js/shared/api.js)
       form.reset();
       showUser(user);
       welcome.textContent = kind === 'signup' ? `${user.nickname}님, 공방에 오신 걸 환영해요` : `${user.nickname}님, 다시 오셨네요`;
@@ -88,10 +77,10 @@ for (const form of document.querySelectorAll('form[data-auth]')) { // 로그인 
 
 menuAccount.addEventListener('click', async () => { // "로그아웃"
   if (root.dataset.auth !== 'in') return; // 로그인 전에는 그냥 회원가입 창이 열린다
-  await request('logout', {}).catch(() => {});
+  await api('/auth/logout', { method: 'POST' }).catch(() => {});
   showUser(null);
 });
 
-request('me') // 새로고침해도 로그인 상태 이어 가기
+api('/auth/me') // 새로고침해도 로그인 상태 이어 가기
   .then(({ user }) => showUser(user))
   .catch(() => showUser(null));

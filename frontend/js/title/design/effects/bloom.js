@@ -6,7 +6,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { UV_VERTEX } from '../../shared/glsl.js';
+import { UV_VERTEX } from '../../../shared/glsl.js';
 
 const finishShader = { // 마무리 셰이더 (비네트, 그레인, 섬광)
   uniforms: {

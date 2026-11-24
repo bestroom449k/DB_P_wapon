@@ -1,6 +1,6 @@
 # 주요 기능 작동 원리
 
-다섯 빛 공방의 **커뮤니티 게시판, 뽑기 영상, 책 넘김 연출, 이미지 업로드**가 어떻게 돌아가는지와 기능별 파일을 정리한 문서입니다.
+다섯 빛 공방의 **커뮤니티 게시판, 뽑기 영상, 책 넘김 연출, 이미지 업로드, 거래소**가 어떻게 돌아가는지와 기능별 파일, 그리고 값을 바꿀 때 고칠 곳을 정리한 문서입니다.
 
 코드의 같은 자리에도 한글 주석이 달려 있으니, 아래 "관련 파일"을 위에서부터 열어 보면 흐름을 따라갈 수 있습니다. DB 구조와 실행 방법은 [README.md](README.md), 라이브러리 설명은 `LIBRARIES.md`에 있습니다.
 
@@ -17,11 +17,13 @@
 
 ```
 브라우저 (frontend)              서버 (server)            저장하는 곳
-HTML, CSS, JS, Three.js   →     Express API       →     MySQL (회원, 글, 인벤토리, 도감)
-                          ←     JSON 응답         →     server/uploads/ (이미지 파일)
+HTML, CSS, JS, Three.js   →     Express API       →     MySQL (회원, 인벤토리, 도감, 글, 댓글, 거래)
+                          ←     JSON 응답         →     server/uploads/ (게시글 이미지 파일)
 ```
 
-네 기능에 공통으로 적용되는 원칙입니다.
+화면 코드는 `frontend/js/` 아래에 화면별 폴더(`title/`, `game/`, `board/`, `atelier/`)로 나뉘고, 두 화면 이상이 같이 쓰는 코드는 `shared/`에 있습니다.
+
+모든 기능에 공통으로 적용되는 원칙입니다.
 
 - **결과와 권한은 서버가 정합니다.** 화면의 버튼은 숨길 수 있어도 주소로 직접 요청할 수 있기 때문입니다.
 - **DB에는 유저 데이터만 저장합니다.** 아이템, 확률, 강화 규칙은 [db/gameData.json](db/gameData.json)에 있습니다.
@@ -31,7 +33,7 @@ HTML, CSS, JS, Three.js   →     Express API       →     MySQL (회원, 글, 
 
 ## 1. 커뮤니티 게시판
 
-페이지는 `board.html` 하나입니다. 목록, 읽기, 쓰기 화면을 미리 넣어 두고, 주소의 `#` 뒤에 따라 하나만 보여 줍니다.
+페이지는 `board.html` 하나입니다. 목록, 읽기, 쓰기 화면을 미리 넣어 두고, 주소의 `#` 뒤에 따라 하나만 보여 줍니다. 게시판에는 자유글(`post_type = 'GENERAL'`)만 나오고, 거래소 거래글은 [5. 거래소](#5-거래소)에서 다룹니다.
 
 ### 작동 흐름 (글 하나를 읽을 때)
 
@@ -49,19 +51,19 @@ HTML, CSS, JS, Three.js   →     Express API       →     MySQL (회원, 글, 
 | 주소 | 화면 | 로그인 |
 | --- | --- | --- |
 | `#/` | 글 목록 | 필요 없음 |
-| `#/post/번호` | 글 읽기와 댓글 | 읽기는 필요 없음, 댓글 쓰기는 필요 |
+| `#/post/번호` | 글 읽기와 댓글 (거래글 번호면 거래소의 거래 화면으로 넘어감) | 읽기는 필요 없음, 댓글 쓰기는 필요 |
 | `#/write` | 글쓰기 | 필요 |
-| `#/edit/번호` | 내 글 고치기 | 필요 |
+| `#/edit/번호` | 내 글 고치기 (거래글 번호면 거래소의 거래 화면으로 넘어감) | 필요 |
 
 ### 서버 API
 
 | 요청 | 하는 일 | 로그인 |
 | --- | --- | --- |
-| `GET /api/posts` | 글 목록 (최신 글부터, 지운 글과 거래글 제외) | 필요 없음 |
-| `GET /api/posts/:postId` | 글 하나와 댓글 (조회수 +1, `?noview=1`이면 그대로) | 필요 없음 |
-| `POST /api/posts` | 글쓰기 | 필요 |
-| `PATCH /api/posts/:postId` | 내 글 고치기 | 필요 |
-| `DELETE /api/posts/:postId` | 내 글 지우기 | 필요 |
+| `GET /api/posts` | 글 목록 (자유글만, 최신 글부터, 지운 글 제외) | 필요 없음 |
+| `GET /api/posts/:postId` | 글 하나와 댓글 (조회수 +1, `?noview=1`이면 그대로). 글 종류(`type`)도 알려 줌 | 필요 없음 |
+| `POST /api/posts` | 글쓰기 (언제나 자유글) | 필요 |
+| `PATCH /api/posts/:postId` | 내 자유글 고치기 | 필요 |
+| `DELETE /api/posts/:postId` | 내 자유글 지우기 | 필요 |
 | `POST /api/posts/:postId/comments` | 댓글 쓰기 | 필요 |
 | `DELETE /api/posts/:postId/comments/:commentId` | 내 댓글 지우기 | 필요 |
 
@@ -87,7 +89,7 @@ HTML, CSS, JS, Three.js   →     Express API       →     MySQL (회원, 글, 
 | [frontend/js/shared/page.js](frontend/js/shared/page.js) | 요소 만들기, 시각 표시, 글자 수, 알림, 확인 창 |
 | [frontend/css/board.css](frontend/css/board.css), [frontend/css/post.css](frontend/css/post.css), [frontend/css/page.css](frontend/css/page.css) | 글 목록, 글 읽기·쓰기·댓글(거래소와 같이 씀), 별도 페이지 공통 디자인 |
 | [server/src/routes/posts.js](server/src/routes/posts.js) | 글과 댓글 API, 권한 검사, SQL |
-| [server/src/common.js](server/src/common.js) | 로그인 확인, 번호 검사 |
+| [server/src/common.js](server/src/common.js) | 로그인 확인, 번호 검사, 글자 수 검사 |
 
 ---
 
@@ -170,7 +172,7 @@ HTML, CSS, JS, Three.js   →     Express API       →     MySQL (회원, 글, 
 
 ### 책장 한 장이 넘어가는 계산
 
-[grimoire.js](frontend/js/design/objects/grimoire.js)의 코드입니다.
+[grimoire.js](frontend/js/title/design/objects/grimoire.js)의 코드입니다.
 
 ```js
 const start = (i / LEAVES) * 0.78;                  // 이 장이 넘어가기 시작하는 순간 (앞 장부터 차례로)
@@ -195,11 +197,11 @@ position.setZ(v, curl * (x / PW) ** 1.6);           // 책등에서 멀수록 �
 
 | 파일 | 역할 |
 | --- | --- |
-| [frontend/js/function/enter.js](frontend/js/function/enter.js) | 연출이 끝나면 게임 화면으로 이동 |
+| [frontend/js/title/function/enter.js](frontend/js/title/function/enter.js) | 연출이 끝나면 게임 화면으로 이동 |
 | [frontend/css/timeline.css](frontend/css/timeline.css) | 3.6초 시간표 (`enter-book`) |
-| [frontend/js/function/timeline.js](frontend/js/function/timeline.js) | CSS 값을 매 프레임 읽기 |
-| [frontend/js/design/objects/grimoire.js](frontend/js/design/objects/grimoire.js) | 사슬, 표지, 책장의 움직임 |
-| [frontend/js/function/stage.js](frontend/js/function/stage.js) | 카메라가 책 속으로 이동 |
+| [frontend/js/title/function/timeline.js](frontend/js/title/function/timeline.js) | CSS 값을 매 프레임 읽기 |
+| [frontend/js/title/design/objects/grimoire.js](frontend/js/title/design/objects/grimoire.js) | 사슬, 표지, 책장의 움직임 |
+| [frontend/js/title/function/stage.js](frontend/js/title/function/stage.js) | 카메라가 책 속으로 이동 |
 | [frontend/css/title.css](frontend/css/title.css) | 화면을 채우는 책장 빛 (`.portal`) |
 | [frontend/css/game/base.css](frontend/css/game/base.css) | 게임 화면에서 걷히는 빛 (`.veil`) |
 | [frontend/game.html](frontend/game.html) | 머리의 작은 스크립트: 책 속으로 들어왔을 때만 빛을 켬 |
@@ -273,8 +275,8 @@ multer는 파일을 **받는 도구**이고, Cloudflare R2는 파일을 **보관
 | 파일 | 역할 |
 | --- | --- |
 | [frontend/board.html](frontend/board.html) | 이미지 첨부 칸, 글의 이미지 자리 (게시판 글쓰기와 글 읽기) |
-| [frontend/js/shared/image-picker.js](frontend/js/shared/image-picker.js) | 파일 선택, 끌어다 놓기, 미리 보기, FormData에 넣기 |
-| [frontend/js/shared/image.js](frontend/js/shared/image.js) | 올리기 전 크기 줄이기, WebP 변환 |
+| [frontend/js/board/image-picker.js](frontend/js/board/image-picker.js) | 파일 선택, 끌어다 놓기, 미리 보기, FormData에 넣기 |
+| [frontend/js/board/image.js](frontend/js/board/image.js) | 올리기 전 크기 줄이기, WebP 변환 |
 | [frontend/js/shared/api.js](frontend/js/shared/api.js) | FormData 전송 |
 | [server/src/uploads.js](server/src/uploads.js) | 받기, 검사, 저장, 삭제, 이미지 제공 |
 | [server/src/routes/posts.js](server/src/routes/posts.js) | 경로를 DB에 저장, 교체와 삭제 처리 |
@@ -302,7 +304,7 @@ multer는 파일을 **받는 도구**이고, Cloudflare R2는 파일을 **보관
 [올리기]  내 마도서의 "올리기" → 판매 글쓰기 (제목과 가격은 미리 채워짐)
           → 제목, 가격, 설명을 JSON으로 POST /api/market
           → 서버: 입력 검사 → 내 마도서인지, 장착 중이 아닌지, 이미 올린 것이 아닌지 확인
-          → posts 한 줄(판매자, 제목, 설명) + trades 한 줄(마도서, 가격, ACTIVE) 저장
+          → posts 한 줄(종류 TRADE, 판매자, 제목, 설명) + trades 한 줄(마도서, 가격, ACTIVE)을 트랜잭션 하나로 저장
           → 올린 거래 화면으로
 
 [보기]    목록의 줄을 누름 → GET /api/market/:postId (거래 정보) + GET /api/posts/:postId (글과 댓글, 조회수 +1)
@@ -343,7 +345,7 @@ LEFT JOIN users b   ON b.user_id = t.buyer_user_id      -- 구매자 (팔렸을 
 
 | 규칙 | 지키는 방법 |
 | --- | --- |
-| 같은 마도서가 두 번 팔리지 않음 | 거래 행을 `FOR UPDATE`로 잠그고 상태가 ACTIVE인지 다시 확인. DB에도 판매 중인 무기는 하나만 허용하는 UNIQUE(`active_weapon_id`)가 있음 |
+| 같은 마도서가 두 번 팔리지 않음 | 거래 행을 `FOR UPDATE`로 잠그고 상태가 ACTIVE인지 다시 확인. DB에도 판매 중인 마도서는 하나만 허용하는 UNIQUE(`active_weapon_id`)가 있음 |
 | 골드가 꼬이지 않음 | 골드 이동, 주인 변경, 거래 기록을 트랜잭션 하나로 묶음 |
 | 두 사람이 서로의 것을 동시에 사도 멈추지 않음 | 두 회원 행을 회원 번호가 작은 쪽부터 잠금 |
 | 판매 중인 마도서는 장착·강화·상점 판매 불가 | 인벤토리 API가 ACTIVE 거래를 확인. 공방 화면에는 "거래소 판매 중"으로 표시 |
@@ -375,6 +377,7 @@ LEFT JOIN users b   ON b.user_id = t.buyer_user_id      -- 구매자 (팔렸을 
 
 | 바꿀 것 | 고칠 곳 | 함께 확인할 것 |
 | --- | --- | --- |
+| 마도서 추가 | `db/gameData.json`의 `weapons`에 한 줄 (새 `id`, `name`, `grade`, `baseSellPrice`, `description`) | 이미 쓴 `id`는 지우거나 바꾸지 않음 (DB가 이 번호로 기억함). 넣으면 뽑기와 도감에 바로 나옴 |
 | 뽑기 가격 | `db/gameData.json`의 `draw.cost` | `game.html`의 버튼에 적힌 가격 |
 | 5등급 확률 | `db/gameData.json`의 `draw.legendaryPct` | `game.html`의 확률 창 |
 | 뽑기 영상 | `frontend/video/`의 파일 | `hud.js`의 `SETTLE` (카드가 멈추는 시각) |

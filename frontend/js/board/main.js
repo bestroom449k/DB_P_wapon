@@ -13,11 +13,11 @@
 //   3. 각 화면은 api()로 서버에서 JSON을 받아 빈 틀(board.html)을 채운다
 //   4. 응답이 늦게 오면 renderToken으로 버린다 (다른 글을 빠르게 눌러도 내용이 섞이지 않게)
 //   5. 글을 올릴 때는 제목, 내용, 이미지를 FormData 한 덩어리로 보낸다
-// 이미지 첨부는 js/shared/image-picker.js, 댓글은 js/shared/comments.js (거래소 거래글과 같이 씀)
+// 이미지 첨부는 js/board/image-picker.js, 댓글은 js/shared/comments.js (거래소 거래글과 같이 씀)
 // 관련 파일: board.html(화면 틀), css/board.css·post.css·page.css(디자인), js/shared/api.js·page.js(도구), server/src/routes/posts.js(서버)
 import { api } from '../shared/api.js';
 import { $, el, count, isToday, timeTag, showToast, askConfirm, updateCounter } from '../shared/page.js';
-import { createImagePicker } from '../shared/image-picker.js';
+import { createImagePicker } from './image-picker.js';
 import { createComments } from '../shared/comments.js';
 
 const views = { list: $('viewList'), post: $('viewPost'), write: $('viewWrite') }; // 세 화면 (board.html의 section)
@@ -192,7 +192,7 @@ function setSubmitBusy(text) { // 올리기 버튼: text가 있으면 그 글자
   $('writeSubmit').textContent = text ?? submitText();
 }
 
-const picker = createImagePicker({ // 이미지 첨부 칸 (js/shared/image-picker.js)
+const picker = createImagePicker({ // 이미지 첨부 칸 (js/board/image-picker.js)
   form: $('writeForm'),
   showError: (message) => { $('writeError').textContent = message; },
   setBusy: (busy) => setSubmitBusy(busy ? '이미지 준비 중' : null), // 다듬는 동안은 올리기 버튼을 잠근다

@@ -4,13 +4,11 @@ import { readFileSync } from 'node:fs';
 
 export const gameData = JSON.parse(readFileSync(new URL('../../db/gameData.json', import.meta.url), 'utf8'));
 
-const { grades, weapons, enhanceRules, draw } = gameData;
+const { grades, weapons, enhanceRules } = gameData;
 
 export const itemById = new Map(weapons.map((item) => [item.id, item])); // 아이템 번호(template_id) → 아이템
 export const gradeName = (grade) => grades.find((g) => g.grade === grade)?.name ?? '';
-export const gameItems = weapons // 지금 게임에 나오는 아이템 (뽑기 종류, 등급 → 번호 순): 도감에 이 순서로 놓인다
-  .filter((item) => item.type === draw.itemType)
-  .sort((a, b) => a.grade - b.grade || a.id - b.id);
+export const gameItems = [...weapons].sort((a, b) => a.grade - b.grade || a.id - b.id); // 모든 마도서 (등급 → 번호 순): 뽑기 후보이고, 도감에 이 순서로 놓인다
 export const MAX_LEVEL = Math.max(...enhanceRules.map((rule) => rule.targetLevel)); // 가장 높은 강화 단계
 
 export function valueAt(item, level) { // 강화 단계에 따른 가치 (기본 가치 × 그 단계의 valueMultiplier)
@@ -23,7 +21,7 @@ export function nextEnhance(item, level) { // 다음 강화 단계의 비용·�
   if (!rule) return null;
   return {
     level: rule.targetLevel,
-    cost: Math.round(item.baseSellPrice * rule.costRatio), // 비용 = 기본 가치 × costRatio (2026-11-23 사용자 결정)
+    cost: Math.round(item.baseSellPrice * rule.costRatio), // 비용 = 기본 가치 × costRatio
     successPct: rule.successPct,
     value: valueAt(item, rule.targetLevel),
   };

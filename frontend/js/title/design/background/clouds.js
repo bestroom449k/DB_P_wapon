@@ -1,7 +1,7 @@
 // 구름바다: 섬 아래로 펼쳐진 큰 평면에 노이즈 구름을 천천히 흘려보낸다.
 // 섬 근처는 등급 색으로 물들고, 멀어질수록 지평선 색에 녹아든다.
 import * as THREE from 'three';
-import { NOISE } from '../../shared/glsl.js';
+import { NOISE } from '../../../shared/glsl.js';
 
 const vertexShader = /* glsl */ ` // 구름 모양 셰이더 (월드 좌표 전달)
   varying vec3 vWorld;

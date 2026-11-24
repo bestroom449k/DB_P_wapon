@@ -1,40 +1,40 @@
 // 타이틀 화면의 3D 장면을 시작하는 파일
 //
-// 폴더 안내
-//   function/              기능: 장면이 돌아가게 하는 코드
-//     main.js              시작, 매 프레임 반복 (이 파일)
+// 폴더 안내 (js/title = 타이틀 화면 index.html. 게임 화면 js/game과 같은 나눔)
+//   title/main.js          시작, 매 프레임 반복 (이 파일)
+//   title/function/        기능: 장면이 돌아가게 하는 코드
 //     timeline.js          CSS 룬 각인 타임라인과 공방 입장 값 읽기
 //     stage.js             렌더러, 카메라, 조명, 화면 크기
 //     menu.js              메뉴와 로그인 창의 키보드 동작 (Enter, Esc, 포커스)
 //     auth.js              회원가입, 로그인 (서버와 주고받기)
 //     enter.js             공방 입장 연출이 끝나면 게임 화면으로 넘어가기
-//   design/                디자인: 화면에 보이는 것을 그리는 코드
+//   title/design/          디자인: 화면에 보이는 것을 그리는 코드
 //     background/          배경: 산맥, 구름바다
 //     objects/             물체: 섬, 돌 조각, 마도서, 등급 룬 띠
 //     effects/             효과: 룬 조각, 룬 마법진, 빛 기둥, 빛 번짐
-//   shared/                게임 화면과 같이 쓰는 디자인 코드: 밤하늘, 마력 가루, 마도서 그림, 셰이더 노이즈, 텍스처, 재질, 무작위 수, 바위 다듬기
+//   js/shared/             게임 화면과 같이 쓰는 디자인 코드: 밤하늘, 마력 가루, 마도서 그림, 셰이더 노이즈, 텍스처, 재질, 무작위 수, 바위 다듬기
 //
 // 모든 부품 파일은 같은 규칙을 따른다
 //   create(무대, 상태)              → 처음에 한 번 만들고, 매 프레임 부를 update 함수를 돌려준다
 //   update(상태, 시간, 프레임 간격)  → 룬 각인 타임라인(css/timeline.css) 값에 맞춰 모습을 고친다
 
 // 기능
-import { state, readTimeline } from "./timeline.js"; // 각인 상태
-import * as stage from "./stage.js"; // 무대
+import { state, readTimeline } from "./function/timeline.js"; // 각인 상태
+import * as stage from "./function/stage.js"; // 무대
 
 // 디자인
 import * as sky from "../shared/sky.js"; // 하늘
-import * as mountains from "../design/background/mountains.js"; // 산맥
-import * as clouds from "../design/background/clouds.js"; // 구름바다
-import * as island from "../design/objects/island.js"; // 섬과 마법진
-import * as rocks from "../design/objects/rocks.js"; // 돌 조각
-import * as grimoire from "../design/objects/grimoire.js"; // 마도서
-import * as rings from "../design/objects/rings.js"; // 등급 룬 띠
+import * as mountains from "./design/background/mountains.js"; // 산맥
+import * as clouds from "./design/background/clouds.js"; // 구름바다
+import * as island from "./design/objects/island.js"; // 섬과 마법진
+import * as rocks from "./design/objects/rocks.js"; // 돌 조각
+import * as grimoire from "./design/objects/grimoire.js"; // 마도서
+import * as rings from "./design/objects/rings.js"; // 등급 룬 띠
 import * as dust from "../shared/dust.js"; // 마력 가루
-import * as runes from "../design/effects/runes.js"; // 룬 조각
-import * as shock from "../design/effects/shock.js"; // 룬 마법진 퍼짐
-import * as pillar from "../design/effects/pillar.js"; // 빛 기둥
-import * as bloom from "../design/effects/bloom.js"; // 빛 번짐
+import * as runes from "./design/effects/runes.js"; // 룬 조각
+import * as shock from "./design/effects/shock.js"; // 룬 마법진 퍼짐
+import * as pillar from "./design/effects/pillar.js"; // 빛 기둥
+import * as bloom from "./design/effects/bloom.js"; // 빛 번짐
 
 const world = stage.create(document.getElementById("scene")); // 무대 만들기
 

@@ -2,8 +2,8 @@
 // 타임라인이 1등급으로 돌아가면(95.9%) 다시 풀려난다. 방금 새겨진 등급의 띠는 번쩍이고, 글자는 늘 띠를 따라 흐른다.
 import * as THREE from 'three';
 import { BOOK_Y } from './grimoire.js';
-import { runeBandTexture } from '../../shared/grimoire-textures.js';
-import { GLOW } from '../../shared/materials.js';
+import { runeBandTexture } from '../../../shared/grimoire-textures.js';
+import { GLOW } from '../../../shared/materials.js';
 
 export const FLAT_TILT = Math.PI / 2 + 0.38; // 수평으로 누웠을 때의 기울기 (살짝 위에서 내려다보는 각, 룬 마법진도 이 면에서 퍼짐)
 const GLYPH_LENGTH = 3; // 룬 띠 그림 한 장이 덮는 길이 (글자가 늘어나 보이지 않게 둘레에 맞춰 반복)

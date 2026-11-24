@@ -2,8 +2,8 @@
 // 불꽃처럼 중력으로 떨어지지 않고, 마법처럼 천천히 위로 흩어지며 사라진다.
 import * as THREE from 'three';
 import { BOOK_Y } from '../objects/grimoire.js';
-import { glyphTextures } from '../../shared/grimoire-textures.js';
-import { GLOW } from '../../shared/materials.js';
+import { glyphTextures } from '../../../shared/grimoire-textures.js';
+import { GLOW } from '../../../shared/materials.js';
 
 const GATHER = 12; // 모여드는 룬 조각 수
 const BURST = 90; // 한꺼번에 퍼질 수 있는 룬 수

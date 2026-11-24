@@ -6,7 +6,7 @@
     <title>뽑기 · 다섯 빛 공방</title>
     <meta name="description" content="달빛 아래 공방에서 마도서를 뽑아요" />
     <meta name="theme-color" content="#0b0e26" />
-    <!-- 타이틀에서 책 속으로 들어왔을 때만 책장 빛 막(.veil)을 보여 준다: 표시(js/function/enter.js가 남김)를 화면을 그리기 전에 읽고 지운다.
+    <!-- 타이틀에서 책 속으로 들어왔을 때만 책장 빛 막(.veil)을 보여 준다: 표시(js/title/function/enter.js가 남김)를 화면을 그리기 전에 읽고 지운다.
          공방, 게시판에서 돌아오거나 새로고침하면 표시가 없어서 노란 빛 없이 바로 게임 화면이 나온다 -->
     <script>
       try {
@@ -198,7 +198,7 @@
       </a>
     </nav>
 
-    <!-- 아래 오른쪽: 주 버튼 (가격은 임시 값) -->
+    <!-- 아래 오른쪽: 주 버튼 (적힌 가격은 db/gameData.json의 draw.cost와 같게) -->
     <button class="draw" id="drawButton" type="button">
       <span class="draw__label">
         <svg class="icon"><use href="#i-card" /></svg>

@@ -4,7 +4,7 @@
      --level(지금 등급), --grade(빛 색), --charge(룬 조각이 모여드는 정도), --pulse(룬이 새겨지는 순간),
      --burst(빛과 룬이 퍼짐), --finale(빛 기둥), --spin(책 회전), --reforge(완성된 책 보관, 새 책 등장), --push(로그인 창 줌)
    "게임 시작"(주소 뒤 #enter)을 누르면 enter-book 애니메이션이 --open(사슬과 표지), --flip(책장 넘김), --dive(책 속으로)를 바꾼다.
-   화면 글자(title.css)와 3D 장면(js/function/timeline.js가 읽음)은 이 값만 보고 따라 움직인다.
+   화면 글자(title.css)와 3D 장면(js/title/function/timeline.js가 읽음)은 이 값만 보고 따라 움직인다.
    ========================================================= */
 
 /* 화면 글자(title.css)도 쓰는 값: 아래 요소들에게 물려줌 (inherits: true) */
@@ -125,7 +125,7 @@
   100% { --open: 1; --flip: 1; --dive: 1; } /* 3.6초: 책장 속 (이 순간 game.html로 넘어간다) */
 }
 
-/* 3D 장면을 그리는 캔버스 (js/function/main.js) */
+/* 3D 장면을 그리는 캔버스 (js/title/main.js) */
 #scene {
   position: fixed;
   inset: 0;
@@ -135,7 +135,7 @@
   display: block;
 }
 
-/* 움직임 줄이기: 각인 타임라인을 멈추고 5등급이 다 된 모습을 한 장면으로 보여 준다 (3D 시간은 js/function/main.js가 멈춘다).
+/* 움직임 줄이기: 각인 타임라인을 멈추고 5등급이 다 된 모습을 한 장면으로 보여 준다 (3D 시간은 js/title/main.js가 멈춘다).
    공방 입장은 책이 펼쳐지지 않고 책장 빛만 짧게 차오른다 (title.css의 portal-still) */
 @media (prefers-reduced-motion: reduce) {
   :root {

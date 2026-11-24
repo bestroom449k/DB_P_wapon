@@ -2,7 +2,7 @@
 // 기둥 가운데가 밝고 가장자리와 위쪽은 흐려지며, 빛줄기가 위로 흐른다.
 import * as THREE from 'three';
 import { ISLAND_TOP } from '../objects/island.js';
-import { GLOW } from '../../shared/materials.js';
+import { GLOW } from '../../../shared/materials.js';
 
 const vertexShader = /* glsl */ ` // 빛 기둥 모양 셰이더 (면 방향 전달)
   varying vec2 vUv;

@@ -1,9 +1,9 @@
 // 떠 있는 섬: 십각형 돌 제단과 아래로 뾰족한 바위,
 // 그 위에서 서로 반대로 도는 마법진 두 겹과 바닥에 번지는 빛.
 import * as THREE from 'three';
-import { circleTexture, glowTexture } from '../../shared/textures.js';
-import { GLOW } from '../../shared/materials.js';
-import { roughen } from '../../shared/roughen.js'; // 바위 표면 다듬기 (게임 화면과 같이 씀)
+import { circleTexture, glowTexture } from '../../../shared/textures.js';
+import { GLOW } from '../../../shared/materials.js';
+import { roughen } from '../../../shared/roughen.js'; // 바위 표면 다듬기 (게임 화면과 같이 씀)
 
 export const ISLAND_TOP = -2.15; // 제단 윗면 높이
 

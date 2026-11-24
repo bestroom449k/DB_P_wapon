@@ -2,7 +2,7 @@
    다섯 빛 공방 - 타이틀 화면의 글자와 메뉴 (강화 타임라인은 timeline.css, 3D 장면은 js/). 이 파일은 JS 없이 동작한다.
    - 로딩 → 제목 등장 → "공방 문 열기" → 메뉴: 시간차 애니메이션
    - 공방 문 열기: 숨은 라디오 버튼(#gate)의 :checked
-   - 로그인·회원가입 창, 알림, 작별 화면: 주소의 #해시를 쓰는 :target (키보드로 쓸 때의 보조는 js/function/menu.js)
+   - 로그인·회원가입 창, 알림, 작별 화면: 주소의 #해시를 쓰는 :target (키보드로 쓸 때의 보조는 js/title/function/menu.js)
    - 강화 등급 표시: timeline.css의 강화 타임라인이 바꾸는 --level, --grade, --grade-name을 따라간다
    ========================================================= */
 
@@ -281,7 +281,7 @@ body {
 }
 
 /* 고른 항목: 마우스를 올린 항목, 마우스가 없으면 포커스가 있는 항목, 둘 다 없으면 첫 항목
-   (공방 문을 열면 js/function/menu.js가 "게임 시작"에 포커스를 줘서 Enter로 바로 고를 수 있다) */
+   (공방 문을 열면 js/title/function/menu.js가 "게임 시작"에 포커스를 줘서 Enter로 바로 고를 수 있다) */
 .menu__item:hover,
 .menu:not(:hover) .menu__item:focus,
 .menu:not(:hover, :focus-within) .menu__item:first-child {
@@ -308,7 +308,7 @@ body {
 
 .forge {
   position: absolute;
-  left: 66%; /* 책이 떠 있는 자리 (js/function/stage.js가 넓은 화면에서 책을 약 66%에 둔다) */
+  left: 66%; /* 책이 떠 있는 자리 (js/title/function/stage.js가 넓은 화면에서 책을 약 66%에 둔다) */
   bottom: calc(var(--gutter) * 0.5);
   translate: -50% 0;
   display: grid;
@@ -574,7 +574,7 @@ kbd {
   text-underline-offset: 3px;
 }
 
-/* 왼쪽 위 회원 표시: 로그인했을 때만 (js/function/auth.js가 <html data-auth="in">을 붙인다) */
+/* 왼쪽 위 회원 표시: 로그인했을 때만 (js/title/function/auth.js가 <html data-auth="in">을 붙인다) */
 .player {
   grid-area: top;
   justify-self: start;
@@ -653,7 +653,7 @@ kbd {
 
 /* ---------- 공방 입장: 로그인한 뒤 "게임 시작" (주소 뒤 #enter = :target) ----------
    마도서가 펼쳐지고 책장이 넘어가며 카메라가 책 속으로 들어가는 동안(timeline.css의 enter-book),
-   글자와 메뉴는 먼저 사라지고, 마지막에 책장 빛이 화면을 가득 채운다. 다 차면 js/function/enter.js가 게임 화면으로 넘긴다. */
+   글자와 메뉴는 먼저 사라지고, 마지막에 책장 빛이 화면을 가득 채운다. 다 차면 js/title/function/enter.js가 게임 화면으로 넘긴다. */
 
 :root:has(#enter:target) .hud {
   opacity: 0;
@@ -674,7 +674,7 @@ kbd {
 
 .portal:target {
   visibility: visible;
-  animation: portal-fill var(--enter) linear forwards; /* enter-book과 같은 길이: 마지막 0.6초 동안 빛이 차오른다. 끝나면 js/function/enter.js가 게임 화면으로 넘긴다 */
+  animation: portal-fill var(--enter) linear forwards; /* enter-book과 같은 길이: 마지막 0.6초 동안 빛이 차오른다. 끝나면 js/title/function/enter.js가 게임 화면으로 넘긴다 */
 }
 
 @keyframes portal-fill {

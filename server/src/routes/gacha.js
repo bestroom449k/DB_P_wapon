@@ -4,7 +4,7 @@
 // 규칙은 db/gameData.json의 draw:
 //   cost          1회 가격 (골드)
 //   legendaryPct  5등급(황금, 황금판 영상)이 나올 확률(%). 지금은 시연용 50 (확률 창에 적힌 1%와 다르다)
-//   itemType      뽑기에 나오는 아이템 종류 (지금은 마도서만, 검은 나중에)
+// 아이템은 gameData.json의 weapons(마도서) 전체에서 고른다.
 // 5등급이 아니면 아이템이 있는 1~4등급 중에서 grades의 drawRatePct 비율로 고른다.
 // 골드 차감, 인벤토리 추가, 도감 기록은 트랜잭션 하나로 묶는다 (중간에 실패하면 전부 취소).
 import { Router } from 'express';
@@ -57,7 +57,7 @@ router.post('/draw', requireLogin('로그인하면 뽑을 수 있어요'), async
     res.json({
       grade: item.grade,
       gradeName: gradeName(item.grade),
-      item: { id: item.id, name: item.name, type: item.type, description: item.description },
+      item: { id: item.id, name: item.name, description: item.description },
       gold: Number(user.gold_balance) - draw.cost,
       isNew: collected.affectedRows === 1, // INSERT IGNORE가 새 줄을 넣었으면 처음 얻은 아이템
     });

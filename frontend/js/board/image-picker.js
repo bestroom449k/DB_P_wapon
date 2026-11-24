@@ -1,7 +1,7 @@
 // 이미지 첨부 칸: 고르거나 끌어다 놓은 이미지를 다듬어(image.js) 미리 보기에 올리고, 올릴 때 FormData에 넣는다.
 // 게시판 글쓰기(js/board/main.js)가 쓴다 (거래소 거래글에는 이미지를 붙이지 않는다). 디자인은 css/post.css.
 // 페이지에 이 id의 칸이 있어야 한다: imageField, imageInput, imagePicker, imagePicked, imagePreview, imageRemove
-import { $ } from './page.js';
+import { $ } from '../shared/page.js';
 import { prepareImage } from './image.js';
 
 const dragsFile = (event) => event.dataTransfer?.types.includes('Files'); // 파일을 끄는 중인지 (글자를 끌어 옮기는 것은 그대로 둔다)

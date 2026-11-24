@@ -4,15 +4,15 @@
 // 룬 조각이 모여들 때 떠오르며 떨고, 룬이 새겨지는 순간 번쩍이며 살짝 가라앉고, 5등급에서는 높이 떠 한 바퀴 돈다.
 // 다 만든 책은 빛 기둥을 타고 위로 올라가 보관되고(--reforge), 사슬에 묶인 새 책이 위에서 내려온다.
 // 공방 입장(게임 시작): s.open이 오르면 사슬이 끊어지고 표지가 열리며 페이지의 주문이 떠오르고,
-// s.flip이 오르면 책장이 점점 빨라지며 촤르륵 넘어간다 (그다음 카메라가 책 속으로 들어가는 것은 js/function/stage.js).
+// s.flip이 오르면 책장이 점점 빨라지며 촤르륵 넘어간다 (그다음 카메라가 책 속으로 들어가는 것은 js/title/function/stage.js).
 // 책 넘김 작동 원리: 책장 18장(LEAVES)은 평소 숨겨 두고, s.flip(0~1)에 맞춰 앞 장부터 차례로 책등을 축 삼아 회전시킨다.
 //   각 장은 꼭짓점을 직접 움직여 넘어가는 동안 종이처럼 휜다. 시간표는 css/timeline.css의 enter-book이 정한다.
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { glowTexture } from '../../shared/textures.js';
-import { GLOW } from '../../shared/materials.js';
-import { random } from '../../shared/random.js';
-import { runeCircleTexture, pageTextures, pageEdgeTexture, leatherGrain, glyphTextures, veinTexture, wingTexture, WING_ROOT } from '../../shared/grimoire-textures.js';
+import { glowTexture } from '../../../shared/textures.js';
+import { GLOW } from '../../../shared/materials.js';
+import { random } from '../../../shared/random.js';
+import { runeCircleTexture, pageTextures, pageEdgeTexture, leatherGrain, glyphTextures, veinTexture, wingTexture, WING_ROOT } from '../../../shared/grimoire-textures.js';
 
 export const BOOK_Y = 0.25; // 책 가운데 높이 (룬 띠, 룬 마법진, 룬 조각도 이 높이를 씀)
 
