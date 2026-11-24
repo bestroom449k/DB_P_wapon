@@ -164,6 +164,7 @@ HTML, CSS, JS, Three.js   →     Express API       →     MySQL (회원, 글, 
 5. .portal 책장 빛이 화면을 채운다
 6. 애니메이션이 끝나면 enter.js가 game.html로 넘긴다
 7. 게임 화면은 같은 색의 빛(.veil)으로 시작해서 그 빛이 걷힌다
+   (enter.js가 남긴 표시가 있을 때만. 공방·게시판에서 돌아오거나 새로고침하면 빛 없이 바로 시작)
 ```
 
 ### 책장 한 장이 넘어가는 계산
@@ -200,6 +201,7 @@ position.setZ(v, curl * (x / PW) ** 1.6);           // 책등에서 멀수록 �
 | [frontend/js/function/stage.js](frontend/js/function/stage.js) | 카메라가 책 속으로 이동 |
 | [frontend/css/title.css](frontend/css/title.css) | 화면을 채우는 책장 빛 (`.portal`) |
 | [frontend/css/game/base.css](frontend/css/game/base.css) | 게임 화면에서 걷히는 빛 (`.veil`) |
+| [frontend/game.html](frontend/game.html) | 머리의 작은 스크립트: 책 속으로 들어왔을 때만 빛을 켬 |
 | [frontend/css/tokens.css](frontend/css/tokens.css) | 책장 빛 색, 페이지 사이 전환 |
 
 ---

@@ -13,6 +13,12 @@
 
 /* ---------- 기본 (두 화면 공통 규칙은 css/tokens.css) ---------- */
 
+/* hidden을 붙인 요소는 display를 따로 정했어도 반드시 숨긴다 (게시판·공방의 page.css와 같은 규칙).
+   이 규칙이 없으면 숨긴 결과 명판(.result, display: grid)이 투명한 채로 남아 아래 메뉴를 가려 눌리지 않는다 */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   margin: 0;
@@ -56,7 +62,12 @@ button {
   height: 100%;
 }
 
-/* 들어올 때: 타이틀에서 책 속으로 빨려 들어온 책장 빛(타이틀 .portal과 같은 색)이 걷히며 밤의 테라스가 드러난다 */
+/* 들어올 때: 타이틀에서 책 속으로 빨려 들어온 책장 빛(타이틀 .portal과 같은 색)이 걷히며 밤의 테라스가 드러난다.
+   타이틀에서 들어왔을 때만(<html class="from-book">, game.html 머리의 스크립트가 붙임) 보인다 */
+:root:not(.from-book) .veil {
+  display: none;
+}
+
 .veil {
   position: fixed;
   inset: 0;
