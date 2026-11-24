@@ -18,7 +18,7 @@ const { draw, grades } = gameData;
 const TOP_GRADE = 5; // 황금
 
 function rollGrade() { // 등급 뽑기
-  if (randomInt(10000) < draw.legendaryPct * 100) return TOP_GRADE;
+  if (randomInt(10000) < draw.legendaryPct * 100) return TOP_GRADE; // 0.01% 단위로 5등급 판정
   const normal = grades.filter((g) => g.grade < TOP_GRADE && items.some((item) => item.grade === g.grade)); // 아이템이 있는 1~4등급만
   let roll = randomInt(normal.reduce((sum, g) => sum + g.drawRatePct * 100, 0));
   for (const g of normal) {
@@ -36,36 +36,36 @@ function pickItem(grade) { // 그 등급의 아이템 하나 (없으면 뽑기 �
 
 router.post('/draw', requireLogin('로그인하면 뽑을 수 있어요'), async (req, res) => { // 1회 뽑기
   const userId = req.session.userId;
-  const item = pickItem(rollGrade());
-  const conn = await pool.getConnection();
+  const item = pickItem(rollGrade()); // 등급과 아이템은 서버가 정한다 (화면에서 결과를 조작할 수 없게)
+  const conn = await pool.getConnection(); // 트랜잭션은 연결 하나로 묶어야 한다
   try {
-    await conn.beginTransaction();
+    await conn.beginTransaction(); // 여기부터 전부 성공하거나 전부 취소
     const [[user]] = await conn.query('SELECT gold_balance FROM users WHERE user_id = ? FOR UPDATE', [userId]); // 동시에 두 번 눌러도 골드가 꼬이지 않게 잠근다
     if (!user) {
-      await conn.rollback();
+      await conn.rollback(); // 지금까지 한 일을 취소
       return res.status(401).json({ message: '로그인이 풀렸어요. 다시 로그인해 주세요' });
     }
     if (Number(user.gold_balance) < draw.cost) {
-      await conn.rollback();
+      await conn.rollback(); // 지금까지 한 일을 취소
       return res.status(400).json({ message: `골드가 부족해요 (1회 ${draw.cost.toLocaleString('ko-KR')}골드)` });
     }
-    await conn.query('UPDATE users SET gold_balance = gold_balance - ? WHERE user_id = ?', [draw.cost, userId]);
+    await conn.query('UPDATE users SET gold_balance = gold_balance - ? WHERE user_id = ?', [draw.cost, userId]); // 골드 차감
     await conn.query('INSERT INTO user_weapons (owner_user_id, template_id) VALUES (?, ?)', [userId, item.id]); // 인벤토리에 추가
     const [collected] = await conn.query('INSERT IGNORE INTO user_collection (user_id, template_id) VALUES (?, ?)', [userId, item.id]); // 처음 얻었으면 도감에 기록
-    await conn.commit();
+    await conn.commit(); // 저장 확정
 
     res.json({
       grade: item.grade,
       gradeName: gradeName(item.grade),
       item: { id: item.id, name: item.name, type: item.type, description: item.description },
       gold: Number(user.gold_balance) - draw.cost,
-      isNew: collected.affectedRows === 1,
+      isNew: collected.affectedRows === 1, // INSERT IGNORE가 새 줄을 넣었으면 처음 얻은 아이템
     });
   } catch (err) {
-    await conn.rollback();
+    await conn.rollback(); // 지금까지 한 일을 취소
     throw err;
   } finally {
-    conn.release();
+    conn.release(); // 연결을 풀에 돌려준다
   }
 });
 

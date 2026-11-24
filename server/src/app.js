@@ -4,6 +4,7 @@
 //   - /api/posts/... 로 커뮤니티 게시판의 글과 댓글을 처리하고, 글에 붙인 이미지는 /uploads/... 로 보여 준다
 //   - /api/gacha/... 로 뽑기를 처리한다 (결과를 정하고 골드, 인벤토리, 도감에 저장)
 //   - /api/collection 으로 도감, /api/inventory/... 로 내 마도서·장착·강화·상점 판매를 처리한다
+//   - /api/market/... 로 거래소(플레이어끼리 사고팔기)를 처리한다
 //   - 로그인 상태는 세션으로 기억한다 (브라우저에는 세션 번호가 담긴 쿠키만 저장)
 import express from 'express';
 import session from 'express-session';
@@ -14,6 +15,7 @@ import postsRouter from './routes/posts.js';
 import gachaRouter from './routes/gacha.js';
 import collectionRouter from './routes/collection.js';
 import inventoryRouter from './routes/inventory.js';
+import marketRouter from './routes/market.js';
 import { serveUploads } from './uploads.js';
 
 if (!process.env.SESSION_SECRET || !process.env.DB_USER) {
@@ -40,6 +42,7 @@ app.use('/api/posts', postsRouter); // 커뮤니티 게시판 API
 app.use('/api/gacha', gachaRouter); // 뽑기 API
 app.use('/api/collection', collectionRouter); // 도감 API
 app.use('/api/inventory', inventoryRouter); // 내 마도서, 장착, 강화, 상점 판매 API
+app.use('/api/market', marketRouter); // 거래소 API
 
 app.use((err, req, res, next) => { // 처리 중 오류
   if (err.type === 'entity.parse.failed') return res.status(400).json({ message: '요청 형식이 올바르지 않아요' });

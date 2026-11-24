@@ -63,7 +63,7 @@ button {
   z-index: 30;
   background: var(--page-fill);
   pointer-events: none;
-  animation: veil-lift 1.8s cubic-bezier(0.45, 0, 0.2, 1) 0.2s forwards;
+  animation: veil-lift 1.8s cubic-bezier(0.45, 0, 0.2, 1) 0.2s forwards; /* 0.2초 뒤 1.8초 동안 걷힌다 */
 }
 
 @keyframes veil-lift {

@@ -1,5 +1,5 @@
 /* =========================================================
-   다섯 빛 공방 - 공방: 도감, 강화, 상점 (atelier.html)
+   다섯 빛 공방 - 공방: 도감, 강화, 상점, 거래소 (atelier.html)
    바탕, 위쪽 막대, 판, 버튼, 알림, 확인 창은 css/page.css (게시판과 같이 씀). 여기는 공방에만 있는 것:
    위쪽 탭, 마도서 표지(이미지 없이 CSS로 그림), 도감 선반, 강화 작업대, 내 마도서 목록(강화·상점이 같이 씀).
    마도서마다 등급 색은 --c (js/atelier/main.js가 var(--g1)~var(--g5)로 정함).
@@ -456,6 +456,60 @@ main {
 
 @keyframes row-leave {
   to { opacity: 0; transform: translateX(14px); }
+}
+
+/* ---------- 거래소: 판매 중인 목록과 내 마도서 올리기 (줄 모양은 상점 목록과 같음) ---------- */
+
+/* 오른쪽 칸 폭을 가장 넓은 "내 판매 + 내리기"에 맞춰 가격이 세로로 정렬되게 */
+.inventory--market .inv-row__act {
+  min-width: 176px;
+}
+
+.inv-row__info .meta {
+  margin-top: 2px;
+}
+
+.price-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mist);
+  font-size: 0.9375rem;
+  white-space: nowrap;
+}
+
+.price-input {
+  width: 120px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(169, 175, 219, 0.3);
+  border-radius: 10px;
+  background: var(--night-0);
+  color: var(--moon);
+  font: inherit;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  caret-color: var(--lamp);
+  appearance: textfield; /* 숫자 칸의 위아래 화살표 숨기기 */
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.price-input::-webkit-inner-spin-button,
+.price-input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.price-input:focus {
+  outline: none;
+  border-color: var(--lamp);
+  box-shadow: 0 0 0 3px rgba(255, 207, 138, 0.18);
+}
+
+.sell__empty {
+  margin: 14px 0 2px;
+  color: var(--mist);
 }
 
 /* ---------- 움직임 줄이기 ---------- */

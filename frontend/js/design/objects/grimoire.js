@@ -5,6 +5,8 @@
 // 다 만든 책은 빛 기둥을 타고 위로 올라가 보관되고(--reforge), 사슬에 묶인 새 책이 위에서 내려온다.
 // 공방 입장(게임 시작): s.open이 오르면 사슬이 끊어지고 표지가 열리며 페이지의 주문이 떠오르고,
 // s.flip이 오르면 책장이 점점 빨라지며 촤르륵 넘어간다 (그다음 카메라가 책 속으로 들어가는 것은 js/function/stage.js).
+// 책 넘김 작동 원리: 책장 18장(LEAVES)은 평소 숨겨 두고, s.flip(0~1)에 맞춰 앞 장부터 차례로 책등을 축 삼아 회전시킨다.
+//   각 장은 꼭짓점을 직접 움직여 넘어가는 동안 종이처럼 휜다. 시간표는 css/timeline.css의 enter-book이 정한다.
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { glowTexture } from '../../shared/textures.js';
@@ -263,11 +265,11 @@ export function create({ scene }) { // 마도서 만들기
   const leaves = Array.from({ length: LEAVES }, (_, i) => {
     const pivot = new THREE.Group();
     pivot.position.set(PX - PW / 2, 0, PD / 2 + 0.004 + i * 0.0006); // 책장 묶음 맨 위
-    pivot.visible = false;
+    pivot.visible = false; // 넘어가기 전에는 그리지 않는다
     body.add(pivot);
     const geometry = leafBase.clone(); // 넘어가는 동안 휘어지므로 장마다 따로
-    add(pivot, geometry, leafPaper);
-    if (i % 3 === 0) add(pivot, geometry, leafInk, 0, 0, 0.001);
+    add(pivot, geometry, leafPaper); // 종이 한 장
+    if (i % 3 === 0) add(pivot, geometry, leafInk, 0, 0, 0.001); // 세 장마다 빛나는 주문을 얹는다
     return { pivot, geometry, rest: geometry.attributes.position.array.slice() }; // rest: 휘기 전 꼭짓점 위치
   });
 
@@ -337,11 +339,11 @@ export function create({ scene }) { // 마도서 만들기
     const away = smooth(s.reforge, 0, 1) * 7; // 화면 위로 올라간 거리 (완성된 책 보관 → 새 책 등장)
     const spin = t * 0.58 + s.spin * TAU; // 천천히 + 5등급 한 바퀴
     if (opened > 0 && faceTurn === null) faceTurn = Math.round(spin / TAU) * TAU; // 펼치면 가장 가까운 정면으로
-    if (opened === 0) faceTurn = null;
+    if (opened === 0) faceTurn = null; // 닫혀 있으면 다음 입장 때 정면을 다시 계산한다
     book.position.y = BOOK_Y + Math.sin(t * 0.9) * 0.07 + s.charge * 0.22 - s.pulse * 0.1 + s.finale * 0.3 + away + opened * 0.12; // 둥실 + 룬 조각 모임 + 룬 새김 + 5등급 + 보관 + 펼치기
     book.rotation.set(
       -0.3 * opened, // 펼치면 뒤로 젖혀 페이지가 보이게
-      faceTurn === null ? spin : THREE.MathUtils.lerp(spin, faceTurn, opened),
+      faceTurn === null ? spin : THREE.MathUtils.lerp(spin, faceTurn, opened), // 펼칠수록 돌던 각도에서 정면으로
       Math.sin(t * 0.5) * 0.03 * (1 - opened) + Math.sin(t * 47) * 0.012 * s.charge, // 기우뚱 + 룬 조각이 모일 때 떨림
     );
     body.position.x = opened * 0.72; // 펼친 두 면이 가운데 오도록
@@ -369,8 +371,8 @@ export function create({ scene }) { // 마도서 만들기
       spike.mesh.visible = now.spikes > 0.02;
     }
     jewel.scale.set(1, 1.35, 0.55).multiplyScalar(now.gem);
-    lowerChain(Math.max(broken, 1 - now.chainA));
-    upperChain(Math.max(broken, 1 - now.chainB));
+    lowerChain(Math.max(broken, 1 - now.chainA)); // 입장 때 끊어지거나, 등급이 올라 풀린 정도 중 큰 값
+    upperChain(Math.max(broken, 1 - now.chainB)); // 위 사슬도 같은 방식
 
     // 빛 (룬 조각이 모일 때 차오르고, 룬이 새겨지는 순간 번쩍)
     const L = s.light;
@@ -389,20 +391,20 @@ export function create({ scene }) { // 마도서 만들기
     pageLight.intensity = shine * 0.35 + s.dive * s.dive * 1.5; // 책 속으로 들어갈수록 페이지가 환해진다 (책장 글씨가 보일 만큼만)
 
     // 책장 넘기기: 앞 장부터 차례로, 넘어가는 동안은 바깥쪽이 뒤처지며 휘어진다
-    const flipping = s.flip > 0 && opened > 0.95;
+    const flipping = s.flip > 0 && opened > 0.95; // 표지가 거의 다 열린 뒤에 넘기기 시작한다
     leaves.forEach((leaf, i) => {
       const start = (i / LEAVES) * 0.78; // 이 장이 넘어가기 시작하는 순간 (s.flip 기준)
       const p = flipping ? smooth(s.flip, start, start + 0.22) : 0; // 이 장이 넘어간 정도
-      leaf.pivot.visible = p > 0;
-      if (!leaf.pivot.visible) return;
+      leaf.pivot.visible = p > 0; // 넘어가기 시작한 장만 그린다
+      if (!leaf.pivot.visible) return; // 아직 차례가 아니면 계산하지 않는다
       leaf.pivot.rotation.y = -p * (0.9 - i * 0.002) * Math.PI; // 왼쪽에 쌓일 때 나중 장이 위로
       const curl = Math.sin(p * Math.PI) * 0.3; // 넘어가는 한가운데서 가장 많이 휜다
-      const position = leaf.geometry.attributes.position;
+      const position = leaf.geometry.attributes.position; // 이 책장의 꼭짓점들
       for (let v = 0; v < position.count; v++) {
         const x = leaf.rest[v * 3]; // 책등에서 떨어진 거리
-        position.setZ(v, curl * (x / PW) ** 1.6);
+        position.setZ(v, curl * (x / PW) ** 1.6); // 책등에서 멀수록 더 많이 휜다
       }
-      position.needsUpdate = true;
+      position.needsUpdate = true; // 바뀐 꼭짓점을 그래픽카드로 다시 보낸다
     });
     const unseal = Math.sin(Math.PI * broken) * 0.6 * Math.max(now.chainA, now.chainB); // 봉인이 풀리는 순간 번쩍
     aura.material.color.copy(L);
@@ -447,13 +449,13 @@ export function create({ scene }) { // 마도서 만들기
     for (const letter of letters) {
       letter.age += dt;
       if (letter.age > letter.life) {
-        if (s.open > 0.75) rise(letter);
+        if (s.open > 0.75) rise(letter); // 책이 거의 펼쳐졌을 때만 새 글자 조각을 띄운다
         else { letter.sprite.material.opacity = 0; continue; }
       }
       if (letter.age < 0) { letter.sprite.material.opacity = 0; continue; }
       const k = letter.age / letter.life;
-      letter.sprite.position.addScaledVector(letter.velocity, dt);
-      letter.sprite.material.opacity = Math.sin(Math.PI * k) * shine;
+      letter.sprite.position.addScaledVector(letter.velocity, dt); // 책장에서 떠오른다
+      letter.sprite.material.opacity = Math.sin(Math.PI * k) * shine; // 서서히 나타났다 사라진다
       letter.sprite.material.color.copy(L).multiplyScalar(1.6);
       letter.sprite.scale.setScalar(letter.size * (0.6 + k * 0.6));
     }

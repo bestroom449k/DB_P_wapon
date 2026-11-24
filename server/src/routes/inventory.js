@@ -7,12 +7,12 @@
 // 강화 규칙은 db/gameData.json의 enhanceRules (server/src/gameData.js의 nextEnhance):
 //   비용 = 기본 가치 × costRatio, 성공 확률 = successPct, 가치 = 기본 가치 × valueMultiplier
 //   실패하면 골드만 쓰고 단계는 그대로다 (2026-11-23 사용자 결정, 힐링 게임이라 잃는 것을 작게)
-// 판매 중(trades ACTIVE)인 마도서는 장착·강화·상점 판매를 할 수 없다 (db/schema.sql의 규칙, 거래소는 아직 없음).
+// 판매 중(trades ACTIVE)인 마도서는 장착·강화·상점 판매를 할 수 없다 (db/schema.sql의 규칙, 거래소는 routes/market.js).
 // 골드나 장착을 바꾸는 요청은 트랜잭션 안에서 회원 행 → 마도서 행 순서로 잠근다 (동시에 눌러도 꼬이지 않게, 서로 기다리다 멈추지 않게).
 import { Router } from 'express';
 import { randomInt } from 'node:crypto';
 import { pool } from '../db.js';
-import { requireLogin, toId } from '../common.js';
+import { requireLogin, toId, transaction } from '../common.js';
 import { itemById, gradeName, valueAt, nextEnhance, MAX_LEVEL } from '../gameData.js';
 
 const router = Router();
@@ -33,6 +33,7 @@ function toItem(row, equippedId) { // DB 행 → 화면용 마도서 (value = �
     value: item ? valueAt(item, row.enhance_level) : 0,
     next: item ? nextEnhance(item, row.enhance_level) : null,
     equipped: sameId(row.user_weapon_id, equippedId),
+    listed: Boolean(row.listed), // 거래소에 올려 판매 중인지 (그동안 장착, 강화, 상점 판매 불가)
     obtainedAt: row.obtained_at,
   };
 }
@@ -42,34 +43,16 @@ const LOCK_USER = 'SELECT gold_balance, equipped_user_weapon_id FROM users WHERE
 const LOCK_WEAPON = `SELECT user_weapon_id, template_id, enhance_level, obtained_at FROM user_weapons
   WHERE user_weapon_id = ? AND owner_user_id = ? AND weapon_status = 'OWNED' FOR UPDATE`;
 
-// 트랜잭션 하나로 work(conn, refuse)를 실행한다. work는 끝에 직접 commit하고,
-// 거절할 때는 return refuse(상태, 메시지) → 되돌리고 그 메시지로 응답한다.
-async function transaction(res, work) {
-  const conn = await pool.getConnection();
-  const refuse = async (status, message) => {
-    await conn.rollback();
-    res.status(status).json({ message });
-  };
-  try {
-    await conn.beginTransaction();
-    await work(conn, refuse);
-  } catch (err) {
-    await conn.rollback();
-    throw err;
-  } finally {
-    conn.release();
-  }
-}
-
 router.get('/', async (req, res) => { // 내 마도서 목록
   const userId = req.session.userId;
   const [[user]] = await pool.query('SELECT gold_balance, equipped_user_weapon_id FROM users WHERE user_id = ?', [userId]);
   if (!user) return res.status(401).json({ message: '로그인이 풀렸어요. 다시 로그인해 주세요' });
   const [rows] = await pool.query(
-    `SELECT user_weapon_id, template_id, enhance_level, obtained_at
-     FROM user_weapons
-     WHERE owner_user_id = ? AND weapon_status = 'OWNED'
-     ORDER BY obtained_at DESC, user_weapon_id DESC`,
+    `SELECT w.user_weapon_id, w.template_id, w.enhance_level, w.obtained_at,
+            EXISTS (SELECT 1 FROM trades t WHERE t.user_weapon_id = w.user_weapon_id AND t.trade_status = 'ACTIVE') AS listed
+     FROM user_weapons w
+     WHERE w.owner_user_id = ? AND w.weapon_status = 'OWNED'
+     ORDER BY w.obtained_at DESC, w.user_weapon_id DESC`,
     [userId],
   );
   res.json({

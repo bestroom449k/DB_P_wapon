@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>공방 · 다섯 빛 공방</title>
-    <meta name="description" content="모은 마도서를 도감에서 보고, 장착한 마도서에 룬을 새겨 강화하고, 상점에 팔아 골드를 받는 공방" />
+    <meta name="description" content="모은 마도서를 도감에서 보고, 장착한 마도서에 룬을 새겨 강화하고, 상점에 팔거나 거래소에서 다른 플레이어와 사고파는 공방" />
     <meta name="theme-color" content="#0b0e26" />
     <link
       rel="icon"
@@ -16,7 +16,7 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Diphylleia&family=Gowun+Dodum&display=swap"
     />
-    <!-- 공통 색과 글꼴(tokens.css), 별도 페이지 공통(page.css, 게시판과 같이 씀), 도감·강화·상점(atelier.css) -->
+    <!-- 공통 색과 글꼴(tokens.css), 별도 페이지 공통(page.css, 게시판과 같이 씀), 도감·강화·상점·거래소(atelier.css) -->
     <link rel="stylesheet" href="css/tokens.css" />
     <link rel="stylesheet" href="css/page.css" />
     <link rel="stylesheet" href="css/atelier.css" />
@@ -43,6 +43,7 @@
       <a class="tab" id="tabCollection" href="#/collection">도감</a>
       <a class="tab" id="tabEnhance" href="#/enhance">강화</a>
       <a class="tab" id="tabShop" href="#/shop">상점</a>
+      <a class="tab" id="tabMarket" href="#/market">거래소</a>
     </nav>
 
     <main>
@@ -121,9 +122,35 @@
           </div>
         </div>
       </section>
+
+      <!-- 거래소 (#/market): 위는 다른 플레이어가 올린 마도서(사기, 내 것은 내리기), 아래는 내 마도서에 가격을 정해 올리기 -->
+      <section class="view" id="viewMarket" aria-labelledby="marketTitle" hidden>
+        <div class="sheet">
+          <div class="sheet__head">
+            <h2 class="sheet__title" id="marketTitle">거래소</h2>
+            <p class="sheet__count" id="marketCount">거래소를 여는 중이에요</p>
+          </div>
+          <p class="shop__lead" id="marketLead" hidden>다른 플레이어가 올린 마도서를 골드로 사요. 산 마도서는 강화 단계 그대로 내 것이 되고 도감에도 기록돼요.</p>
+          <ol class="inventory inventory--market" id="marketList"></ol>
+          <div class="note" id="marketNote" hidden>
+            <p id="marketNoteText"></p>
+            <a class="btn" id="marketNoteAction" hidden></a>
+          </div>
+        </div>
+
+        <div class="sheet" id="sellSheet" hidden>
+          <div class="sheet__head">
+            <h3 class="sheet__title">내 마도서 올리기</h3>
+            <p class="sheet__count" id="sellCount"></p>
+          </div>
+          <p class="shop__lead">가격을 정해 올리면 누군가 살 때까지 거래소에 걸려요. 올려 둔 동안은 장착, 강화, 상점 판매를 할 수 없고, 위 목록에서 언제든 내릴 수 있어요.</p>
+          <ol class="inventory inventory--market" id="sellList"></ol>
+          <p class="sell__empty" id="sellEmpty" hidden>올릴 수 있는 마도서가 없어요.</p>
+        </div>
+      </section>
     </main>
 
-    <!-- 팔기 확인 (디자인은 page.css, 게시판의 지우기 확인과 같음) -->
+    <!-- 팔기, 사기 확인 (디자인은 page.css, 게시판의 지우기 확인과 같음) -->
     <dialog class="confirm" id="confirm" aria-labelledby="confirmTitle">
       <form method="dialog">
         <h2 class="confirm__title" id="confirmTitle"></h2>

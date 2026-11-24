@@ -666,7 +666,7 @@ kbd {
   inset: 0;
   z-index: 45;
   margin: 0;
-  background: var(--page-fill);
+  background: var(--page-fill); /* 책장 빛 (css/tokens.css, 게임 화면의 .veil과 같은 색이라 이어져 보인다) */
   opacity: 0;
   visibility: hidden;
   pointer-events: none;

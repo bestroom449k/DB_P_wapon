@@ -53,6 +53,7 @@
       <p class="who" id="who"></p>
     </header>
 
+    <!-- 빈 틀: 세 화면(목록, 읽기, 쓰기)을 미리 두고, js/board/main.js가 주소의 #에 따라 하나만 보이게 하고 서버 데이터로 채운다 -->
     <main class="board">
       <!-- 글 목록 (#/) -->
       <section class="view" id="viewList" aria-labelledby="listTitle" hidden>
@@ -91,6 +92,7 @@
                 </div>
               </div>
             </header>
+            <!-- 글에 붙인 이미지 (없으면 숨김). src는 서버의 /uploads/파일이름, 누르면 새 탭에서 크게 -->
             <figure class="read__image" id="postFigure" hidden>
               <a id="postImageLink" target="_blank" rel="noopener"><img id="postImage" alt="" /></a>
             </figure>
@@ -129,6 +131,7 @@
             <textarea class="input input--tall" id="contentInput" rows="14" maxlength="5000"></textarea>
             <span class="counter" id="contentCounter">0 / 5000</span>
           </div>
+          <!-- 이미지 첨부: 실제 파일 입력은 숨기고 label(점선 칸)을 누르게 한다. 고르면 js/board/image.js가 다듬고 미리 보기로 바뀐다 -->
           <div class="field image-field" id="imageField">
             <span class="field__label">이미지 (선택)</span>
             <input class="sr-only image-input" id="imageInput" type="file" accept="image/jpeg,image/png,image/webp" />

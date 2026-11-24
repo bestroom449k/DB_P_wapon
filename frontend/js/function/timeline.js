@@ -1,5 +1,6 @@
 // css/timeline.css의 룬 각인 타임라인과 공방 입장 연출이 매 순간 바꾸는 값을 읽어 온다.
 // 3D 부품들은 이 값만 보고 움직이므로, "언제 무엇이 일어나는지"는 CSS 한 곳에서 정해진다.
+// 공방 입장(책 넘김)에서는 --open, --flip, --dive 값을 grimoire.js(책), stage.js(카메라), bloom.js(빛)가 읽는다.
 import * as THREE from 'three';
 
 const css = getComputedStyle(document.documentElement); // CSS 값 읽기 도구

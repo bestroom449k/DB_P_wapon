@@ -66,8 +66,8 @@ export function create(canvas) { // 무대 만들기
     // 공방 입장: 표지가 열리면 책이 화면 가운데로 오며 조금 다가가고, 책장이 넘어가면 점점 빨라지며 책장 속으로 들어간다
     const toPage = s.open * 0.15 + s.dive ** 1.6 * 0.85; // 0 → 1 (끝으로 갈수록 빨라짐)
     if (toPage > 0) {
-      camera.position.lerp(PAGE_EYE, toPage);
-      look.lerp(PAGE, Math.min(1, s.open));
+      camera.position.lerp(PAGE_EYE, toPage); // 카메라를 책장 바로 앞으로 옮긴다
+      look.lerp(PAGE, Math.min(1, s.open)); // 시선을 책장 가운데로
     }
     camera.lookAt(look);
     frame(THREE.MathUtils.smoothstep(s.open, 0, 1)); // 펼치는 동안 책을 화면 가운데로

@@ -103,26 +103,26 @@
    → 1.8~3.6초 카메라가 펼친 면 속으로 빨려 들어간다 (마지막에 title.css의 .portal 빛이 화면을 채움)
    그동안 각인 타임라인은 멈춰 둔다 (책이 펼쳐지는 중에 등급이 바뀌지 않게) */
 :root:has(#enter:target) {
-  animation: var(--forge), enter-book var(--enter) linear forwards;
-  animation-play-state: paused, running;
+  animation: var(--forge), enter-book var(--enter) linear forwards; /* forwards: 끝난 뒤에도 마지막 값(책 속)을 유지한다 */
+  animation-play-state: paused, running; /* 각인 타임라인은 멈추고 입장 연출만 돌린다 */
 }
 
 @keyframes enter-book {
-  0% { --open: 0; --flip: 0; --dive: 0; }
-  14% { --open: 0.3; }
-  22% { --open: 0.65; }
-  28% { --flip: 0; }
+  0% { --open: 0; --flip: 0; --dive: 0; } /* 0초: 닫힌 책 */
+  14% { --open: 0.3; } /* 0.5초: 사슬이 다 끊어짐 */
+  22% { --open: 0.65; } /* 0.8초: 표지가 열리는 중 */
+  28% { --flip: 0; } /* 1초: 여기까지 책장은 가만히 */
   30% { --open: 0.92; }
-  34% { --open: 1; }
-  40% { --flip: 0.12; }
-  50% { --dive: 0; }
-  52% { --flip: 0.33; }
-  62% { --flip: 0.6; --dive: 0.08; }
-  72% { --flip: 1; }
+  34% { --open: 1; } /* 1.2초: 표지가 다 열림 */
+  40% { --flip: 0.12; } /* 1.44초: 책장이 넘어가기 시작 */
+  50% { --dive: 0; } /* 1.8초: 여기부터 카메라가 책 속으로 */
+  52% { --flip: 0.33; } /* 1.87초: 책장이 점점 빨라진다 */
+  62% { --flip: 0.6; --dive: 0.08; } /* 2.23초 */
+  72% { --flip: 1; } /* 2.6초: 모든 책장이 넘어감 */
   74% { --dive: 0.25; }
-  84% { --dive: 0.55; }
+  84% { --dive: 0.55; } /* 3초: 빠르게 다가간다 */
   92% { --dive: 0.82; }
-  100% { --open: 1; --flip: 1; --dive: 1; }
+  100% { --open: 1; --flip: 1; --dive: 1; } /* 3.6초: 책장 속 (이 순간 game.html로 넘어간다) */
 }
 
 /* 3D 장면을 그리는 캔버스 (js/function/main.js) */
